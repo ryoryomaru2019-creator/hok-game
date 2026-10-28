@@ -1,0 +1,320 @@
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&family=Outfit:wght@600;800;900&display=swap');
+
+:root {
+  --primary-ocean: #0284c7;
+  --deep-ocean: #03203b;
+  --accent-gold: #facc15;
+  --accent-coral: #f43f5e;
+  --glass-bg: rgba(15, 23, 42, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  min-height: 100vh;
+  background: radial-gradient(circle at 50% 20%, #034574 0%, #021a30 70%, #010d18 100%);
+  font-family: 'M PLUS Rounded 1c', 'Outfit', sans-serif;
+  color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 480px;
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 28px 24px;
+  box-shadow: var(--glass-shadow);
+  text-align: center;
+}
+
+.title-banner {
+  margin-bottom: 20px;
+}
+
+.title-logo {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  background: linear-gradient(135deg, #38bdf8 0%, #ffffff 50%, #facc15 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+
+.title-sub {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+/* プレイヤー名入力欄 */
+.player-input-box {
+  margin-bottom: 16px;
+}
+
+.player-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.player-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+}
+
+/* 内部ユーザーID認識状態表示 */
+.identity-status-container {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.identity-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 11px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.badge-new {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 10px;
+}
+
+.badge-recon {
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 10px;
+}
+
+.identity-name {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.identity-id-hint {
+  color: #64748b;
+  font-family: monospace;
+  font-size: 10px;
+}
+
+/* ボタン */
+.main-btn {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+  margin-bottom: 12px;
+}
+
+.main-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6);
+}
+
+.main-btn:active {
+  transform: scale(0.98);
+}
+
+.sub-btn {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 8px;
+}
+
+.sub-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* ランキング表示カード */
+.result-ranking-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 14px 0 10px 0;
+  text-align: left;
+}
+
+.result-ranking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
+}
+
+.icon-btn-sm {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn-sm:hover {
+  background: rgba(56, 189, 248, 0.3);
+  transform: rotate(90deg);
+}
+
+.result-ranking-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.result-ranking-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 12px;
+}
+
+.result-ranking-row.current-user {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.result-ranking-row .rank-medal {
+  font-weight: 900;
+  width: 22px;
+}
+
+.result-ranking-row .rank-name {
+  flex: 1;
+  font-weight: 700;
+  margin: 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-ranking-row .rank-score {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+/* 内部ID検証テストセクション & ログ表示欄 */
+.ranking-test-section {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  text-align: left;
+}
+
+.btn-micro-test {
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-micro-test:hover, .btn-micro-test:active {
+  background: rgba(16, 185, 129, 0.4);
+  transform: scale(0.97);
+}
+
+.ranking-log-box {
+  margin-top: 8px;
+  max-height: 80px;
+  overflow-y: auto;
+  background: rgba(10, 15, 29, 0.85);
+  border-radius: 8px;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #94a3b8;
+}
+
+.log-line {
+  margin-bottom: 3px;
+  word-break: break-all;
+}
+
+.log-time {
+  color: #38bdf8;
+}
+
+.log-text {
+  color: #cbd5e1;
+}
+
+.hidden {
+  display: none !important;
+}

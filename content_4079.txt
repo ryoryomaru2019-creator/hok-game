@@ -1,0 +1,267 @@
+Created At: 2026-10-18T02:33:27+09:00
+Completed At: 2026-10-18T02:33:29+09:00
+The following changes were made by the replace_file_content tool to: d:\AI\GAME\HIRAME\admin.html. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -260,10 +260,133 @@
+                 <span>🔄</span> デフォルトに戻す
+               </button>
+             </div>
+-          </div>
+-
+-          <!-- リアルタイムシミュレーション水槽プレビュー -->
+-          <div class="glass-card preview-card">
++              </div>
++            </div>
++
++            <!-- 2. 音量・BGM設定 ＆ プレイリスト編集パネル -->
++            <div id="subPanelBgm" class="sub-editor-panel hidden">
++              <div class="glass-card bgm-management-card">
++                <div class="card-header">
++                  <div style="display:flex; align-items:center; gap:8px;">
++                    <h2>🎵 音量・BGM設定 ＆ プレイリスト編集</h2>
++                    <span class="badge-live" id="adminBgmTrackBadge">BGM: 読込中...</span>
++                  </div>
++                  <button id="adminResetBgmBtn" class="btn-secondary-sm" title="初期3曲のプレイリストに戻します">🔄 初期3曲にリセット</button>
++                </div>
++                <p class="desc-text">ゲーム本体および管理コンソールのBGMを管理します。楽曲の追加、削除、順番変更（▲▼）や、ツマミでのリアルタイム音量調節・即時再生停止が可能です。</p>
++
++                <div class="bgm-controls-layout">
++                  <!-- 左側: 音量スライダー群 (ツマミに再生停止ボタン付き) -->
++                  <div class="bgm-volume-column">
++                    <div class="form-group">
++                      <div class="label-row">
++                        <label for="adminBgmVol">BGM音量 (ツマミで再生・停止切替)</label>
++                        <span id="adminBgmVolVal" class="val-pill">70 %</span>
++                      </div>
++                      <div class="slider-with-knob-row">
++                        <button type="button" id="adminBgmPlayToggleBtn" class="btn-knob-toggle" title="再生 / 停止">▶</button>
++                        <input type="range" id="adminBgmVol" min="0" max="1" step="0.01" value="0.7" class="admin-slider">
++                      </div>
++                      <span class="desc-text">ツマミ左のアイコンをタップすると選択中のBGMを即座に再生/停止します。スライドで音量をスムーズに強弱調整できます。</span>
++                    </div>
++
++                    <div class="form-group">
++                      <div class="label-row">
++                        <label for="adminMasterVol">全体音量 (マスター)</label>
++                        <span id="adminMasterVolVal" class="val-pill">80 %</span>
++                      </div>
++                      <input type="range" id="adminMasterVol" min="0" max="1" step="0.01" value="0.8" class="admin-slider">
++                    </div>
++
++                    <div class="form-group">
++                      <div class="label-row">
++                        <label for="adminSeVol">効果音音量 (SE)</label>
++                        <span id="adminSeVolVal" class="val-pill">80 %</span>
++                      </div>
++                      <input type="range" id="adminSeVol" min="0" max="1" step="0.01" value="0.8" class="admin-slider">
++                    </div>
++                  </div>
++
++                  <!-- 右側: プレイリスト一覧 & 新規追加フォーム -->
++                  <div class="bgm-playlist-column">
++                    <div class="playlist-header-row">
++                      <span class="playlist-title">📜 登録楽曲プレイリスト (順番変更・削除):</span>
++                      <span id="adminTrackCountBadge" class="val-pill">3 曲</span>
++                    </div>
++                    <div id="adminBgmPlaylist" class="admin-bgm-playlist">
++                      <!-- 動的に生成されます -->
++                    </div>
++
++                    <!-- 楽曲追加フォーム -->
++                    <div class="add-bgm-box">
++                      <div style="font-size:13px; font-weight:800; color:#38bdf8; margin-bottom:8px;">➕ 新しいBGMを追加</div>
++                      <div class="add-bgm-inputs">
++                        <input type="text" id="adminAddBgmTitle" placeholder="曲名 (例: 閃きの波打ち際)" class="admin-text-input">
++                        <input type="text" id="adminAddBgmSrc" placeholder="音声URL または ファイル選択" class="admin-text-input">
++                        <div style="display:flex; gap:8px;">
++                          <label class="btn-file-upload">
++                            📁 ファイル選択
++                            <input type="file" id="adminBgmFilePicker" accept="audio/*" style="display:none;">
++                          </label>
++                          <button type="button" id="adminAddBgmBtn" class="btn-primary-sm" style="flex:1;">➕ リストに追加</button>
++                        </div>
++                      </div>
++                    </div>
++                  </div>
++                </div>
++              </div>
++            </div>
++
++            <!-- 3. 称号一覧エディタパネル -->
++            <div id="subPanelTitles" class="sub-editor-panel hidden">
++              <div class="glass-card title-tiers-card">
++                <div class="card-header">
++                  <div style="display:flex; align-items:center; gap:8px;">
++                    <h2>🎖️ 称号一覧エディタ (スコア閾値 ＆ 称号名設定)</h2>
++                    <span class="badge-live">STATUS TITLES</span>
++                  </div>
++                  <button id="adminResetTitlesBtn" class="btn-secondary-sm" title="初期の称号リストに戻します">🔄 デフォルト称号にリセット</button>
++                </div>
++                <p class="desc-text">プレイヤーがゲーム終了時に獲得したスコアに応じてリザルト画面に付与される称号一覧を編集できます。必要スコアの高い順に自動判定されます。</p>
++
++                <div id="adminTitleTiersList" class="title-tiers-list">
++                  <!-- JSで動的生成 -->
++                </div>
++
++                <div style="margin-top: 12px; display:flex; justify-content:space-between; align-items:center;">
++                  <button type="button" id="adminAddTitleTierBtn" class="btn-secondary-sm">➕ 新しい称号階級を追加</button>
++                  <span class="desc-text" style="margin:0;">※変更後は「セット」で即時ゲームに反映されます</span>
++                </div>
++              </div>
++            </div>
++
++            <!-- 4. 𝕏 結果シェア文言エディタパネル -->
++            <div id="subPanelXShare" class="sub-editor-panel hidden">
++              <div class="glass-card xshare-card">
++                <div class="card-header">
++                  <div style="display:flex; align-items:center; gap:8px;">
++                    <h2>𝕏 結果シェア文言エディタ (無料版140字以内)</h2>
++                    <span class="badge-live">X SHARE TEMPLATE</span>
++                  </div>
++                  <button id="adminResetXShareBtn" class="btn-secondary-sm" title="初期テンプレートに戻します">🔄 デフォルト文言にリセット</button>
++                </div>
++                <p class="desc-text">リザルト画面の「Xで結果を自慢する」ボタンを押した際に投稿される文章テンプレートです。楽曲宣伝を排し、無料版Xの140字以内で自由に編集できます。<br>
++                  利用可能タグ: <code>{score}</code>(スコア), <code>{mode}</code>(所属派閥), <code>{title}</code>(称号), <code>{combo}</code>(最大コンボ), <code>{name}</code>(プレイヤー名)
++                </p>
++
++                <div class="form-group">
++                  <textarea id="adminXShareTemplate" rows="4" class="admin-textarea" style="width:100%; font-family:monospace; font-size:13px; line-height:1.6;"></textarea>
++                  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
++                    <span id="adminXShareCharCount" class="val-pill">0 / 140 文字</span>
++                    <span id="adminXShareWarning" style="color:#ef4444; font-size:12px; font-weight:700; display:none;">⚠️ 140文字を超えています！無料版Xで途切れる可能性があります。</span>
++                  </div>
++                </div>
++              </div>
++            </div>
++          </div>
++
++          <!-- 右側: リアルタイムシミュレーション水槽プレビュー (常に右側に固定・表示) -->
++          <div class="glass-card preview-card sticky-preview-card">
+             <div class="card-header">
+               <div style="display:flex; align-items:center; gap:8px;">
+                 <h2>🌊 テスト水槽プレビュー</h2>
+@@ -297,121 +297,6 @@
+             </div>
+           </div>
+         </div>
+-
+-        <!-- ===== 音量・BGM設定 ＆ プレイリスト管理カード ===== -->
+-        <div class="glass-card bgm-management-card" style="margin-top: 24px;">
+-          <div class="card-header">
+-            <div style="display:flex; align-items:center; gap:8px;">
+-              <h2>🎵 音量・BGM設定 ＆ プレイリスト編集</h2>
+-              <span class="badge-live" id="adminBgmTrackBadge">BGM: 読込中...</span>
+-            </div>
+-            <button id="adminResetBgmBtn" class="btn-secondary-sm" title="初期3曲のプレイリストに戻します">🔄 初期3曲にリセット</button>
+-          </div>
+-          <p class="desc-text">ゲーム本体および管理コンソールのBGMを管理します。楽曲の追加、削除、順番変更（▲▼）や、ツマミでのリアルタイム音量調節・即時再生停止が可能です。</p>
+-
+-          <div class="bgm-controls-layout">
+-            <!-- 左側: 音量スライダー群 (ツマミに再生停止ボタン付き) -->
+-            <div class="bgm-volume-column">
+-              <div class="form-group">
+-                <div class="label-row">
+-                  <label for="adminBgmVol">BGM音量 (ツマミで再生・停止切替)</label>
+-                  <span id="adminBgmVolVal" class="val-pill">70 %</span>
+-                </div>
+-                <div class="slider-with-knob-row">
+-                  <button type="button" id="adminBgmPlayToggleBtn" class="btn-knob-toggle" title="再生 / 停止">▶</button>
+-                  <input type="range" id="adminBgmVol" min="0" max="1" step="0.01" value="0.7" class="admin-slider">
+-                </div>
+-                <span class="desc-text">ツマミ左のアイコンをタップすると選択中のBGMを即座に再生/停止します。スライドで音量をスムーズに強弱調整できます。</span>
+-              </div>
+-
+-              <div class="form-group">
+-                <div class="label-row">
+-                  <label for="adminMasterVol">全体音量 (マスター)</label>
+-                  <span id="adminMasterVolVal" class="val-pill">80 %</span>
+-                </div>
+-                <input type="range" id="adminMasterVol" min="0" max="1" step="0.01" value="0.8" class="admin-slider">
+-              </div>
+-
+-              <div class="form-group">
+-                <div class="label-row">
+-                  <label for="adminSeVol">効果音音量 (SE)</label>
+-                  <span id="adminSeVolVal" class="val-pill">80 %</span>
+-                </div>
+-                <input type="range" id="adminSeVol" min="0" max="1" step="0.01" value="0.8" class="admin-slider">
+-              </div>
+-            </div>
+-
+-            <!-- 右側: プレイリスト一覧 & 新規追加フォーム -->
+-            <div class="bgm-playlist-column">
+-              <div class="playlist-header-row">
+-                <span class="playlist-title">📜 登録楽曲プレイリスト (順番変更・削除):</span>
+-                <span id="adminTrackCountBadge" class="val-pill">3 曲</span>
+-              </div>
+-              <div id="adminBgmPlaylist" class="admin-bgm-playlist">
+-                <!-- 動的に生成されます -->
+-              </div>
+-
+-              <!-- 楽曲追加フォーム -->
+-              <div class="add-bgm-box">
+-                <div style="font-size:13px; font-weight:800; color:#38bdf8; margin-bottom:8px;">➕ 新しいBGMを追加</div>
+-                <div class="add-bgm-inputs">
+-                  <input type="text" id="adminAddBgmTitle" placeholder="曲名 (例: 閃きの波打ち際)" class="admin-text-input">
+-                  <input type="text" id="adminAddBgmSrc" placeholder="音声URL または ファイル選択" class="admin-text-input">
+-                  <div style="display:flex; gap:8px;">
+-                    <label class="btn-file-upload">
+-                      📁 ファイル選択
+-                      <input type="file" id="adminBgmFilePicker" accept="audio/*" style="display:none;">
+-                    </label>
+-                    <button type="button" id="adminAddBgmBtn" class="btn-primary-sm" style="flex:1;">➕ リストに追加</button>
+-                  </div>
+-                </div>
+-              </div>
+-            </div>
+-          </div>
+-        </div>
+-
+-        <!-- ===== ステータス画面: 称号一覧エディタカード ===== -->
+-        <div class="glass-card title-tiers-card" style="margin-top: 24px;">
+-          <div class="card-header">
+-            <div style="display:flex; align-items:center; gap:8px;">
+-              <h2>🎖️ 称号一覧エディタ (スコア閾値 ＆ 称号名設定)</h2>
+-              <span class="badge-live">STATUS TITLES</span>
+-            </div>
+-            <button id="adminResetTitlesBtn" class="btn-secondary-sm" title="初期の称号リストに戻します">🔄 デフォルト称号にリセット</button>
+-          </div>
+-          <p class="desc-text">プレイヤーがゲーム終了時に獲得したスコアに応じてリザルト画面に付与される称号一覧を編集できます。必要スコアの高い順に自動判定されます。</p>
+-
+-          <div id="adminTitleTiersList" class="title-tiers-list">
+-            <!-- JSで動的生成 -->
+-          </div>
+-
+-          <div style="margin-top: 12px; display:flex; justify-content:space-between; align-items:center;">
+-            <button type="button" id="adminAddTitleTierBtn" class="btn-secondary-sm">➕ 新しい称号階級を追加</button>
+-            <span class="desc-text" style="margin:0;">※変更後は上部または下部の「セット」で即時ゲームに反映されます</span>
+-          </div>
+-        </div>
+-
+-        <!-- ===== X（旧Twitter）結果シェア文言エディタカード ===== -->
+-        <div class="glass-card xshare-card" style="margin-top: 24px;">
+-          <div class="card-header">
+-            <div style="display:flex; align-items:center; gap:8px;">
+-              <h2>𝕏 結果シェア文言エディタ (無料版140字以内)</h2>
+-              <span class="badge-live">X SHARE TEMPLATE</span>
+-            </div>
+-            <button id="adminResetXShareBtn" class="btn-secondary-sm" title="初期テンプレートに戻します">🔄 デフォルト文言にリセット</button>
+-          </div>
+-          <p class="desc-text">リザルト画面の「Xで結果を自慢する」ボタンを押した際に投稿される文章テンプレートです。楽曲宣伝を排し、無料版Xの140字以内で自由に編集できます。<br>
+-            利用可能タグ: <code>{score}</code>(スコア), <code>{mode}</code>(所属派閥), <code>{title}</code>(称号), <code>{combo}</code>(最大コンボ), <code>{name}</code>(プレイヤー名)
+-          </p>
+-
+-          <div class="form-group">
+-            <textarea id="adminXShareTemplate" rows="4" class="admin-textarea" style="width:100%; font-family:monospace; font-size:13px; line-height:1.6;"></textarea>
+-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+-              <span id="adminXShareCharCount" class="val-pill">0 / 140 文字</span>
+-              <span id="adminXShareWarning" style="color:#ef4444; font-size:12px; font-weight:700; display:none;">⚠️ 140文字を超えています！無料版Xで途切れる可能性があります。</span>
+-            </div>
+-          </div>
+-        </div>
+       </section>
+ 
+       <!-- ===== タブ2: キャラクタースタジオ (Photoshop風ベジェ・リギング・アニメーション制作) ===== -->
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.

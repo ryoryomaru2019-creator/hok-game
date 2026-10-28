@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ゲーム設定 & 視覚アクセシビリティ (色覚サポート)</title>
+  <style>
+    /* ────────────────────────────────────────────────────────
+       1. 基本スタイル & CSSカスタムプロパティ (デザイントークン)
+       ──────────────────────────────────────────────────────── */
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: rgba(30, 41, 59, 0.75);
+      --bg-card-border: rgba(56, 189, 248, 0.25);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+
+      /* セマンティックカラー (色覚サポート設定により動的に更新されます) */
+      --color-hp-high: #22c55e;
+      --color-hp-mid: #eab308;
+      --color-hp-low: #ef4444;
+
+      --color-ally: #38bdf8;
+      --color-enemy: #ef4444;
+
+      --color-rarity-common: #94a3b8;
+      --color-rarity-rare: #3b82f6;
+      --color-rarity-epic: #a855f7;
+      --color-rarity-legend: #f59e0b;
+
+      --color-warning-bg: #dc2626;
+      --color-warning-border: #fca5a5;
+
+      --color-btn-normal: #0284c7;
+      --color-btn-hover: #0369a1;
+      --color-btn-active: #10b981;
+      --color-btn-disabled: #475569;
+
+      /* パターン表示の強度 (0.0〜1.0) */
+      --pattern-opacity: 0;
+      --border-accent-width: 1px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Hiragino Kaku Gothic ProN", "BIZ UDPGothic", Meiryo, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      padding: 24px 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-image: radial-gradient(circle at 50% 10%, rgba(56, 189, 248, 0.12) 0%, transparent 60%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ヘッダー */
+    header {
+      text-align: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .header-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* カードコンテナ */
+    .glass-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #e0f2fe;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+    }
+
+    /* ────────────────────────────────────────────────────────
+       2. 設定UIコントロール
+       ──────────────────────────────────────────────────────── */
+    .settings-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .setting-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .setting-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .setting-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .setting-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .val-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid #38bdf8;
+      border-radius: 9999px;
+      color: #38bdf8;
+      font-size: 12px;
+      font-weight: 800;
+      min-width: 44px;
+      text-align: center;
+    }
+
+    /* ボタングループ (モード選択 & FPS選択) */
+    .button-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-choice {
+      flex: 1 1 160px;
+      padding: 10px 14px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .btn-choice:hover {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: #38bdf8;
+      color: #ffffff;
+    }
+
+    .btn-choice.active {
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+      font-weight: 800;
+    }
+
+    /* スライダー */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .custom-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      border-radius: 4px;
+      background: #334155;
+      outline: none;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .custom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #38bdf8;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .custom-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .custom-slider:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* ────────────────────────────────────────────────────────
+       3. プレビュー領域 (色 + 模様 + アイコン + ラベルで識別)
+       ──────────────────────────────────────────────────────── */
+    .preview-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .preview-block {
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .preview-block-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* 1. HPバー プレビュー */
+    .hp-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hp-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hp-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .hp-track {
+      width: 100%;
+      height: 18px;
+      background: #1e293b;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      position: relative;
+    }
+
+    .hp-fill {
+      height: 100%;
+      transition: width 0.3s ease, background-color 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+      position: relative;
+    }
+
+    .hp-fill-high {
+      background-color: var(--color-hp-high);
+      width: 85%;
+    }
+
+    .hp-fill-mid {
+      background-color: var(--color-hp-mid);
+      width: 50%;
+    }
+
+    .hp-fill-low {
+      background-color: var(--color-hp-low);
+      width: 20%;
+    }
+
+    /* 危険HPのストライプ模様（視覚補助） */
+    .hp-fill-low::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(0, 0, 0, calc(0.35 * var(--pattern-opacity))),
+        rgba(0, 0, 0, calc(0.35 * var(--pattern-opacity))) 6px,
+        transparent 6px,
+        transparent 12px
+      );
+    }
+
+    /* 2. 味方と敵の識別 プレビュー */
+    .unit-cards-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .unit-card {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .unit-ally {
+      background: rgba(14, 165, 233, 0.15);
+      border: 2px solid var(--color-ally);
+    }
+
+    .unit-enemy {
+      background: rgba(239, 68, 68, 0.15);
+      border: 2px dashed var(--color-enemy);
+    }
+
+    .unit-icon {
+      font-size: 24px;
+    }
+
+    .unit-tag {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .unit-ally .unit-tag {
+      background: var(--color-ally);
+      color: #0f172a;
+    }
+
+    .unit-enemy .unit-tag {
+      background: var(--color-enemy);
+      color: #ffffff;
+    }
+
+    /* 3. レアリティ色 プレビュー */
+    .rarity-chips-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .rarity-chip {
+      padding: 8px 10px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      border-width: 2px;
+      border-style: solid;
+      background: rgba(15, 23, 42, 0.7);
+      transition: all 0.25s ease;
+    }
+
+    .rarity-common {
+      border-color: var(--color-rarity-common);
+      color: var(--color-rarity-common);
+    }
+
+    .rarity-rare {
+      border-color: var(--color-rarity-rare);
+      color: var(--color-rarity-rare);
+    }
+
+    .rarity-epic {
+      border-color: var(--color-rarity-epic);
+      color: var(--color-rarity-epic);
+      border-style: double;
+      border-width: 3px;
+    }
+
+    .rarity-legend {
+      border-color: var(--color-rarity-legend);
+      color: var(--color-rarity-legend);
+      background: rgba(245, 158, 11, 0.12);
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+    }
+
+    /* 4. 警告表示色 プレビュー */
+    .warning-banner {
+      background: var(--color-warning-bg);
+      border: 2px solid var(--color-warning-border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 12px;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .warning-banner::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        rgba(0, 0, 0, calc(0.3 * var(--pattern-opacity))),
+        rgba(0, 0, 0, calc(0.3 * var(--pattern-opacity))) 8px,
+        transparent 8px,
+        transparent 16px
+      );
+      pointer-events: none;
+    }
+
+    .warning-icon {
+      font-size: 20px;
+      z-index: 1;
+    }
+
+    .warning-text {
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .warning-title {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+
+    .warning-sub {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    /* 5. ボタン状態色 プレビュー */
+    .buttons-preview-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .state-btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: default;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid transparent;
+      transition: all 0.25s ease;
+    }
+
+    .state-btn-normal {
+      background: var(--color-btn-normal);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .state-btn-hover {
+      background: var(--color-btn-hover);
+      color: #ffffff;
+      border-color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(56, 189, 248, 0.4);
+    }
+
+    .state-btn-active {
+      background: var(--color-btn-active);
+      color: #0f172a;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+      border-color: #ffffff;
+    }
+
+    .state-btn-disabled {
+      background: var(--color-btn-disabled);
+      color: #94a3b8;
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* ────────────────────────────────────────────────────────
+       4. DOM変更一覧テーブル
+       ──────────────────────────────────────────────────────── */
+    .dom-table-wrap {
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+
+    .dom-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      text-align: left;
+    }
+
+    .dom-table th {
+      background: #1e293b;
+      color: #38bdf8;
+      padding: 8px 12px;
+      border-bottom: 2px solid #334155;
+      white-space: nowrap;
+    }
+
+    .dom-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+    }
+
+    .dom-table tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .badge-code {
+      font-family: monospace;
+      padding: 2px 6px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 4px;
+      color: #facc15;
+      font-size: 11px;
+    }
+
+    /* ────────────────────────────────────────────────────────
+       5. 操作アクションバー (設定保存・ホーム・デフォルト)
+       ──────────────────────────────────────────────────────── */
+    .action-bar-card {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1.5px solid rgba(56, 189, 248, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.2);
+      position: sticky;
+      bottom: 16px;
+      z-index: 100;
+    }
+
+    .action-bar-grid {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .main-action-btn {
+      flex: 1;
+      min-width: 180px;
+      max-width: 280px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid transparent;
+      user-select: none;
+    }
+
+    .main-action-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .main-action-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* 設定保存ボタン (エメラルドグリーン) */
+    .btn-save {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+      border-color: #34d399;
+    }
+
+    .btn-save:hover {
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+      filter: brightness(1.1);
+    }
+
+    /* ホーム画面に戻るボタン (スカイブルー) */
+    .btn-home {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+      border-color: #38bdf8;
+    }
+
+    .btn-home:hover {
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6);
+      filter: brightness(1.1);
+    }
+
+    /* デフォルトに戻すボタン (落ち着いたグレー) */
+    .btn-reset {
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-reset:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+      color: #fca5a5;
+    }
+
+    /* 保存完了トースト通知 */
+    .save-toast {
+      margin-top: 10px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid #10b981;
+      color: #6ee7b7;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      transition: all 0.3s ease;
+      opacity: 1;
+    }
+
+    .save-toast.hidden {
+      display: none;
+      opacity: 0;
+    }
+
+    /* レスポンシブ対応 */
+    @media (max-width: 640px) {
+      .button-group {
+        flex-direction: column;
+      }
+      .btn-choice {
+        width: 100%;
+      }
+      .preview-grid {
+        grid-template-columns: 1fr;
+      }
+      .action-bar-grid {
+        flex-direction: column;
+      }
+      .main-action-btn {
+        max-width: 100%;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- ヘッダー -->
+    <header>
+      <h1><span>⚙️</span> ゲーム設定 & 視覚アクセシビリティ</h1>
+      <p class="header-desc">
+        色覚の多様性に配慮し、すべての方が快適にプレイできる視覚補助機能を提供します。<br>
+        色だけでなく、<strong>枠線の形状・アイコン・模様・テキストラベル</strong>を組み合わせた「色だけに依存しないUI」を実現しています。
+      </p>
+    </header>
+
+    <!-- 1. ゲーム基本設定 (FPS設定) -->
+    <section class="glass-card">
+      <div class="section-title">
+        <span>🎮</span> ゲーム動作設定
+      </div>
+      <div class="settings-grid">
+        <div class="setting-item">
+          <div class="setting-label-row">
+            <span class="setting-label">🎞️ フレームレート (FPS設定)</span>
+            <span id="currentFpsBadge" class="val-badge">60 FPS</span>
+          </div>
+          <p class="setting-hint">ゲームの描画フレームレートを選択します。標準は60FPSです。端末の発熱やバッテリー消費を抑えたい場合は30FPSを選択してください。</p>
+          <div class="button-group" id="fpsButtonGroup">
+            <button type="button" class="btn-choice" data-fps="30">
+              <span>🔋 30 FPS</span>
+              <small style="opacity:0.7;">(省電力・安定動作)</small>
+            </button>
+            <button type="button" class="btn-choice active" data-fps="60">
+              <span>⚡ 60 FPS</span>
+              <small style="opacity:0.7;">(標準・なめらか表示)</small>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 色覚サポート設定セクション -->
+    <section class="glass-card">
+      <div class="section-title">
+        <span>👁️</span> 色覚サポート (アクセシビリティ)
+      </div>
+
+      <div class="settings-grid">
+        <!-- モード選択 -->
+        <div class="setting-item">
+          <div class="setting-label-row">
+            <span class="setting-label">🎨 視覚サポートモード</span>
+            <span id="currentModeBadge" class="val-badge">オフ</span>
+          </div>
+          <p class="setting-hint">ご自身の見え方や環境に合わせて、区別しやすい配色とシンボル補助を選択してください。</p>
+          <div class="button-group" id="modeButtonGroup">
+            <button type="button" class="btn-choice active" data-mode="off">
+              <span>⚪ オフ</span>
+              <small style="opacity:0.7;">(通常配色)</small>
+            </button>
+            <button type="button" class="btn-choice" data-mode="protanopia">
+              <span>🔴 赤系と緑系の区別補助</span>
+              <small style="opacity:0.7;">(1型色覚サポート)</small>
+            </button>
+            <button type="button" class="btn-choice" data-mode="deuteranopia">
+              <span>🟢 緑系と赤系の区別補助</span>
+              <small style="opacity:0.7;">(2型色覚サポート)</small>
+            </button>
+            <button type="button" class="btn-choice" data-mode="tritanopia">
+              <span>🔵 青系と黄系の区別補助</span>
+              <small style="opacity:0.7;">(3型色覚サポート)</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- 補助強度スライダー -->
+        <div class="setting-item">
+          <div class="setting-label-row">
+            <span class="setting-label">🎚️ 補助強度</span>
+            <span id="intensityValBadge" class="val-badge">100%</span>
+          </div>
+          <p class="setting-hint">色相シフトの度合いや、模様・パターンの視認コントラストの強弱を調整します。</p>
+          <div class="slider-row">
+            <input type="range" id="intensitySlider" class="custom-slider" min="0" max="100" step="5" value="100">
+            <button type="button" id="btnResetIntensity" class="btn-choice" style="flex:0 0 100px; padding:6px 12px; font-size:12px;">🔄 100%</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. リアルタイム・プレビュー領域 -->
+    <section class="glass-card">
+      <div class="section-title">
+        <span>🔍</span> 設定プレビュー (即時反映)
+      </div>
+
+      <div class="preview-container">
+        <div class="preview-grid">
+          <!-- ① HPバー -->
+          <div class="preview-block" id="previewHpBlock">
+            <div class="preview-block-title">
+              <span>❤️ HPバー表示</span>
+              <span style="font-size:11px; color:#38bdf8;">残量＋文字ラベル＋模様</span>
+            </div>
+            <div class="hp-bar-wrap">
+              <div class="hp-item">
+                <div class="hp-label-row">
+                  <span id="hpHighLabel">🛡️ 安全領域 (85%)</span>
+                  <span>85/100</span>
+                </div>
+                <div class="hp-track">
+                  <div class="hp-fill hp-fill-high" id="hpFillHigh">85%</div>
+                </div>
+              </div>
+              <div class="hp-item">
+                <div class="hp-label-row">
+                  <span id="hpMidLabel">⚠️ 注意領域 (50%)</span>
+                  <span>50/100</span>
+                </div>
+                <div class="hp-track">
+                  <div class="hp-fill hp-fill-mid" id="hpFillMid">50%</div>
+                </div>
+              </div>
+              <div class="hp-item">
+                <div class="hp-label-row">
+                  <span id="hpLowLabel" style="color:var(--color-hp-low);">⚡ 危険領域 (20%) [瀕死]</span>
+                  <span>20/100</span>
+                </div>
+                <div class="hp-track">
+                  <div class="hp-fill hp-fill-low" id="hpFillLow">20%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ② 味方と敵の識別色 -->
+          <div class="preview-block" id="previewUnitBlock">
+            <div class="preview-block-title">
+              <span>👥 味方と敵の識別</span>
+              <span style="font-size:11px; color:#38bdf8;">二重枠・点線＋アイコン</span>
+            </div>
+            <div class="unit-cards-row">
+              <div class="unit-card unit-ally" id="unitAllyCard">
+                <span class="unit-icon" id="unitAllyIcon">🐟</span>
+                <span style="font-weight:700; font-size:12px;">カレイ (自軍)</span>
+                <span class="unit-tag" id="unitAllyTag">🛡️ [味方]</span>
+              </div>
+              <div class="unit-card unit-enemy" id="unitEnemyCard">
+                <span class="unit-icon" id="unitEnemyIcon">🐙</span>
+                <span style="font-weight:700; font-size:12px;">タコ (邪魔キャラ)</span>
+                <span class="unit-tag" id="unitEnemyTag">⚔️ [敵 / 邪魔]</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ③ レアリティ色 -->
+          <div class="preview-block" id="previewRarityBlock">
+            <div class="preview-block-title">
+              <span>💎 レアリティ識別</span>
+              <span style="font-size:11px; color:#38bdf8;">星数＋固有枠線＋英字記号</span>
+            </div>
+            <div class="rarity-chips-wrap">
+              <div class="rarity-chip rarity-common" id="rarityCommonChip">
+                <span>★1 コモン</span>
+                <span class="badge-code">[N]</span>
+              </div>
+              <div class="rarity-chip rarity-rare" id="rarityRareChip">
+                <span>★★2 レア</span>
+                <span class="badge-code">[R]</span>
+              </div>
+              <div class="rarity-chip rarity-epic" id="rarityEpicChip">
+                <span>★★★3 エピック</span>
+                <span class="badge-code">[SR]</span>
+              </div>
+              <div class="rarity-chip rarity-legend" id="rarityLegendChip">
+                <span>★★★★4 レジェンド</span>
+                <span class="badge-code">[UR]</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ④ 警告表示色 -->
+          <div class="preview-block" id="previewWarningBlock">
+            <div class="preview-block-title">
+              <span>🚨 警告・アラート表示</span>
+              <span style="font-size:11px; color:#38bdf8;">警告マーク＋ストライプ</span>
+            </div>
+            <div class="warning-banner" id="warningBanner">
+              <span class="warning-icon">⚠️</span>
+              <div class="warning-text">
+                <span class="warning-title" id="warningTitleText">緊急警戒 / DANGER</span>
+                <span class="warning-sub" id="warningSubText">巨大サメが接近中！画面端へ退避してください</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ⑤ ボタン状態色 -->
+          <div class="preview-block" style="grid-column: 1 / -1;" id="previewButtonBlock">
+            <div class="preview-block-title">
+              <span>🔘 ボタン状態色</span>
+              <span style="font-size:11px; color:#38bdf8;">立体押し込み＋アイコン＋枠線</span>
+            </div>
+            <div class="buttons-preview-row">
+              <button type="button" class="state-btn state-btn-normal" id="btnStateNormal">
+                <span>▶ 通常状態</span>
+              </button>
+              <button type="button" class="state-btn state-btn-hover" id="btnStateHover">
+                <span>✨ ホバー状態 (浮上)</span>
+              </button>
+              <button type="button" class="state-btn state-btn-active" id="btnStateActive">
+                <span>✓ 選択・決定済み (ON)</span>
+              </button>
+              <button type="button" class="state-btn state-btn-disabled" id="btnStateDisabled">
+                <span>✕ 無効 (Disabled)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 設定変更によるDOM変化一覧の説明 -->
+    <section class="glass-card">
+      <div class="section-title">
+        <span>📋</span> 設定とDOM要素の変化一覧
+      </div>
+      <p class="setting-hint" style="margin-bottom:12px;">本アクセシビリティ機能により、どのDOM要素がどのように変化するかの一覧です。</p>
+      <div class="dom-table-wrap">
+        <table class="dom-table">
+          <thead>
+            <tr>
+              <th>対象要素 / セレクタ</th>
+              <th>プレビュー項目</th>
+              <th>色の変化 (色相シフト・コントラスト)</th>
+              <th>色だけに依存しない非色情報の変化 (枠線・アイコン・模様・ラベル)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge-code">.hp-fill</span> (<span class="badge-code">#hpFillHigh/Mid/Low</span>)</td>
+              <td>HPバー</td>
+              <td>緑・黄・赤の色相を各色覚特性に合わせて最適調整</td>
+              <td>低HP時に斜線ストライプ模様をオーバーレイ表示＋残量%と「安全/注意/危険」文字ラベル</td>
+            </tr>
+            <tr>
+              <td><span class="badge-code">#unitAllyCard</span>, <span class="badge-code">#unitEnemyCard</span></td>
+              <td>味方と敵</td>
+              <td>味方色(青緑系)と敵色(橙/深マゼンタ系)の明度コントラストを最大化</td>
+              <td>味方は「二重実線＋🛡️[味方]」、敵は「点線破線＋⚔️[敵/邪魔]」で形状から瞬時に識別</td>
+            </tr>
+            <tr>
+              <td><span class="badge-code">.rarity-chip</span> (<span class="badge-code">#rarity*</span>)</td>
+              <td>レアリティ</td>
+              <td>青系・紫系・金系の混同を避ける明度差・彩度調整</td>
+              <td>星の個数（★1〜★4）、二重線（エピック）、グロー光彩（レジェンド）、[N][R][SR][UR]英字表記</td>
+            </tr>
+            <tr>
+              <td><span class="badge-code">#warningBanner</span></td>
+              <td>警告表示</td>
+              <td>赤色背景の明度・色相をシフト</td>
+              <td>警告アイコン⚠️、斜線ハザードストライプテクスチャ、白枠線の強調</td>
+            </tr>
+            <tr>
+              <td><span class="badge-code">.state-btn</span> (<span class="badge-code">#btnState*</span>)</td>
+              <td>ボタン状態</td>
+              <td>通常、ホバー、決定ON、無効のカラーパレットを切り替え</td>
+              <td>「✓」や「✕」の記号、浮上シャドウ、インセット（押し込み陰影）による立体的フィードバック</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. 操作アクションバー (設定保存・ホーム画面に戻る・デフォルトに戻す) -->
+    <section class="glass-card action-bar-card">
+      <div class="action-bar-grid">
+        <button type="button" id="btnSaveSettings" class="main-action-btn btn-save" title="現在の設定をブラウザに保存します">
+          <span>💾</span> <span>設定保存</span>
+        </button>
+        <button type="button" id="btnGoHome" class="main-action-btn btn-home" title="ゲームタイトル・メイン画面に戻ります">
+          <span>🏠</span> <span>ホーム画面に戻る</span>
+        </button>
+        <button type="button" id="btnResetAll" class="main-action-btn btn-reset" title="すべての設定を初期値に戻します">
+          <span>🔄</span> <span>デフォルトに戻す</span>
+        </button>
+      </div>
+      <div id="saveToast" class="save-toast hidden">✅ 設定をブラウザに保存しました！</div>
+    </section>
+  </div>
+
+  <!-- ────────────────────────────────────────────────────────
+       5. JavaScriptロジック
+       ・設定状態管理 (State)
+       ・イベント処理 (Event Handling)
+       ・色変換・スタイル適用処理 (Color Transformation & CSS Variables)
+       ・ブラウザ保存・復元処理 (Storage Persistence)
+       ──────────────────────────────────────────────────────── -->
+  <script>
+    (function () {
+      'use strict';
+
+      // ─── 1. 設定項目状態管理 (State) ───
+      const STORAGE_KEY = 'game_accessibility_settings';
+
+      const state = {
+        fps: 60,                // 30 or 60
+        colorMode: 'off',       // 'off' | 'protanopia' | 'deuteranopia' | 'tritanopia'
+        intensity: 100          // 0 〜 100
+      };
+
+      // ─── 2. カラーパレット定義 (アクセシビリティ原則に基づく最適配色) ───
+      const PALETTES = {
+        // オフ (通常配色)
+        off: {
+          hpHigh: '#22c55e',      // 鮮やかな緑
+          hpMid: '#eab308',       // 鮮やかな黄
+          hpLow: '#ef4444',       // 鮮やかな赤
+          ally: '#38bdf8',        // スカイブルー
+          enemy: '#ef4444',       // レッド
+          rarityCommon: '#94a3b8',
+          rarityRare: '#3b82f6',
+          rarityEpic: '#a855f7',
+          rarityLegend: '#f59e0b',
+          warningBg: '#dc2626',
+          warningBorder: '#fca5a5',
+          btnNormal: '#0284c7',
+          btnHover: '#0369a1',
+          btnActive: '#10b981',
+          btnDisabled: '#475569'
+        },
+
+        // 赤系と緑系の区別補助 (1型 / Protanopia配慮: 赤の明度低下・緑混同を解消)
+        // 赤を鮮明なマゼンタ/ローズレッドに、緑をシアンブルー寄りの高明度ミントグリーンにシフト
+        protanopia: {
+          hpHigh: '#2dd4bf',      // 明るい青緑 (シアンミント)
+          hpMid: '#fbbf24',       // 温かみのある琥珀黄
+          hpLow: '#f43f5e',       // 高コントラストなマゼンタローズ
+          ally: '#06b6d4',        // シアンブルー
+          enemy: '#f43f5e',       // マゼンタローズ
+          rarityCommon: '#94a3b8',
+          rarityRare: '#0284c7',
+          rarityEpic: '#c084fc',  // 明るいラベンダー
+          rarityLegend: '#fbbf24',// 高輝度アンバー
+          warningBg: '#be123c',   // ディープローズ
+          warningBorder: '#fda4af',
+          btnNormal: '#0891b2',
+          btnHover: '#0e7490',
+          btnActive: '#2dd4bf',
+          btnDisabled: '#475569'
+        },
+
+        // 緑系と赤系の区別補助 (2型 / Deuteranopia配慮: 緑と赤の弁別を最大化)
+        // 赤を明るい朱色・オレンジに、緑を深いスカイブルー/セルリアンにシフト
+        deuteranopia: {
+          hpHigh: '#38bdf8',      // 明快なセルリアンブルー
+          hpMid: '#facc15',       // 明るいイエロー
+          hpLow: '#f97316',       // 鮮烈なオレンジ
+          ally: '#0284c7',        // スカイブルー
+          enemy: '#ea580c',       // ビビッドオレンジ
+          rarityCommon: '#94a3b8',
+          rarityRare: '#2563eb',
+          rarityEpic: '#d946ef',  // フクシアピンク
+          rarityLegend: '#facc15',// クッキリイエロー
+          warningBg: '#c2410c',   // バーントオレンジ
+          warningBorder: '#fdba74',
+          btnNormal: '#2563eb',
+          btnHover: '#1d4ed8',
+          btnActive: '#06b6d4',
+          btnDisabled: '#475569'
+        },
+
+        // 青系と黄系の区別補助 (3型 / Tritanopia配慮: 青と黄色の混同を解消)
+        // 黄色を白に近い高輝度クリーム/ライトコーラルに、青をターコイズ/ディープパープルにシフト
+        tritanopia: {
+          hpHigh: '#10b981',      // エメラルドグリーン
+          hpMid: '#f472b6',       // ライトピンク
+          hpLow: '#dc2626',       // ピュアレッド
+          ally: '#0d9488',        // ティールグリーン
+          enemy: '#e11d48',       // クリムゾン
+          rarityCommon: '#94a3b8',
+          rarityRare: '#0d9488',
+          rarityEpic: '#e11d48',
+          rarityLegend: '#f472b6',
+          warningBg: '#9f1239',   // ワインレッド
+          warningBorder: '#fecdd3',
+          btnNormal: '#0d9488',
+          btnHover: '#0f766e',
+          btnActive: '#10b981',
+          btnDisabled: '#475569'
+        }
+      };
+
+      // ─── 3. 色補間ユーティリティ (強度スライダー0〜100%の反映) ───
+      function hexToRgb(hex) {
+        const clean = hex.replace('#', '');
+        const bigint = parseInt(clean, 16);
+        return {
+          r: (bigint >> 16) & 255,
+          g: (bigint >> 8) & 255,
+          b: bigint & 255
+        };
+      }
+
+      function rgbToHex(r, g, b) {
+        return '#' + [r, g, b].map(x => {
+          const hex = Math.round(Math.max(0, Math.min(255, x))).toString(16);
+          return hex.length === 1 ? '0' + hex : hex;
+        }).join('');
+      }
+
+      function interpolateColor(color1, color2, factor) {
+        const c1 = hexToRgb(color1);
+        const c2 = hexToRgb(color2);
+        const r = c1.r + (c2.r - c1.r) * factor;
+        const g = c1.g + (c2.g - c1.g) * factor;
+        const b = c1.b + (c2.b - c1.b) * factor;
+        return rgbToHex(r, g, b);
+      }
+
+      // ─── 4. 色変換・スタイル適用処理 ───
+      function applySettings() {
+        const root = document.documentElement;
+        const basePalette = PALETTES.off;
+        const targetPalette = PALETTES[state.colorMode] || PALETTES.off;
+        const factor = state.colorMode === 'off' ? 0 : (state.intensity / 100);
+
+        // 各セマンティックカラーを補間してCSS変数に適用
+        Object.keys(basePalette).forEach(key => {
+          const blended = interpolateColor(basePalette[key], targetPalette[key], factor);
+          const cssVarName = '--color-' + key.replace(/([A-Z])/g, '-$1').toLowerCase();
+          root.style.setProperty(cssVarName, blended);
+        });
+
+        // パターン・模様の強度
+        root.style.setProperty('--pattern-opacity', factor.toFixed(2));
+
+        // UI表示の更新
+        updateUiElements();
+      }
+
+      function updateUiElements() {
+        // バッジ更新
+        const modeBadge = document.getElementById('currentModeBadge');
+        const modeNames = {
+          off: 'オフ',
+          protanopia: '赤・緑 補助 (1型)',
+          deuteranopia: '緑・赤 補助 (2型)',
+          tritanopia: '青・黄 補助 (3型)'
+        };
+        if (modeBadge) {
+          modeBadge.innerText = modeNames[state.colorMode] || 'オフ';
+          modeBadge.style.background = state.colorMode === 'off' ? 'rgba(255,255,255,0.08)' : 'rgba(56,189,248,0.2)';
+        }
+
+        const intensityBadge = document.getElementById('intensityValBadge');
+        if (intensityBadge) {
+          intensityBadge.innerText = `${state.intensity}%`;
+        }
+
+        const fpsBadge = document.getElementById('currentFpsBadge');
+        if (fpsBadge) {
+          fpsBadge.innerText = `${state.fps} FPS`;
+        }
+
+        // ボタングループのactiveクラス更新
+        document.querySelectorAll('#modeButtonGroup .btn-choice').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.mode === state.colorMode);
+        });
+
+        document.querySelectorAll('#fpsButtonGroup .btn-choice').forEach(btn => {
+          btn.classList.toggle('active', parseInt(btn.dataset.fps, 10) === state.fps);
+        });
+
+        // 強度スライダーの無効化切り替え (オフ時はスライダー非活性)
+        const slider = document.getElementById('intensitySlider');
+        const btnReset = document.getElementById('btnResetIntensity');
+        if (slider) {
+          slider.disabled = (state.colorMode === 'off');
+          slider.value = state.intensity;
+        }
+        if (btnReset) {
+          btnReset.disabled = (state.colorMode === 'off');
+        }
+
+        // プレビューの非色情報の調整
+        const unitAllyTag = document.getElementById('unitAllyTag');
+        const unitEnemyTag = document.getElementById('unitEnemyTag');
+        if (state.colorMode !== 'off') {
+          if (unitAllyTag) unitAllyTag.innerHTML = '🛡️ [味方・保護]';
+          if (unitEnemyTag) unitEnemyTag.innerHTML = '⚔️ [敵・回避]';
+        } else {
+          if (unitAllyTag) unitAllyTag.innerHTML = '🛡️ [味方]';
+          if (unitEnemyTag) unitEnemyTag.innerHTML = '⚔️ [敵]';
+        }
+      }
+
+      // ─── 0. Web Audio API による専用効果音エンジン (外部ファイル不要・即時再生) ───
+      let audioCtx = null;
+      function getAudioContext() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        return audioCtx;
+      }
+
+      // タップ音 (ポチッ)
+      function playTapSound() {
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.05);
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.05);
+        } catch (e) { }
+      }
+
+      // スライダードラッグ音 (チチッ・周波数が連動)
+      let lastTickTime = 0;
+      function playSliderTickSound(val) {
+        const now = performance.now();
+        if (now - lastTickTime < 40) return;
+        lastTickTime = now;
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          const freq = 450 + (val || 0) * 8;
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.025);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.025);
+        } catch (e) { }
+      }
+
+      // 設定保存音 (チャリーン / ド-ミ-ソ和音)
+      function playSaveSound() {
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.06);
+            gain.gain.setValueAtTime(0.12, ctx.currentTime + idx * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.06 + 0.25);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.06);
+            osc.stop(ctx.currentTime + idx * 0.06 + 0.25);
+          });
+        } catch (e) { }
+      }
+
+      // デフォルトリセット音 (ポロン/下降音)
+      function playResetSound() {
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const notes = [659.25, 523.25, 392.00];
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.07);
+            gain.gain.setValueAtTime(0.12, ctx.currentTime + idx * 0.07);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.07 + 0.2);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.07);
+            osc.stop(ctx.currentTime + idx * 0.07 + 0.2);
+          });
+        } catch (e) { }
+      }
+
+      // ホーム画面に戻る音 (ピピッ)
+      function playHomeSound() {
+        try {
+          const ctx = getAudioContext();
+          if (!ctx) return;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.2);
+        } catch (e) { }
+      }
+
+      // トースト通知表示
+      function showSaveToast(message = '✅ 設定をブラウザに保存しました！') {
+        const toast = document.getElementById('saveToast');
+        if (!toast) return;
+        toast.innerText = message;
+        toast.classList.remove('hidden');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 2500);
+      }
+
+      // ─── 5. ブラウザ保存・復元処理 (Storage Persistence) ───
+      function saveSettings() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          localStorage.setItem('hirame_target_fps', state.fps.toString());
+          localStorage.setItem('hirame_accessibility_settings', JSON.stringify(state));
+          // ゲーム本体や他タブに即時通知
+          try {
+            const channel = new BroadcastChannel('hirame_settings_channel');
+            channel.postMessage({ type: 'UPDATE_ACCESSIBILITY', settings: state });
+          } catch (e) { }
+        } catch (err) {
+          console.warn('[Accessibility Settings] localStorage save failed:', err);
+        }
+      }
+
+      function loadSettings() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('hirame_accessibility_settings');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (typeof parsed.fps === 'number') state.fps = parsed.fps;
+            if (typeof parsed.colorMode === 'string') state.colorMode = parsed.colorMode;
+            if (typeof parsed.intensity === 'number') state.intensity = parsed.intensity;
+          }
+          const savedFps = localStorage.getItem('hirame_target_fps');
+          if (savedFps) {
+            state.fps = parseInt(savedFps, 10) || 60;
+          }
+        } catch (err) {
+          console.warn('[Accessibility Settings] localStorage load failed:', err);
+        }
+      }
+
+      // ─── 6. イベント処理 (全操作でSE再生＆即時反映) ───
+      function initEventHandlers() {
+        // モード選択ボタン
+        document.querySelectorAll('#modeButtonGroup .btn-choice').forEach(btn => {
+          btn.addEventListener('click', () => {
+            playTapSound();
+            const mode = btn.dataset.mode;
+            if (mode) {
+              state.colorMode = mode;
+              applySettings();
+              saveSettings();
+            }
+          });
+        });
+
+        // FPS選択ボタン
+        document.querySelectorAll('#fpsButtonGroup .btn-choice').forEach(btn => {
+          btn.addEventListener('click', () => {
+            playTapSound();
+            const fps = parseInt(btn.dataset.fps, 10);
+            if (!isNaN(fps)) {
+              state.fps = fps;
+              applySettings();
+              saveSettings();
+            }
+          });
+        });
+
+        // 強度スライダー
+        const slider = document.getElementById('intensitySlider');
+        slider?.addEventListener('input', (e) => {
+          const val = parseInt(e.target.value, 10) || 0;
+          state.intensity = val;
+          playSliderTickSound(val);
+          applySettings();
+        });
+        slider?.addEventListener('change', () => {
+          saveSettings();
+        });
+
+        // 強度リセットボタン
+        const btnReset = document.getElementById('btnResetIntensity');
+        btnReset?.addEventListener('click', () => {
+          playTapSound();
+          state.intensity = 100;
+          applySettings();
+          saveSettings();
+        });
+
+        // ── アクションバー操作ボタン ──
+        // 1. 設定保存ボタン
+        document.getElementById('btnSaveSettings')?.addEventListener('click', () => {
+          playSaveSound();
+          saveSettings();
+          showSaveToast('💾 設定をブラウザに保存しました！');
+        });
+
+        // 2. ホーム画面に戻るボタン
+        document.getElementById('btnGoHome')?.addEventListener('click', () => {
+          playHomeSound();
+          saveSettings();
+          setTimeout(() => {
+            if (window.opener && !window.opener.closed) {
+              window.opener.focus();
+              window.close();
+            } else {
+              window.location.href = '/';
+            }
+          }, 150);
+        });
+
+        // 3. デフォルトに戻すボタン
+        document.getElementById('btnResetAll')?.addEventListener('click', () => {
+          playResetSound();
+          state.fps = 60;
+          state.colorMode = 'off';
+          state.intensity = 100;
+          applySettings();
+          saveSettings();
+          showSaveToast('🔄 すべての設定を初期値（デフォルト）に戻しました');
+        });
+      }
+
+      // ─── 初期化実行 ───
+      loadSettings();
+      initEventHandlers();
+      applySettings();
+
+    })();
+  </script>
+</body>
+</html>

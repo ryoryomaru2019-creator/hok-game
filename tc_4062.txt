@@ -1,0 +1,333 @@
+      <!-- ===== タブ1: 判定シミュレーター ===== -->
+      <section id="simulatorSection" class="admin-panel active">
+        <div class="panel-grid">
+          <!-- コントロール群 (個々のキャラクター設定 & 共通設定 & ターゲット/邪魔キャラ切り替え) -->
+          <div class="glass-card controls-card">
+            <div class="card-header">
+              <h2>🎛️ パラメーター設定 (個別キャラ・共通・役割切替)</h2>
+              <span class="status-indicator" id="syncStatusBadge">⚡ 接続待機中</span>
+            </div>
+
+            <!-- 1. キャラクター選択セクション -->
+            <div class="char-selection-section">
+              <div class="label-row" style="margin-bottom:8px;">
+                <label>🐟 編集するキャラクターを選択</label>
+                <span id="activeCharBadge" class="val-pill" style="background:#0284c7; color:#fff;">🐟 ヒラメ</span>
+              </div>
+              <div id="charSelectPills" class="char-select-pills">
+                <!-- 動的にピルボタン群が生成されます -->
+              </div>
+            </div>
+
+            <!-- 2. 「ターゲット」 / 「邪魔キャラ」切り替えスイッチ -->
+            <div class="role-switch-container">
+              <div class="role-switch-label">
+                <span>🎭 キャラクターの役割指定:</span>
+                <span id="charRoleDesc" class="role-hint">タップで獲得できる捕獲ターゲットです</span>
+              </div>
+              <div class="role-switch-buttons">
+                <button type="button" id="roleBtnTarget" class="role-toggle-btn active-target">
+                  <span class="role-icon">🎯</span> ターゲット
+                </button>
+                <button type="button" id="roleBtnDisturber" class="role-toggle-btn">
+                  <span class="role-icon">⚠️</span> 邪魔キャラ
+                </button>
+              </div>
+            </div>
+
+            <!-- 3. 全てのキャラ共通設定 (個々で設定可能 ＆ 「全てのキャラに適用」ボタン) -->
+            <div class="settings-block common-settings-block">
+              <div class="block-header-row">
+                <div class="block-title">
+                  <span>⚙️ 共通設定 (このキャラの個別数値)</span>
+                </div>
+                <button type="button" id="btnApplyCommonToAll" class="btn-batch-apply" title="現在編集中の数値をすべてのキャラクターに一括コピーします">
+                  ⚡ 全てのキャラに適用
+                </button>
+              </div>
+
+              <!-- キャラのサイズ (新規追加) -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="charSizeScale">キャラのサイズ (倍率)</label>
+                  <span id="charSizeScaleVal" class="val-pill">1.00 x</span>
+                </div>
+                <input type="range" id="charSizeScale" min="0.5" max="2.5" step="0.05" value="1.0" class="admin-slider">
+                <div class="size-preset-buttons" style="display:flex; gap:6px; margin-top:6px;">
+                  <button type="button" class="btn-size-preset btn-micro" data-size="0.7">0.7x (小型)</button>
+                  <button type="button" class="btn-size-preset btn-micro active" data-size="1.0">1.0x (標準)</button>
+                  <button type="button" class="btn-size-preset btn-micro" data-size="1.5">1.5x (大型)</button>
+                  <button type="button" class="btn-size-preset btn-micro" data-size="2.0">2.0x (特大)</button>
+                </div>
+                <span class="desc-text">画面に表示されるキャラクターの大きさ（倍率）を変更します。当たり判定も連動して拡大縮小されます。</span>
+              </div>
+
+              <!-- キャラ表示数 -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="charCount">キャラ表示数 (最大同時出現数)</label>
+                  <span id="charCountVal" class="val-pill">40 匹</span>
+                </div>
+                <input type="range" id="charCount" min="10" max="200" step="5" value="40" class="admin-slider">
+                <span class="desc-text">水槽・海中に同時に泳ぐ生物の目標数です（デフォルト40匹、10〜200匹で調整可能）。</span>
+              </div>
+
+              <!-- 補修閾値 (残り匹数) -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="charMinThreshold">キャラ枯渇防止 補修閾値 (残り匹数)</label>
+                  <span id="charMinThresholdVal" class="val-pill">2 匹</span>
+                </div>
+                <input type="range" id="charMinThreshold" min="1" max="10" step="1" value="2" class="admin-slider">
+                <span class="desc-text">画面内のターゲット魚がこの匹数以下になった瞬間に、自動で新規ターゲットを即時補充します。</span>
+              </div>
+
+              <!-- キャラの遊泳すばやさ (スピード倍率) -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="charSpeedMult">キャラの遊泳すばやさ (スピード倍率)</label>
+                  <span id="charSpeedMultVal" class="val-pill">1.00 x</span>
+                </div>
+                <input type="range" id="charSpeedMult" min="0.3" max="3.0" step="0.1" value="1.0" class="admin-slider">
+                <span class="desc-text">魚の遊泳スピードを個別に加速・減速させます（1.0が通常速）。</span>
+              </div>
+
+              <!-- 滞在・離脱時間 (逃走秒数) -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="charLifetime">キャラ滞在・離脱時間 (逃走秒数)</label>
+                  <span id="charLifetimeVal" class="val-pill">6.0 秒</span>
+                </div>
+                <input type="range" id="charLifetime" min="2.0" max="15.0" step="0.5" value="6.0" class="admin-slider">
+                <span class="desc-text">出現してから画面外へ逃走退場するまでの滞在時間です。</span>
+              </div>
+
+              <!-- 方向転換の頻度 (ランダム揺らぎ) -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="charTurnRate">方向転換の頻度 (ランダム揺らぎ)</label>
+                  <span id="charTurnRateVal" class="val-pill">2.0 %</span>
+                </div>
+                <input type="range" id="charTurnRate" min="0" max="0.1" step="0.005" value="0.02" class="admin-slider">
+                <span class="desc-text">泳ぎの軌道が気まぐれに曲がる確率です（高いほど予測不能な動きになります）。</span>
+              </div>
+            </div>
+
+            <!-- 4. ターゲット専用設定 (初心者点滅機能) -->
+            <div id="panelTargetSettings" class="settings-block dedicated-settings-block">
+              <div class="block-header-row">
+                <div class="block-title">
+                  <span>🎯 ターゲット専用設定</span>
+                  <span id="targetBadgeStatus" class="dedicated-badge-active">※ターゲット指定時のみ有効</span>
+                </div>
+              </div>
+
+              <div class="form-group beginner-alert-row">
+                <div class="beginner-header">
+                  <span class="beginner-title">💡 逃走2秒前の点滅通知 (初心者サポート)</span>
+                </div>
+                <div class="beginner-control-row">
+                  <label class="switch-toggle">
+                    <input type="checkbox" id="charBeginnerAlert" checked>
+                    <span class="slider round"></span>
+                  </label>
+                  <span class="beginner-desc">
+                    ターゲット滞在・離脱時間の<strong>２秒前</strong>になったら、魚がピカピカ点滅してプレイヤーに逃走間近を知らせます。
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. 邪魔キャラ専用設定 (出現比率ウェイト & 出現スコア閾値) -->
+            <div id="panelDisturberSettings" class="settings-block dedicated-settings-block section-disabled">
+              <div class="block-header-row">
+                <div class="block-title">
+                  <span>⚠️ 邪魔キャラ専用設定</span>
+                  <span id="disturberBadgeStatus" class="dedicated-badge-disabled">※邪魔キャラ指定時のみ有効</span>
+                </div>
+              </div>
+
+              <!-- 出現比率 (ウェイト) -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="charDisturberWeight">邪魔キャラ個別 出現比率 (ウェイト)</label>
+                  <span id="charDisturberWeightVal" class="val-pill">20</span>
+                </div>
+                <input type="range" id="charDisturberWeight" min="0" max="100" step="5" value="20" class="admin-slider">
+                <span class="desc-text">スコア到達後にスポーンする邪魔キャラの中で選ばれる出現ウェイトです（0で出現なし）。</span>
+              </div>
+
+              <!-- 出現スコア閾値 -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="charDisturberScoreThreshold">邪魔キャラ個別 出現スコア閾値</label>
+                  <span id="charDisturberScoreThresholdVal" class="val-pill">150 pt</span>
+                </div>
+                <input type="range" id="charDisturberScoreThreshold" min="0" max="1500" step="25" value="150" class="admin-slider">
+                <span class="desc-text">この邪魔キャラが出現し始めるスコア条件です（指定スコア到達後にスポーン解禁）。</span>
+              </div>
+            </div>
+
+            <!-- アクションボタン群 -->
+            <div class="action-btn-group">
+              <button id="applySimBtn" class="btn-primary">
+                <span>🚀</span> セット (ゲーム本体に即時適用)
+              </button>
+              <button id="resetSimBtn" class="btn-secondary">
+                <span>🔄</span> デフォルトに戻す
+              </button>
+            </div>
+          </div>
+
+          <!-- リアルタイムシミュレーション水槽プレビュー -->
+          <div class="glass-card preview-card">
+            <div class="card-header">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <h2>🌊 テスト水槽プレビュー</h2>
+                <span class="badge-live">LIVE SIMULATION</span>
+              </div>
+              <button id="btnSimRespawnAll" class="btn-secondary-sm" title="水槽内の魚を強制的に満タン再出現させます">🔄 全復活</button>
+            </div>
+            <p class="desc-text">左記のパラメーターで泳ぐ魚の密度・速度感をこの水槽でリアルタイム検証できます。水槽内をタップして捕獲や空振り演出もテスト可能です（捕獲後は3秒で自動復活）。</p>
+            
+            <!-- 登録キャラクター表示選択 (チェックボックス切り替え) -->
+            <div class="sim-fish-filter-box">
+              <div class="filter-header-row">
+                <span class="filter-title">🐟 水槽に泳がせる魚（チェックで表示切替）:</span>
+                <div class="filter-quick-btns">
+                  <button type="button" id="btnFilterSelectAll" class="btn-micro">全選択</button>
+                  <button type="button" id="btnFilterSelectNone" class="btn-micro">全解除</button>
+                </div>
+              </div>
+              <div id="simCharCheckboxes" class="sim-char-checkboxes">
+                <!-- 動的に生成されます -->
+              </div>
+            </div>
+
+            <div class="sim-canvas-wrapper">
+              <canvas id="simTestCanvas" width="600" height="380"></canvas>
+            </div>
+            <div class="sim-stats-bar">
+              <div class="sim-stat">泳いでいる魚: <span id="simCountStat">14</span>匹</div>
+              <div class="sim-stat">カレイ: <span id="simKareiStat">0</span>匹</div>
+              <div class="sim-stat">ヒラメ: <span id="simHirameStat">0</span>匹</div>
+              <div class="sim-stat">邪魔魚: <span id="simTrapStat">0</span>匹</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 音量・BGM設定 ＆ プレイリスト管理カード ===== -->
+        <div class="glass-card bgm-management-card" style="margin-top: 24px;">
+          <div class="card-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h2>🎵 音量・BGM設定 ＆ プレイリスト編集</h2>
+              <span class="badge-live" id="adminBgmTrackBadge">BGM: 読込中...</span>
+            </div>
+            <button id="adminResetBgmBtn" class="btn-secondary-sm" title="初期3曲のプレイリストに戻します">🔄 初期3曲にリセット</button>
+          </div>
+          <p class="desc-text">ゲーム本体および管理コンソールのBGMを管理します。楽曲の追加、削除、順番変更（▲▼）や、ツマミでのリアルタイム音量調節・即時再生停止が可能です。</p>
+
+          <div class="bgm-controls-layout">
+            <!-- 左側: 音量スライダー群 (ツマミに再生停止ボタン付き) -->
+            <div class="bgm-volume-column">
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="adminBgmVol">BGM音量 (ツマミで再生・停止切替)</label>
+                  <span id="adminBgmVolVal" class="val-pill">70 %</span>
+                </div>
+                <div class="slider-with-knob-row">
+                  <button type="button" id="adminBgmPlayToggleBtn" class="btn-knob-toggle" title="再生 / 停止">▶</button>
+                  <input type="range" id="adminBgmVol" min="0" max="1" step="0.01" value="0.7" class="admin-slider">
+                </div>
+                <span class="desc-text">ツマミ左のアイコンをタップすると選択中のBGMを即座に再生/停止します。スライドで音量をスムーズに強弱調整できます。</span>
+              </div>
+
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="adminMasterVol">全体音量 (マスター)</label>
+                  <span id="adminMasterVolVal" class="val-pill">80 %</span>
+                </div>
+                <input type="range" id="adminMasterVol" min="0" max="1" step="0.01" value="0.8" class="admin-slider">
+              </div>
+
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="adminSeVol">効果音音量 (SE)</label>
+                  <span id="adminSeVolVal" class="val-pill">80 %</span>
+                </div>
+                <input type="range" id="adminSeVol" min="0" max="1" step="0.01" value="0.8" class="admin-slider">
+              </div>
+            </div>
+
+            <!-- 右側: プレイリスト一覧 & 新規追加フォーム -->
+            <div class="bgm-playlist-column">
+              <div class="playlist-header-row">
+                <span class="playlist-title">📜 登録楽曲プレイリスト (順番変更・削除):</span>
+                <span id="adminTrackCountBadge" class="val-pill">3 曲</span>
+              </div>
+              <div id="adminBgmPlaylist" class="admin-bgm-playlist">
+                <!-- 動的に生成されます -->
+              </div>
+
+              <!-- 楽曲追加フォーム -->
+              <div class="add-bgm-box">
+                <div style="font-size:13px; font-weight:800; color:#38bdf8; margin-bottom:8px;">➕ 新しいBGMを追加</div>
+                <div class="add-bgm-inputs">
+                  <input type="text" id="adminAddBgmTitle" placeholder="曲名 (例: 閃きの波打ち際)" class="admin-text-input">
+                  <input type="text" id="adminAddBgmSrc" placeholder="音声URL または ファイル選択" class="admin-text-input">
+                  <div style="display:flex; gap:8px;">
+                    <label class="btn-file-upload">
+                      📁 ファイル選択
+                      <input type="file" id="adminBgmFilePicker" accept="audio/*" style="display:none;">
+                    </label>
+                    <button type="button" id="adminAddBgmBtn" class="btn-primary-sm" style="flex:1;">➕ リストに追加</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== ステータス画面: 称号一覧エディタカード ===== -->
+        <div class="glass-card title-tiers-card" style="margin-top: 24px;">
+          <div class="card-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h2>🎖️ 称号一覧エディタ (スコア閾値 ＆ 称号名設定)</h2>
+              <span class="badge-live">STATUS TITLES</span>
+            </div>
+            <button id="adminResetTitlesBtn" class="btn-secondary-sm" title="初期の称号リストに戻します">🔄 デフォルト称号にリセット</button>
+          </div>
+          <p class="desc-text">プレイヤーがゲーム終了時に獲得したスコアに応じてリザルト画面に付与される称号一覧を編集できます。必要スコアの高い順に自動判定されます。</p>
+
+          <div id="adminTitleTiersList" class="title-tiers-list">
+            <!-- JSで動的生成 -->
+          </div>
+
+          <div style="margin-top: 12px; display:flex; justify-content:space-between; align-items:center;">
+            <button type="button" id="adminAddTitleTierBtn" class="btn-secondary-sm">➕ 新しい称号階級を追加</button>
+            <span class="desc-text" style="margin:0;">※変更後は上部または下部の「セット」で即時ゲームに反映されます</span>
+          </div>
+        </div>
+
+        <!-- ===== X（旧Twitter）結果シェア文言エディタカード ===== -->
+        <div class="glass-card xshare-card" style="margin-top: 24px;">
+          <div class="card-header">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <h2>𝕏 結果シェア文言エディタ (無料版140字以内)</h2>
+              <span class="badge-live">X SHARE TEMPLATE</span>
+            </div>
+            <button id="adminResetXShareBtn" class="btn-secondary-sm" title="初期テンプレートに戻します">🔄 デフォルト文言にリセット</button>
+          </div>
+          <p class="desc-text">リザルト画面の「Xで結果を自慢する」ボタンを押した際に投稿される文章テンプレートです。楽曲宣伝を排し、無料版Xの140字以内で自由に編集できます。<br>
+            利用可能タグ: <code>{score}</code>(スコア), <code>{mode}</code>(所属派閥), <code>{title}</code>(称号), <code>{combo}</code>(最大コンボ), <code>{name}</code>(プレイヤー名)
+          </p>
+
+          <div class="form-group">
+            <textarea id="adminXShareTemplate" rows="4" class="admin-textarea" style="width:100%; font-family:monospace; font-size:13px; line-height:1.6;"></textarea>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+              <span id="adminXShareCharCount" class="val-pill">0 / 140 文字</span>
+              <span id="adminXShareWarning" style="color:#ef4444; font-size:12px; font-weight:700; display:none;">⚠️ 140文字を超えています！無料版Xで途切れる可能性があります。</span>
+            </div>
+          </div>
+        </div>
+      </section>

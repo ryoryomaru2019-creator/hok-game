@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>キャラクタースタジオ - 操作・ショートカットキー一覧 (Photoshop準拠)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&family=Outfit:wght@600;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0f1d;
+      --bg-card: rgba(15, 23, 42, 0.85);
+      --border-card: rgba(255, 255, 255, 0.12);
+      --accent-cyan: #38bdf8;
+      --accent-purple: #818cf8;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'M PLUS Rounded 1c', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(129, 140, 248, 0.15) 0%, transparent 40%);
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-card);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .title-wrap h1 {
+      font-size: 20px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title-wrap p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .search-box {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+      width: 220px;
+      transition: border-color 0.2s;
+    }
+
+    .search-box:focus {
+      border-color: var(--accent-cyan);
+    }
+
+    .section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 900;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title.sec-path { color: var(--accent-cyan); }
+    .section-title.sec-canvas { color: var(--accent-emerald); }
+    .section-title.sec-general { color: var(--accent-purple); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      color: var(--text-muted);
+      font-size: 11px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-weight: 800;
+    }
+
+    td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    kbd {
+      display: inline-block;
+      padding: 3px 7px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-bottom-width: 2px;
+      border-radius: 5px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      margin: 0 2px;
+      white-space: nowrap;
+    }
+
+    .desc {
+      color: #e2e8f0;
+      line-height: 1.5;
+    }
+
+    .desc small {
+      color: var(--text-muted);
+      display: block;
+      margin-top: 2px;
+      font-size: 11px;
+    }
+
+    .btn-close {
+      padding: 6px 14px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-close:hover {
+      background: rgba(244, 63, 94, 0.25);
+      border-color: var(--accent-rose);
+      color: var(--accent-rose);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title-wrap">
+        <h1>⌨️ キャラクタースタジオ 操作＆ショートカットキー一覧 <span class="badge">Photoshop準拠</span></h1>
+        <p>ベジェ曲線パス操作・キャンバス操作・全ツールのショートカット一覧です。</p>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <input type="text" id="shortcutSearch" class="search-box" placeholder="🔍 キー・操作で検索...">
+        <button class="btn-close" onclick="window.close()">閉じる</button>
+      </div>
+    </header>
+
+    <!-- A: パス系ツールの操作 -->
+    <section class="section">
+      <h2 class="section-title sec-path">✒️ A. パス・ベジェ曲線ツールの操作</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 28%;">キー / マウス操作</th>
+            <th style="width: 32%;">機能名</th>
+            <th>詳細な動作</th>
+          </tr>
+        </thead>
+        <tbody id="tablePath">
+          <tr>
+            <td><kbd>Alt</kbd> + ハンドルドラッグ</td>
+            <td><strong>ハンドルの折り曲げ (分割)</strong></td>
+            <td class="desc">スムーズポイントの片側ハンドルだけを独立して折り曲げ、コーナー化します。<small>※もう一度 <kbd>Alt</kbd> を押してドラッグすると反対側ハンドルと一直線に再連動します。</small></td>
+          </tr>
+          <tr>
+            <td><kbd>Alt</kbd> + アンカークリック</td>
+            <td><strong>コーナー / スムーズ切り替え</strong></td>
+            <td class="desc">アンカーポイントの直線（角）と曲線（スムーズ）をトグル切り替えします。<small>ダブルクリックでも同様に切り替え可能です。</small></td>
+          </tr>
+          <tr>
+            <td><kbd>Alt</kbd> + ドラッグ (アンカーから)</td>
+            <td><strong>ハンドルの引き出し</strong></td>
+            <td class="desc">コーナーポイント（直線）から両側に新しいベジェハンドルを引き出して曲線化します。</td>
+          </tr>
+          <tr>
+            <td>パス線上をクリック</td>
+            <td><strong>アンカーポイントの追加</strong></td>
+            <td class="desc">ペンツール選択時、既存パスの線分上をクリックするとその位置に新しいアンカーポイントを挿入します。</td>
+          </tr>
+          <tr>
+            <td>アンカーポイントをクリック</td>
+            <td><strong>アンカーポイントの削除</strong></td>
+            <td class="desc">ペンツール選択時、既存アンカーポイントをクリックすると削除（マイナス化）されます。</td>
+          </tr>
+          <tr>
+            <td>パス線を直接ドラッグ</td>
+            <td><strong>セグメントの直接変形</strong></td>
+            <td class="desc">ダイレクト選択ツールまたは選択ツール時、パスの曲線を直接マウスでドラッグして直感的にふくらみを調整できます。</td>
+          </tr>
+          <tr>
+            <td><kbd>Shift</kbd> + ドラッグ</td>
+            <td><strong>45° 角度スナップ</strong></td>
+            <td class="desc">ハンドル操作やアンカー移動時に、水平・垂直・45度単位に角度をきれいに固定します。</td>
+          </tr>
+          <tr>
+            <td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td>
+            <td><strong>選択アンカーの削除</strong></td>
+            <td class="desc">現在選択されているアンカーポイントをパスから削除します。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + クリック / 背景クリック</td>
+            <td><strong>選択解除</strong></td>
+            <td class="desc">アンカーポイントの選択を解除します。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- B: キャンバス上の操作 -->
+    <section class="section">
+      <h2 class="section-title sec-canvas">🖼️ B. キャンバス・画面表示の操作</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 28%;">キー / マウス操作</th>
+            <th style="width: 32%;">機能名</th>
+            <th>詳細な動作</th>
+          </tr>
+        </thead>
+        <tbody id="tableCanvas">
+          <tr>
+            <td><kbd>Space</kbd> + ドラッグ</td>
+            <td><strong>一時的な手のひらツール</strong></td>
+            <td class="desc">どのツールを選択中でも、Spaceキーを押している間は手のひらツール（Pan）になり、画面を自在にスクロール移動できます。Spaceを離すと元のツールに戻ります。</td>
+          </tr>
+          <tr>
+            <td>マウスホイール回転</td>
+            <td><strong>カーソル中心ズーム</strong></td>
+            <td class="desc">マウスカーソルの位置を中心として、滑らかにズームイン・ズームアウトします。</td>
+          </tr>
+          <tr>
+            <td>ズームツールでクリック</td>
+            <td><strong>ズームイン (拡大)</strong></td>
+            <td class="desc">クリックした位置を中心に 1.25 倍ズームインします。</td>
+          </tr>
+          <tr>
+            <td><kbd>Alt</kbd> + ズームツールクリック</td>
+            <td><strong>ズームアウト (縮小)</strong></td>
+            <td class="desc">クリックした位置を中心に 0.8 倍ズームアウトします。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>0</kbd></td>
+            <td><strong>全体表示 (画面にフィット)</strong></td>
+            <td class="desc">キャラクター全体が現在のキャンバス画面の中央に収まるよう自動スケーリングします。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>1</kbd></td>
+            <td><strong>100% 等倍表示</strong></td>
+            <td class="desc">ズーム倍率を正確に 100%（等倍）にリセットします。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>+</kbd> / <kbd>-</kbd></td>
+            <td><strong>段階ズーム</strong></td>
+            <td class="desc">段階的に画面を拡大・縮小します。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- C: ツール切り替え & 全体編集ショートカット -->
+    <section class="section">
+      <h2 class="section-title sec-general">⚙️ C. ツール切り替え ＆ 全体編集ショートカット</h2>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 28%;">ショートカットキー</th>
+            <th style="width: 32%;">機能名</th>
+            <th>詳細な動作</th>
+          </tr>
+        </thead>
+        <tbody id="tableGeneral">
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>T</kbd> または ツール <kbd>⤢ スケール・回転</kbd></td>
+            <td><strong>スケール・回転 (バウンディングボックス)</strong></td>
+            <td class="desc">
+              オブジェクトや選択パス（複数）の周辺にPhotoshop風バウンディングボックスを表示して拡縮・回転します。<br>
+              ・<strong>拡大縮小 (スケール)</strong>: 周辺8箇所の四角ハンドルをドラッグ<br>
+              ・<strong>回転</strong>: バウンディングボックスの四隅のやや外側にカーソルを合わせてドラッグ<br>
+              ・<kbd>Shift</kbd> + ドラッグ: 縦横比を固定して拡縮 / 回転時は15°刻みスナップ<br>
+              ・<kbd>Alt</kbd> (Mac: <kbd>Option</kbd>) + ドラッグ: オブジェクトの中心から操作<br>
+              ・<kbd>Shift</kbd> + <kbd>Alt</kbd> + ドラッグ: 中心基準かつ縦横比固定で拡縮<br>
+              ・<strong>確定</strong>: <kbd>Enter</kbd> キー<br>
+              ・<strong>キャンセル</strong>: <kbd>Esc</kbd> キー (またはキャンバスの何もないところをクリック)
+            </td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>E</kbd></td>
+            <td><strong>複数レイヤーの結合 / 下のレイヤーと結合</strong></td>
+            <td class="desc">複数選択されたレイヤーを1つに統合します。単一選択時はPhotoshop同様に「下のレイヤーと結合」します。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>A</kbd></td>
+            <td><strong>すべて選択 (Select All)</strong></td>
+            <td class="desc">キャラクター内のすべてのパーツ・レイヤーを一括選択します。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>D</kbd></td>
+            <td><strong>選択を解除 (Deselect)</strong></td>
+            <td class="desc">すべてのパーツ・アンカーポイントの選択状態を解除します。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>J</kbd></td>
+            <td><strong>レイヤーの複製 (Duplicate)</strong></td>
+            <td class="desc">選択中のパーツ・レイヤーを複製して配置します。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>G</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd></td>
+            <td><strong>レイヤーのグループ化 / 解除</strong></td>
+            <td class="desc">選択中のパーツをグループ化してまとめます。Shift併用でグループ解除します。</td>
+          </tr>
+          <tr>
+            <td><kbd>M</kbd></td>
+            <td><strong>矩形選択ツール (Marquee)</strong></td>
+            <td class="desc">ドラッグした四角形エリア内の複数のオブジェクトやパスを一括選択します。<small>※選択ツール(V)で背景をドラッグしても矩形選択可能です。</small></td>
+          </tr>
+          <tr>
+            <td><kbd>Shift</kbd> + クリック</td>
+            <td><strong>複数パーツの追加選択</strong></td>
+            <td class="desc">キャンバス上の複数パーツを1つずつ追加・除外して複数選択します。</td>
+          </tr>
+          <tr>
+            <td>レイヤーをドラッグ＆ドロップ</td>
+            <td><strong>レイヤーの並び替え ＆ 親子付け</strong></td>
+            <td class="desc">レイヤーリストで上下にドロップして前後順序を変更、中央にドロップして子レイヤー化。⏏️ボタンで親から解除可能。</td>
+          </tr>
+          <tr>
+            <td><kbd>V</kbd></td>
+            <td><strong>選択ツール</strong></td>
+            <td class="desc">オブジェクト全体のみの選択・移動ツールです。パスやベジェハンドルには触れません。<kbd>Ctrl</kbd>+<kbd>T</kbd>で拡大縮小・回転が可能です。</td>
+          </tr>
+          <tr>
+            <td><kbd>A</kbd></td>
+            <td><strong>ダイレクト選択ツール</strong></td>
+            <td class="desc">アンカーポイントやベジェハンドル、セグメントの個別編集ツールに切り替えます。</td>
+          </tr>
+          <tr>
+            <td><kbd>P</kbd></td>
+            <td><strong>ペンツール</strong></td>
+            <td class="desc">ベジェ曲線のアンカー追加・編集ペンツールに切り替えます。</td>
+          </tr>
+          <tr>
+            <td><kbd>C</kbd> / <kbd>Shift</kbd> + <kbd>P</kbd></td>
+            <td><strong>曲率ペン (アンカーツール)</strong></td>
+            <td class="desc">アンカーポイントツールとして、パス上のポイントやコントロールハンドルに触れて曲率を直感調整します（意図しないポイント挿入は行いません）。</td>
+          </tr>
+          <tr>
+            <td><kbd>R</kbd> / <kbd>E</kbd> / <kbd>T</kbd> / <kbd>U</kbd></td>
+            <td><strong>シェイプツール</strong></td>
+            <td class="desc"><kbd>R</kbd>: 長方形、<kbd>E</kbd>: 楕円、<kbd>T</kbd>: 三角形、<kbd>U</kbd>: シェイプツールを起動します。</td>
+          </tr>
+          <tr>
+            <td><kbd>H</kbd></td>
+            <td><strong>手のひらツール</strong></td>
+            <td class="desc">画面パンスクロールツールに切り替えます。</td>
+          </tr>
+          <tr>
+            <td><kbd>Z</kbd></td>
+            <td><strong>ズームツール</strong></td>
+            <td class="desc">画面ズームツールに切り替えます。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>Z</kbd></td>
+            <td><strong>元に戻す (Undo)</strong></td>
+            <td class="desc">直前の操作を1つ取り消します。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>Y</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td>
+            <td><strong>やり直し (Redo)</strong></td>
+            <td class="desc">取り消した操作をやり直します。</td>
+          </tr>
+          <tr>
+            <td><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> (矢印キー)</td>
+            <td><strong>微小移動 (ナッジ)</strong></td>
+            <td class="desc">選択中のアンカーポイントまたはパーツを 1px 単位で移動します。<small><kbd>Shift</kbd> 併用で 10px 移動になります。</small></td>
+          </tr>
+          <tr>
+            <td><kbd>Shift</kbd> + クリック / <kbd>Ctrl</kbd> + クリック</td>
+            <td><strong>レイヤーの複数選択</strong></td>
+            <td class="desc">レイヤーパネルで複数の部位レイヤーをまとめて選択します。キャンバス上の矩形選択（ラバーバンド）とも連動します。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>C</kbd> / <kbd>Ctrl</kbd> + <kbd>V</kbd></td>
+            <td><strong>レイヤーの一括コピー＆貼り付け</strong></td>
+            <td class="desc">選択した全レイヤーをクリップボードにコピーし、位置を +15px ずらして複製追加します（親子関係を自動維持）。</td>
+          </tr>
+          <tr>
+            <td><kbd>Delete</kbd> / <kbd>Backspace</kbd></td>
+            <td><strong>選択レイヤーの削除</strong></td>
+            <td class="desc">選択中の全レイヤーを一度に削除します。</td>
+          </tr>
+          <tr>
+            <td><kbd>[</kbd> / <kbd>]</kbd></td>
+            <td><strong>線幅の変更</strong></td>
+            <td class="desc">選択中のパーツの線幅を 0.5px 刻みで細く / 太くします。</td>
+          </tr>
+          <tr>
+            <td><kbd>Ctrl</kbd> + <kbd>S</kbd></td>
+            <td><strong>ゲームに適用</strong></td>
+            <td class="desc">現在のキャラクター編集データをゲーム本編に即時反映します。</td>
+          </tr>
+          <tr>
+            <td><kbd>🪄 AIキャラ生成</kbd></td>
+            <td><strong>Gemini AI キャラ自動生成</strong></td>
+            <td class="desc">参考画像やプロンプトから、ゲーム専用のベクターパーツ構造を持った新キャラクターを完全自動生成します。</td>
+          </tr>
+          <tr>
+            <td><kbd>F1</kbd> または <kbd>?</kbd></td>
+            <td><strong>ショートカット一覧</strong></td>
+            <td class="desc">この操作・ショートカットキー一覧ウィンドウを開きます。</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    // リアルタイム検索フィルター
+    const searchInput = document.getElementById('shortcutSearch');
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const rows = document.querySelectorAll('tbody tr');
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>

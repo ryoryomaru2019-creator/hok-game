@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>HoK！ ~華麗にヒラメいた！~ - カレイとヒラメを瞬時に仕分けろ！</title>
+  <meta name="description" content="カレイとヒラメをタップして仕分けるWeb爽快アクション！カレイ派？ヒラメ派？ヒライ派？スキマ時間に最高記録を目指せ！">
+  
+  <!-- OGP / Xカード設定 -->
+  <meta property="og:title" content="HoK！ ~華麗にヒラメいた！~ - カレイとヒラメの瞬時仕分けゲーム">
+  <meta property="og:description" content="あなたはカレイ派？ヒラメ派？華麗なる目利きで閃きを競おう！">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  
+  <!-- Google Fonts: Diverse Japanese Typography for Title & UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DotGothic16&family=Hachi+Maru+Pop&family=M+PLUS+Rounded+1c:wght@400;700;800;900&family=Noto+Sans+JP:wght@400;700;900&family=Outfit:wght@600;800;900&family=Shippori+Mincho:wght@700;800&family=Yuji+Boku&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- ゲーム画面キャンバス -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- UIオーバーレイ層 -->
+    <div class="ui-layer">
+      <!-- プレイ中ヘッダーHUD -->
+      <div id="gameHud" class="hud-header interactive hidden">
+        <div class="hud-stat-box">
+          <span class="hud-label" data-i18n="time">TIME</span>
+          <span id="hudTimeVal" class="hud-value">60</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="hud-label" data-i18n="score">SCORE</span>
+          <span id="hudScoreVal" class="hud-value">0</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="hud-label" data-i18n="combo">COMBO</span>
+          <span id="hudComboVal" class="hud-value">0</span>
+        </div>
+
+        <div class="hud-controls">
+          <!-- クイックリトライ（最初からやり直す） -->
+          <button id="quickRetryBtn" class="icon-btn" title="最初からやり直す" data-i18n-title="quickRetry">🔄</button>
+          <!-- メニューに戻る -->
+          <button id="hudHomeBtn" class="icon-btn" title="メニューに戻る" data-i18n-title="back">🏠</button>
+          <!-- 全体音声クイックON/OFF -->
+          <button id="hudMuteBtn" class="icon-btn" title="ミュート切替">🔊</button>
+          <!-- 設定モーダルを開く -->
+          <button id="hudSettingsBtn" class="icon-btn" title="音量・BGM設定" data-i18n-title="settingsTitle">⚙️</button>
+        </div>
+      </div>
+
+      <!-- 音楽Now Playing ピル（画面上部） -->
+      <div id="nowPlayingPill" class="now-playing-pill interactive">
+        <div class="music-wave">
+          <span></span><span></span><span></span>
+        </div>
+        <span id="nowPlayingTitle">♪ Nano Ninja</span>
+      </div>
+
+      <!-- プレイ中ボトムドック (餌ボタン & バケツ) -->
+      <div id="bottomDock" class="bottom-dock interactive hidden">
+        <!-- 餌コントロール -->
+        <div class="bait-controls">
+          <button id="feedKareiBtn" class="bait-btn">
+            <span>🐛</span>
+            <span data-i18n="feedKarei">カレイの餌</span>
+            <span id="baitStockBadge" class="bait-badge">1</span>
+          </button>
+          <button id="feedHirameBtn" class="bait-btn">
+            <span>🐟</span>
+            <span data-i18n="feedHirame">ヒラメの餌</span>
+          </button>
+        </div>
+
+        <!-- バケツコンテナ (ヒライ派で2つ並ぶ / カレイ・ヒラメ派は1つ) -->
+        <div id="bucketsContainer" class="buckets-container">
+          <div id="bucketKarei" class="bucket-box active">
+            <span class="bucket-icon">🪣</span>
+            <span class="bucket-name" data-i18n="bucketKarei">カレイ</span>
+          </div>
+          <div id="bucketHirame" class="bucket-box">
+            <span class="bucket-icon">🪣</span>
+            <span class="bucket-name" data-i18n="bucketHirame">ヒラメ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- カウントダウン表示 -->
+      <div id="countdownOverlay" class="countdown-overlay hidden">3</div>
+    </div>
+
+    <!-- モーダル：タイトル画面 -->
+    <div id="titleModal" class="modal-overlay interactive">
+      <div class="modal-content glass-panel">
+        <div class="title-banner">
+          <h1 class="title-logo" data-i18n="title">HoK！<br>~華麗にヒラメいた！~</h1>
+          <p class="title-sub" data-i18n="subtitle">カレイとヒラメを瞬時に見分けろ！</p>
+          <div id="titleCreditsBanner" class="title-credits-banner">PIG STAR / 2026</div>
+        </div>
+
+        <!-- プレイヤー名入力 & 内部ユーザーID認識状態 -->
+        <div class="player-input-box">
+          <input type="text" id="playerNameInput" class="player-input" maxlength="12" data-i18n="namePlaceholder" placeholder="名前を入力...">
+          <div id="identityStatusBox" class="identity-status-container"></div>
+        </div>
+
+        <!-- スタートボタン -->
+        <button id="toModeSelectBtn" class="main-btn" data-i18n="start">スタート</button>
+
+        <!-- サブメニューボタン -->
+        <button id="openLeaderboardBtn" class="sub-btn" data-i18n="ranking">🏆 世界ランキング</button>
+        <button id="openSettingsBtn" class="sub-btn" data-i18n="settings">⚙️ 音量・BGM設定</button>
+        <button id="openMusicModalBtn" class="sub-btn music-btn-highlight" data-i18n="musicListen">🎵 搭載BMGを聴く (LinkCore)</button>
+
+        <!-- 多言語ピッカー -->
+        <div class="lang-selector">
+          <button class="lang-btn active" data-lang="ja">日本語</button>
+          <button class="lang-btn" data-lang="en">English</button>
+          <button class="lang-btn" data-lang="ko">한국어</button>
+          <button class="lang-btn" data-lang="zh">中文</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- モーダル：頑固親父の派閥選択 -->
+    <div id="masterModal" class="modal-overlay interactive hidden">
+      <div class="modal-content glass-panel">
+        <div class="master-avatar-wrap">
+          <img id="masterAvatarImg" src="/images/BUTA_shokunin.png" alt="頑固親父職人">
+        </div>
+        <div id="masterSpeechBubble" class="master-speech-bubble" data-i18n="masterPrompt">
+          おう！おめぇはどっちの魚が好きなんだい！？
+          自分の派閥をハッキリさせな！
+        </div>
+
+        <div class="mode-choices">
+          <div id="chooseKareiMode" class="mode-card">
+            <div class="mode-card-title">
+              <span>🐟</span> <span data-i18n="modeKarei">カレイ派</span>
+            </div>
+            <div class="mode-card-desc" data-i18n="modeKareiDesc">
+              カレイだけをひたすら獲る！
+              （ヒラメは獲るなよ！）
+            </div>
+          </div>
+
+          <div id="chooseHirameMode" class="mode-card">
+            <div class="mode-card-title">
+              <span>🦈</span> <span data-i18n="modeHirame">ヒラメ派</span>
+            </div>
+            <div class="mode-card-desc" data-i18n="modeHirameDesc">
+              ヒラメだけをひたすら獲る！
+              （カレイは獲るなよ！）
+            </div>
+          </div>
+
+          <div id="chooseHiraiMode" class="mode-card">
+            <div class="mode-card-title">
+              <span>⚖️</span> <span data-i18n="modeHirai">ヒライ派（仕分け）</span>
+            </div>
+            <div class="mode-card-desc" data-i18n="modeHiraiDesc">
+              両方愛する達人！
+              バケツを選んで正確に仕分けろ！
+            </div>
+          </div>
+        </div>
+
+        <button id="backToTitleBtn" class="sub-btn" style="margin-top: 14px;" data-i18n="back">タイトルに戻る</button>
+      </div>
+    </div>
+
+    <!-- モーダル：リザルト画面 (ステータス画面) -->
+    <div id="resultModal" class="modal-overlay interactive hidden">
+      <div class="modal-content glass-panel">
+        <h2 style="font-size: 20px; margin-bottom: 8px;" data-i18n="resultTitle">本日の水揚げ結果</h2>
+        
+        <div class="result-card">
+          <div id="resultScore" class="result-score-large">0 pt</div>
+          <div id="resultTitleBadge" class="result-badge">見習い釣り人</div>
+
+          <div class="result-stats-grid">
+            <div class="stat-tile">
+              <div class="stat-tile-label" data-i18n="combo">最大コンボ</div>
+              <div id="resultMaxCombo" class="stat-tile-val">0</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-tile-label" data-i18n="resultCatchSuccess">水揚げ正解</div>
+              <div id="resultCatchCount" class="stat-tile-val">0 匹</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- キャラ図鑑カード (ランダム紹介 ＆ 泳ぎアニメーション ＆ タップ演出) -->
+        <div id="resultLoreContainer" class="result-lore-container">
+          <div class="result-lore-header">
+            <span class="lore-tag" data-i18n="resultFishEncyclopedia">📖 今日の魚図鑑</span>
+            <span id="resultLoreName" class="lore-char-name">カレイ</span>
+          </div>
+          <div class="result-lore-body">
+            <div class="result-lore-canvas-wrap" id="resultLoreCanvasWrap" title="触ってみてね！">
+              <canvas id="resultLoreCanvas" width="160" height="90"></canvas>
+              <div id="resultLoreTapHint" class="lore-tap-hint" data-i18n="resultFishTapHint">👆 触ってみてね！</div>
+            </div>
+            <div class="result-lore-text-wrap">
+              <div id="resultLoreSubtitle" class="lore-subtitle">これがカレイだ！</div>
+              <div id="resultLoreDescription" class="lore-desc">「左ヒラメに右カレイ」でおなじみ。目が右側に集まっているのが特徴。</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ステータス画面内ランキング表示 (🔄 更新ボタン付き ＆ 期間タブ切替 ＆ モード切替) -->
+        <div class="result-ranking-card">
+          <div class="result-ranking-header">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span>🏆</span>
+              <span style="font-weight:800; font-size:14px;" data-i18n="rankingShort">世界ランキング</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button id="clearMyRankingBtn" class="icon-btn-sm" title="登録済みのあなたの全ランキングを消去">🗑️</button>
+              <button id="refreshResultRankingBtn" class="icon-btn-sm" title="ランキングを更新">🔄</button>
+            </div>
+          </div>
+          <!-- 期間切替タブ -->
+          <div class="ranking-tab-bar" id="resultRankingTabs">
+            <button type="button" class="ranking-tab-btn active" data-period="yearly" data-i18n="periodYearlyShort">👑 年間</button>
+            <button type="button" class="ranking-tab-btn" data-period="monthly" data-i18n="periodMonthlyShort">📅 マンスリー</button>
+            <button type="button" class="ranking-tab-btn" data-period="weekly" data-i18n="periodWeeklyShort">📆 ウィークリー</button>
+            <button type="button" class="ranking-tab-btn" data-period="daily" data-i18n="periodDailyShort">⏰ デイリー</button>
+          </div>
+          <!-- モード切替タブ -->
+          <div class="ranking-mode-tab-bar" id="resultRankingModeTabs">
+            <button type="button" class="ranking-mode-tab-btn" data-mode="karei" data-i18n="modeKareiRank">🐟 カレイ派</button>
+            <button type="button" class="ranking-mode-tab-btn" data-mode="hirame" data-i18n="modeHirameRank">🦈 ヒラメ派</button>
+            <button type="button" class="ranking-mode-tab-btn" data-mode="hirai" data-i18n="modeHiraiRank">⚖️ ヒライ派</button>
+            <button type="button" class="ranking-mode-tab-btn active" data-mode="all" data-i18n="modeAll">🌐 全モード</button>
+          </div>
+          <div id="resultRankingItems" class="result-ranking-list">
+            <!-- JSで動的生成 -->
+          </div>
+          <!-- ユーザー自身の記録削除バー -->
+          <div class="ranking-self-delete-bar">
+            <button type="button" id="btnDeleteSelectedResultRanking" class="btn-delete-ranking-sm" data-i18n="deleteSelectedRecords" disabled>
+              🗑️ チェックした自分の記録を削除
+            </button>
+            <span id="resultDeleteStatus" class="ranking-delete-status"></span>
+          </div>
+        </div>
+
+        <!-- 内部ID自動静止システム：テスト送信 & 簡易ログ (デバッグ用・10回連打で起動) -->
+        <div id="rankingTestSection" class="ranking-test-section" style="display: none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:11px; color:#38bdf8; font-weight:800;" data-i18n="testScoreSection">📡 [DEBUG] 内部ID認識＆スコア送信テスト</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button type="button" id="btnTestSubmitScore" class="btn-micro-test" data-i18n="testScoreBtn">⚡ テスト用スコア送信</button>
+              <button type="button" id="btnCloseRankingTestSection" class="btn-micro-test" style="background:#ef444433; border-color:#ef4444; color:#fca5a5;">✖ 閉じる</button>
+            </div>
+          </div>
+          <div id="rankingIdentityLog" class="ranking-log-box"></div>
+        </div>
+
+        <!-- X (Twitter) シェア -->
+        <button id="shareXBtn" class="main-btn share-x-btn">
+          <span>𝕏</span> <span data-i18n="shareX">Xで結果を自慢する</span>
+        </button>
+
+        <!-- もう一度遊ぶ -->
+        <button id="retryBtn" class="main-btn" data-i18n="retry">もう一度遊ぶ</button>
+        <!-- タイトルに戻る -->
+        <button id="resultTitleBtn" class="sub-btn" data-i18n="back">タイトルに戻る</button>
+      </div>
+    </div>
+
+    <!-- モーダル：ランキング一覧 -->
+    <div id="leaderboardModal" class="modal-overlay interactive hidden">
+      <div class="modal-content glass-panel">
+        <h2 style="font-size: 20px; margin-bottom: 8px;" data-i18n="ranking">世界ランキング</h2>
+        <!-- 期間切替タブ -->
+        <div class="ranking-tab-bar" id="mainRankingTabs">
+          <button type="button" class="ranking-tab-btn active" data-period="yearly" data-i18n="periodYearly">👑 年間ランキング</button>
+          <button type="button" class="ranking-tab-btn" data-period="monthly" data-i18n="periodMonthly">📅 マンスリー</button>
+          <button type="button" class="ranking-tab-btn" data-period="weekly" data-i18n="periodWeekly">📆 ウィークリー</button>
+          <button type="button" class="ranking-tab-btn" data-period="daily" data-i18n="periodDaily">⏰ デイリー</button>
+        </div>
+        <!-- モード切替タブ -->
+        <div class="ranking-mode-tab-bar" id="mainRankingModeTabs">
+          <button type="button" class="ranking-mode-tab-btn" data-mode="karei" data-i18n="modeKareiRank">🐟 カレイ派</button>
+          <button type="button" class="ranking-mode-tab-btn" data-mode="hirame" data-i18n="modeHirameRank">🦈 ヒラメ派</button>
+          <button type="button" class="ranking-mode-tab-btn" data-mode="hirai" data-i18n="modeHiraiRank">⚖️ ヒライ派</button>
+          <button type="button" class="ranking-mode-tab-btn active" data-mode="all" data-i18n="modeAll">🌐 全モード</button>
+        </div>
+        <div id="leaderboardItems" class="leaderboard-list">
+          <!-- JSで動的生成 -->
+        </div>
+        <!-- ユーザー自身の記録削除バー -->
+        <div class="ranking-self-delete-bar">
+          <button type="button" id="btnDeleteSelectedMainRanking" class="btn-delete-ranking-sm" data-i18n="deleteSelectedRecords" disabled>
+            🗑️ チェックした自分の記録を削除
+          </button>
+          <span id="mainDeleteStatus" class="ranking-delete-status"></span>
+        </div>
+        <button id="closeLeaderboardBtn" class="sub-btn" data-i18n="close">閉じる</button>
+      </div>
+    </div>
+
+    <!-- モーダル：設定画面（音量・BGM） -->
+    <div id="settingsModal" class="modal-overlay interactive hidden">
+      <div class="modal-content glass-panel">
+        <h2 style="font-size: 20px; margin-bottom: 16px;" data-i18n="settings">ゲーム設定 & 音量</h2>
+
+        <!-- FPS設定 (30FPS / 60FPS) -->
+        <div class="setting-row" style="margin-bottom: 14px;">
+          <div class="setting-header">
+            <span class="setting-title">⚡ フレームレート (FPS)</span>
+            <div class="mode-pill-toggle">
+              <button type="button" id="fps30Btn" class="pill-btn">30 FPS</button>
+              <button type="button" id="fps60Btn" class="pill-btn active">60 FPS</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 視覚アクセシビリティ (色覚サポート) -->
+        <div class="setting-row" style="margin-bottom: 14px;">
+          <div class="setting-header">
+            <span class="setting-title">👁️ 視覚アクセシビリティ</span>
+            <a href="/accessibility_settings.html" target="_blank" rel="noopener" class="pill-btn active" style="text-decoration:none; padding: 4px 10px; font-size: 11px;">
+              🎨 色覚サポート設定を開く ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- 全体音量 -->
+        <div class="setting-row">
+          <div class="setting-header">
+            <span class="setting-title" data-i18n="masterVol">全体音量</span>
+            <button id="toggleMasterBtn" class="toggle-btn active">ON</button>
+          </div>
+          <div class="slider-wrapper">
+            <input type="range" id="masterVolSlider" min="0" max="1" step="0.05" value="0.8" class="touch-slider">
+            <span id="masterVolVal" class="slider-val">80%</span>
+          </div>
+        </div>
+
+        <!-- BGM音量 -->
+        <div class="setting-row">
+          <div class="setting-header">
+            <span class="setting-title" data-i18n="bgmVol">BGM音量</span>
+            <button id="toggleBgmBtn" class="toggle-btn active">ON</button>
+          </div>
+          <div class="slider-wrapper">
+            <button type="button" id="gameBgmPlayToggleBtn" class="knob-toggle-btn" title="再生 / 停止">▶</button>
+            <input type="range" id="bgmVolSlider" min="0" max="1" step="0.01" value="0.7" class="touch-slider">
+            <span id="bgmVolVal" class="slider-val">70%</span>
+          </div>
+        </div>
+
+        <!-- 効果音音量 -->
+        <div class="setting-row">
+          <div class="setting-header">
+            <span class="setting-title" data-i18n="seVol">効果音音量</span>
+            <button id="toggleSeBtn" class="toggle-btn active">ON</button>
+          </div>
+          <div class="slider-wrapper">
+            <input type="range" id="seVolSlider" min="0" max="1" step="0.05" value="0.8" class="touch-slider">
+            <span id="seVolVal" class="slider-val">80%</span>
+          </div>
+        </div>
+
+        <!-- BGM再生モード (固定 / ランダム) -->
+        <div class="setting-row" style="margin-top: 10px;">
+          <div class="setting-header">
+            <span class="setting-title" data-i18n="bgmMode">BGM再生モード</span>
+            <div class="mode-pill-toggle">
+              <button id="bgmModeRandomBtn" class="pill-btn active" data-i18n="bgmModeRandom">🔀 ランダム</button>
+              <button id="bgmModeFixedBtn" class="pill-btn" data-i18n="bgmModeFixed">🔁 1曲固定</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BGM選曲 & 試聴 -->
+        <div class="setting-row" style="margin-top: 10px;">
+          <div class="setting-header">
+            <span class="setting-title" data-i18n="bgmSelect">楽曲一覧 & 試聴</span>
+          </div>
+          <div class="track-select-grid" id="trackSelectGrid">
+            <!-- JSで動的生成 -->
+          </div>
+        </div>
+
+        <!-- 操作ボタン群 (設定保存・ホーム画面に戻る・デフォルトに戻す) -->
+        <div class="modal-action-grid">
+          <button type="button" id="btnSaveGameSettings" class="modal-action-btn modal-btn-save">
+            <span>💾</span> <span>設定保存</span>
+          </button>
+          <button type="button" id="btnHomeGameSettings" class="modal-action-btn modal-btn-home">
+            <span>🏠</span> <span>ホームに戻る</span>
+          </button>
+          <button type="button" id="btnResetGameSettings" class="modal-action-btn modal-btn-reset">
+            <span>🔄</span> <span>デフォルト</span>
+          </button>
+        </div>
+        <div id="settingsSaveToast" class="save-toast-banner">✓ 設定を保存しました</div>
+      </div>
+    </div>
+
+    <!-- モーダル：自作配信楽曲プロモーション -->
+    <div id="musicModal" class="modal-overlay interactive hidden">
+      <div class="modal-content glass-panel">
+        <h2 style="font-size: 20px; margin-bottom: 6px;" data-i18n="music">自作楽曲ストリーミング</h2>
+        <p style="font-size: 13px; color: #94a3b8; margin-bottom: 12px;" data-i18n="musicPromo">Core Tuneより各配信サービスにて好評配信中！</p>
+        
+        <!-- LinkCoreへのメイン誘導カード -->
+        <a href="https://linkco.re/HaZSEutS" target="_blank" rel="noopener" class="linkcore-promo-banner" style="margin-bottom: 16px;">
+          <div class="promo-badge" data-i18n="linkCoreOfficial">LinkCore 公式</div>
+          <div class="promo-text-wrap">
+            <span class="promo-title" data-i18n="openStreamingPlatforms">🎵 配信プラットフォーム一覧を開く</span>
+            <span class="promo-subtitle">https://linkco.re/HaZSEutS</span>
+          </div>
+          <span class="promo-arrow">➔</span>
+        </a>
+
+        <div class="streaming-links-grid">
+          <a href="https://linkco.re/HaZSEutS" target="_blank" rel="noopener" class="stream-link-btn">
+            <span class="stream-icon">🟢</span>
+            <span>Spotify</span>
+          </a>
+          <a href="https://linkco.re/HaZSEutS" target="_blank" rel="noopener" class="stream-link-btn">
+            <span class="stream-icon">🍎</span>
+            <span>Apple Music</span>
+          </a>
+          <a href="https://linkco.re/HaZSEutS" target="_blank" rel="noopener" class="stream-link-btn">
+            <span class="stream-icon">🎵</span>
+            <span>TikTok</span>
+          </a>
+          <a href="https://linkco.re/HaZSEutS" target="_blank" rel="noopener" class="stream-link-btn">
+            <span class="stream-icon">▶️</span>
+            <span>YouTube Music</span>
+          </a>
+          <a href="https://linkco.re/HaZSEutS" target="_blank" rel="noopener" class="stream-link-btn" style="grid-column: span 2;">
+            <span class="stream-icon">📦</span>
+            <span>Amazon Music</span>
+          </a>
+        </div>
+
+        <button id="closeMusicModalBtn" class="sub-btn" data-i18n="close">閉じる</button>
+      </div>
+    </div>
+
+    <!-- モーダル：全ランキング削除確認 -->
+    <div id="clearRankingModal" class="modal-overlay interactive hidden">
+      <div class="modal-content glass-panel" style="max-width: 360px; text-align: center;">
+        <div style="font-size: 36px; margin-bottom: 12px;">🗑️</div>
+        <h3 style="font-size: 16px; margin-bottom: 16px; line-height: 1.5; color: #f8fafc;" id="clearRankingConfirmText" data-i18n="confirmDeleteAllRankings">登録済みのあなたの全ランキングを消しますか？</h3>
+        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 18px;">
+          <button id="btnCancelClearRanking" class="sub-btn" style="flex: 1;" data-i18n="btnNo">いいえ</button>
+          <button id="btnConfirmClearRanking" class="main-btn" style="flex: 1; background: #ef4444; border-color: #dc2626;" data-i18n="btnYes">はい</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

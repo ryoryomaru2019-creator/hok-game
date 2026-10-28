@@ -1,0 +1,59 @@
+Created At: 2026-10-18T04:31:02+09:00
+Completed At: 2026-10-18T04:31:02+09:00
+File Path: `file:///d:/AI/GAME/HIRAME/admin.html`
+Total Lines: 436
+Total Bytes: 26145
+Showing lines 340 to 390
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+340:             <!-- 3. 称号一覧エディタパネル -->
+341:             <div id="subPanelTitles" class="sub-editor-panel hidden">
+342:               <div class="glass-card title-tiers-card">
+343:                 <div class="card-header">
+344:                   <div style="display:flex; align-items:center; gap:8px;">
+345:                     <h2>🎖️ 称号一覧エディタ (スコア閾値 ＆ 称号名設定)</h2>
+346:                     <span class="badge-live">STATUS TITLES</span>
+347:                   </div>
+348:                   <button id="adminResetTitlesBtn" class="btn-secondary-sm" title="初期の称号リストに戻します">🔄 デフォルト称号にリセット</button>
+349:                 </div>
+350:                 <p class="desc-text">プレイヤーがゲーム終了時に獲得したスコアに応じてリザルト画面に付与される称号一覧を編集できます。必要スコアの高い順に自動判定されます。</p>
+351: 
+352:                 <div id="adminTitleTiersList" class="title-tiers-list">
+353:                   <!-- JSで動的生成 -->
+354:                 </div>
+355: 
+356:                 <div style="margin-top: 12px; display:flex; justify-content:space-between; align-items:center;">
+357:                   <button type="button" id="adminAddTitleTierBtn" class="btn-secondary-sm">➕ 新しい称号階級を追加</button>
+358:                   <span class="desc-text" style="margin:0;">※変更後は「セット」で即時ゲームに反映されます</span>
+359:                 </div>
+360:               </div>
+361:             </div>
+362: 
+363:             <!-- 4. 𝕏 結果シェア文言エディタパネル -->
+364:             <div id="subPanelXShare" class="sub-editor-panel hidden">
+365:               <div class="glass-card xshare-card">
+366:                 <div class="card-header">
+367:                   <div style="display:flex; align-items:center; gap:8px;">
+368:                     <h2>𝕏 結果シェア文言エディタ (無料版140字以内)</h2>
+369:                     <span class="badge-live">X SHARE TEMPLATE</span>
+370:                   </div>
+371:                   <button id="adminResetXShareBtn" class="btn-secondary-sm" title="初期テンプレートに戻します">🔄 デフォルト文言にリセット</button>
+372:                 </div>
+373:                 <p class="desc-text">リザルト画面の「Xで結果を自慢する」ボタンを押した際に投稿される文章テンプレートです。楽曲宣伝を排し、無料版Xの140字以内で自由に編集できます。<br>
+374:                   利用可能タグ: <code>{score}</code>(スコア), <code>{mode}</code>(所属派閥), <code>{title}</code>(称号), <code>{combo}</code>(最大コンボ), <code>{name}</code>(プレイヤー名)
+375:                 </p>
+376: 
+377:                 <div class="form-group">
+378:                   <textarea id="adminXShareTemplate" rows="4" class="admin-textarea" style="width:100%; font-family:monospace; font-size:13px; line-height:1.6;"></textarea>
+379:                   <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+380:                     <span id="adminXShareCharCount" class="val-pill">0 / 140 文字</span>
+381:                     <span id="adminXShareWarning" style="color:#ef4444; font-size:12px; font-weight:700; display:none;">⚠️ 140文字を超えています！無料版Xで途切れる可能性があります。</span>
+382:                   </div>
+383:                 </div>
+384:               </div>
+385:             </div>
+386:           </div>
+387: 
+388:           <!-- 右側: リアルタイムシミュレーション水槽プレビュー (常に右側に固定・表示) -->
+389:           <div class="glass-card preview-card sticky-preview-card">
+390:             <div class="card-header">
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

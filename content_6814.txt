@@ -1,0 +1,89 @@
+Created At: 2026-10-18T16:24:33+09:00
+Completed At: 2026-10-18T16:24:33+09:00
+File Path: `file:///d:/AI/GAME/HIRAME/admin.html`
+Total Lines: 648
+Total Bytes: 39268
+Showing lines 420 to 500
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+420:                   <!-- 左側: 音量スライダー群 (ツマミに再生停止ボタン付き) -->
+421:                   <div class="bgm-volume-column">
+422:                     <div class="form-group">
+423:                       <div class="label-row">
+424:                         <label for="adminBgmVol">BGM音量 (ツマミで再生・停止切替)</label>
+425:                         <span id="adminBgmVolVal" class="val-pill">70 %</span>
+426:                       </div>
+427:                       <div class="slider-with-knob-row">
+428:                         <button type="button" id="adminBgmPlayToggleBtn" class="btn-knob-toggle" title="再生 / 停止">▶</button>
+429:                         <input type="range" id="adminBgmVol" min="0" max="1" step="0.01" value="0.7" class="admin-slider">
+430:                       </div>
+431:                       <span class="desc-text">ツマミ左のアイコンをタップすると選択中のBGMを即座に再生/停止します。スライドで音量をスムーズに強弱調整できます。</span>
+432:                     </div>
+433: 
+434:                     <div class="form-group">
+435:                       <div class="label-row">
+436:                         <label for="adminMasterVol">全体音量 (マスター)</label>
+437:                         <span id="adminMasterVolVal" class="val-pill">80 %</span>
+438:                       </div>
+439:                       <input type="range" id="adminMasterVol" min="0" max="1" step="0.01" value="0.8" class="admin-slider">
+440:                     </div>
+441: 
+442:                     <div class="form-group">
+443:                       <div class="label-row">
+444:                         <label for="adminSeVol">効果音音量 (SE)</label>
+445:                         <span id="adminSeVolVal" class="val-pill">80 %</span>
+446:                       </div>
+447:                       <input type="range" id="adminSeVol" min="0" max="1" step="0.01" value="0.8" class="admin-slider">
+448:                     </div>
+449:                   </div>
+450: 
+451:                   <!-- 右側: プレイリスト一覧 & 新規追加フォーム -->
+452:                   <div class="bgm-playlist-column">
+453:                     <div class="playlist-header-row">
+454:                       <span class="playlist-title">📜 登録楽曲プレイリスト (順番変更・削除):</span>
+455:                       <span id="adminTrackCountBadge" class="val-pill">3 曲</span>
+456:                     </div>
+457:                     <div id="adminBgmPlaylist" class="admin-bgm-playlist">
+458:                       <!-- 動的に生成されます -->
+459:                     </div>
+460: 
+461:                     <!-- 楽曲追加フォーム -->
+462:                     <div class="add-bgm-box">
+463:                       <div style="font-size:13px; font-weight:800; color:#38bdf8; margin-bottom:8px;">➕ 新しいBGMを追加</div>
+464:                       <div class="add-bgm-inputs">
+465:                         <input type="text" id="adminAddBgmTitle" placeholder="曲名 (例: 閃きの波打ち際)" class="admin-text-input">
+466:                         <input type="text" id="adminAddBgmSrc" placeholder="音声URL または ファイル選択" class="admin-text-input">
+467:                         <div style="display:flex; gap:8px;">
+468:                           <label class="btn-file-upload">
+469:                             📁 ファイル選択
+470:                             <input type="file" id="adminBgmFilePicker" accept="audio/*" style="display:none;">
+471:                           </label>
+472:                           <button type="button" id="adminAddBgmBtn" class="btn-primary-sm" style="flex:1;">➕ リストに追加</button>
+473:                         </div>
+474:                       </div>
+475:                     </div>
+476:                   </div>
+477:                 </div>
+478:               </div>
+479:             </div>
+480: 
+481:             <!-- 3. 称号一覧エディタパネル -->
+482:             <div id="subPanelTitles" class="sub-editor-panel hidden">
+483:               <div class="glass-card title-tiers-card">
+484:                 <div class="card-header">
+485:                   <div style="display:flex; align-items:center; gap:8px;">
+486:                     <h2>🎖️ 称号一覧エディタ (スコア閾値 ＆ 称号名設定)</h2>
+487:                     <span class="badge-live">STATUS TITLES</span>
+488:                   </div>
+489:                   <button id="adminResetTitlesBtn" class="btn-secondary-sm" title="初期の称号リストに戻します">🔄 デフォルト称号にリセット</button>
+490:                 </div>
+491:                 <p class="desc-text">プレイヤーがゲーム終了時に獲得したスコアに応じてリザルト画面に付与される称号一覧を編集できます。必要スコアの高い順に自動判定されます。</p>
+492: 
+493:                 <div id="adminTitleTiersList" class="title-tiers-list">
+494:                   <!-- JSで動的生成 -->
+495:                 </div>
+496: 
+497:                 <div style="margin-top: 12px; display:flex; justify-content:space-between; align-items:center;">
+498:                   <button type="button" id="adminAddTitleTierBtn" class="btn-secondary-sm">➕ 新しい称号階級を追加</button>
+499:                   <span class="desc-text" style="margin:0;">※変更後は「セット」で即時ゲームに反映されます</span>
+500:                 </div>
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

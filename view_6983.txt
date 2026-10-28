@@ -1,0 +1,59 @@
+Created At: 2026-10-18T17:11:10+09:00
+Completed At: 2026-10-18T17:11:10+09:00
+File Path: `file:///d:/AI/GAME/HIRAME/src/admin.js`
+Total Lines: 3796
+Total Bytes: 155011
+Showing lines 200 to 250
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+200:   // ===== サブタブ切替 (パラメーター / BGM / 称号 / Xシェア / タイトル＆モード画面) =====
+201:   let updateTitleModeMockup = () => {};
+202:   const subTabButtons = document.querySelectorAll('.sub-tab-btn');
+203:   const previewFishTankContainer = document.getElementById('previewFishTankContainer');
+204:   const previewTitleModeContainer = document.getElementById('previewTitleModeContainer');
+205: 
+206:   const subPanels = {
+207:     params: document.getElementById('subPanelParams'),
+208:     bgm: document.getElementById('subPanelBgm'),
+209:     titles: document.getElementById('subPanelTitles'),
+210:     xshare: document.getElementById('subPanelXShare'),
+211:     titleMode: document.getElementById('subPanelTitleMode')
+212:   };
+213: 
+214:   subTabButtons.forEach(btn => {
+215:     btn.addEventListener('click', () => {
+216:       try { sound.init(); sound.playTap(); } catch (e) {}
+217:       const target = btn.dataset.subtab;
+218:       subTabButtons.forEach(b => b.classList.toggle('active', b === btn));
+219:       Object.entries(subPanels).forEach(([key, panel]) => {
+220:         if (!panel) return;
+221:         if (key === target) {
+222:           panel.classList.add('active');
+223:           panel.classList.remove('hidden');
+224:         } else {
+225:           panel.classList.remove('active');
+226:           panel.classList.add('hidden');
+227:         }
+228:       });
+229: 
+230:       // 右側プレビューカードの切替 (タイトル＆モード画面タブのときはモックアップ表示)
+231:       if (target === 'titleMode') {
+232:         if (previewFishTankContainer) previewFishTankContainer.classList.add('hidden');
+233:         if (previewTitleModeContainer) previewTitleModeContainer.classList.remove('hidden');
+234:         updateTitleModeMockup();
+235:       } else {
+236:         if (previewFishTankContainer) previewFishTankContainer.classList.remove('hidden');
+237:         if (previewTitleModeContainer) previewTitleModeContainer.classList.add('hidden');
+238:       }
+239:     });
+240:   });
+241: 
+242:   // ===== 判定シミュレーター ロジック (個別キャラ設定・役割切替・共通一括適用) =====
+243:   // 0. ゲームバランスON/OFF ＆ モード切替コントロール
+244:   const btnToggleGameBalance = document.getElementById('btnToggleGameBalance');
+245:   const balanceIcon = document.getElementById('balanceIcon');
+246:   const balanceText = document.getElementById('balanceText');
+247:   const balanceNoticeBanner = document.getElementById('balanceNoticeBanner');
+248:   const modePillButtons = document.querySelectorAll('.mode-pill-btn');
+249: 
+250:   // 1. キャラクター選択
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

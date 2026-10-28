@@ -1,0 +1,19 @@
+Created At: 2026-10-18T16:34:18+09:00
+Completed At: 2026-10-18T16:34:18+09:00
+File Path: `file:///d:/AI/GAME/HIRAME/src/admin.js`
+Total Lines: 3050
+Total Bytes: 122967
+Showing lines 198 to 208
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+198:   });
+199: 
+200:   // ===== サブタブ切替 (パラメーター / BGM / 称号 / Xシェア / タイトル＆モード画面) =====
+201:   const subTabButtons = document.querySelectorAll('.sub-tab-btn');
+202:   const previewFishTankContainer = document.getElementById('previewFishTankContainer');
+203:   const previewTitleModeContainer = document.getElementById('previewTitleModeContainer');
+204: 
+205:   const subPanels = {
+206:     params: document.getElementById('subPanelParams'),
+207:     bgm: document.getElementById('subPanelBgm'),
+208:     titles: document.getElementById('subPanelTitles'),
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

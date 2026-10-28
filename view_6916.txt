@@ -1,0 +1,49 @@
+Created At: 2026-10-18T16:33:48+09:00
+Completed At: 2026-10-18T16:33:48+09:00
+File Path: `file:///d:/AI/GAME/HIRAME/src/admin.js`
+Total Lines: 3050
+Total Bytes: 122967
+Showing lines 195 to 235
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+195:         studioApp.syncNavigator?.();
+196:       }
+197:     }, 60);
+198:   });
+199: 
+200:   // ===== サブタブ切替 (パラメーター / BGM / 称号 / Xシェア / タイトル＆モード画面) =====
+201:   const subTabButtons = document.querySelectorAll('.sub-tab-btn');
+202:   const previewFishTankContainer = document.getElementById('previewFishTankContainer');
+203:   const previewTitleModeContainer = document.getElementById('previewTitleModeContainer');
+204: 
+205:   const subPanels = {
+206:     params: document.getElementById('subPanelParams'),
+207:     bgm: document.getElementById('subPanelBgm'),
+208:     titles: document.getElementById('subPanelTitles'),
+209:     xshare: document.getElementById('subPanelXShare'),
+210:     titleMode: document.getElementById('subPanelTitleMode')
+211:   };
+212: 
+213:   subTabButtons.forEach(btn => {
+214:     btn.addEventListener('click', () => {
+215:       try { sound.init(); sound.playTap(); } catch (e) {}
+216:       const target = btn.dataset.subtab;
+217:       subTabButtons.forEach(b => b.classList.toggle('active', b === btn));
+218:       Object.entries(subPanels).forEach(([key, panel]) => {
+219:         if (!panel) return;
+220:         if (key === target) {
+221:           panel.classList.add('active');
+222:           panel.classList.remove('hidden');
+223:         } else {
+224:           panel.classList.remove('active');
+225:           panel.classList.add('hidden');
+226:         }
+227:       });
+228: 
+229:       // 右側プレビューカードの切替 (タイトル＆モード画面タブのときはモックアップ表示)
+230:       if (target === 'titleMode') {
+231:         if (previewFishTankContainer) previewFishTankContainer.classList.add('hidden');
+232:         if (previewTitleModeContainer) previewTitleModeContainer.classList.remove('hidden');
+233:         updateTitleModeMockup();
+234:       } else {
+235:         if (previewFishTankContainer) previewFishTankContainer.classList.remove('hidden');
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
