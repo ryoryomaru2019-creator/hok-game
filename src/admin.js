@@ -475,6 +475,10 @@ window.addEventListener('DOMContentLoaded', () => {
   const charCondRepeatCountVal = document.getElementById('charCondRepeatCountVal');
   const chkCharCondTapCountEnabled = document.getElementById('chkCharCondTapCountEnabled');
   const chkCharCondMatchAny = document.getElementById('chkCharCondMatchAny');
+  const chkCharCondAll = document.getElementById('chkCharCondAll');
+  const chkCharCondScore = document.getElementById('chkCharCondScore');
+  const chkCharCondTargetTaps = document.getElementById('chkCharCondTargetTaps');
+  const chkCharCondTime = document.getElementById('chkCharCondTime');
 
   // 全モード適用 ＆ 設定一覧マトリクス要素
   const btnApplyCharToAllModes = document.getElementById('btnApplyCharToAllModes');
@@ -1550,9 +1554,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (panelDisturberSettings && disturberBadgeStatus) {
-      panelDisturberSettings.classList.toggle('section-disabled', isTarget);
-      disturberBadgeStatus.innerText = !isTarget ? '有効中' : '※邪魔キャラ指定時のみ有効';
-      disturberBadgeStatus.className = !isTarget ? 'dedicated-badge-active' : 'dedicated-badge-disabled';
+      panelDisturberSettings.classList.remove('section-disabled');
+      disturberBadgeStatus.innerText = '全キャラ対応';
+      disturberBadgeStatus.className = 'dedicated-badge-active';
     }
 
     // 共通設定の反映
@@ -1723,11 +1727,21 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (chkCharCondTapCountEnabled) {
-      chkCharCondTapCountEnabled.checked = (sc.tapCountEnabled !== false);
+      chkCharCondTapCountEnabled.checked = (sc.tapCountEnabled !== false && sc.condTargetTapsEnabled !== false);
     }
     if (chkCharCondMatchAny) {
       chkCharCondMatchAny.checked = !!sc.matchAny;
     }
+
+    const condScore = !!sc.condScoreEnabled;
+    const condTaps = sc.condTargetTapsEnabled !== false && sc.tapCountEnabled !== false;
+    const condTime = !!sc.condTimeEnabled;
+    const isCondAll = condScore && condTaps && condTime;
+
+    if (chkCharCondAll) chkCharCondAll.checked = isCondAll;
+    if (chkCharCondScore) chkCharCondScore.checked = condScore;
+    if (chkCharCondTargetTaps) chkCharCondTargetTaps.checked = condTaps;
+    if (chkCharCondTime) chkCharCondTime.checked = condTime;
 
     if (charCondTapCount && charCondTapCountVal) {
       const isIdle = (sc.triggerAction === 'idle');
@@ -1932,7 +1946,91 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.target.checked) {
       cfg.spawnCondition.enabled = true;
       cfg.spawnCondition.tapCountEnabled = true;
+      cfg.spawnCondition.condTargetTapsEnabled = true;
     }
+
+    try { sound.init(); sound.playTap(); } catch (err) { }
+    syncUIForActiveChar();
+    saveCurrentConfigToStorage();
+    if (configMatrixModal && !configMatrixModal.classList.contains('hidden')) {
+      renderConfigMatrixTable(matrixCurrentMode);
+    }
+  });
+
+  // ３条件設定: 全て (ALL) リスナー
+  chkCharCondAll?.addEventListener('change', (e) => {
+    const cfg = getActiveCharConfig();
+    if (!cfg.spawnCondition) cfg.spawnCondition = {};
+    const val = e.target.checked;
+    cfg.spawnCondition.condAll = val;
+    cfg.spawnCondition.condScoreEnabled = val;
+    cfg.spawnCondition.condTargetTapsEnabled = val;
+    cfg.spawnCondition.tapCountEnabled = val;
+    cfg.spawnCondition.condTimeEnabled = val;
+
+    if (!val && !cfg.spawnCondition.enabled) {
+      cfg.spawnCondition.matchAny = false;
+    }
+
+    try { sound.init(); sound.playTap(); } catch (err) { }
+    syncUIForActiveChar();
+    saveCurrentConfigToStorage();
+    if (configMatrixModal && !configMatrixModal.classList.contains('hidden')) {
+      renderConfigMatrixTable(matrixCurrentMode);
+    }
+  });
+
+  // ３条件設定: 獲得Pt リスナー
+  chkCharCondScore?.addEventListener('change', (e) => {
+    const cfg = getActiveCharConfig();
+    if (!cfg.spawnCondition) cfg.spawnCondition = {};
+    cfg.spawnCondition.condScoreEnabled = e.target.checked;
+    const condScore = !!cfg.spawnCondition.condScoreEnabled;
+    const condTaps = cfg.spawnCondition.condTargetTapsEnabled !== false && cfg.spawnCondition.tapCountEnabled !== false;
+    const condTime = !!cfg.spawnCondition.condTimeEnabled;
+    cfg.spawnCondition.condAll = condScore && condTaps && condTime;
+
+    try { sound.init(); sound.playTap(); } catch (err) { }
+    syncUIForActiveChar();
+    saveCurrentConfigToStorage();
+    if (configMatrixModal && !configMatrixModal.classList.contains('hidden')) {
+      renderConfigMatrixTable(matrixCurrentMode);
+    }
+  });
+
+  // ３条件設定: T捕獲数 リスナー
+  chkCharCondTargetTaps?.addEventListener('change', (e) => {
+    const cfg = getActiveCharConfig();
+    if (!cfg.spawnCondition) cfg.spawnCondition = {};
+    cfg.spawnCondition.condTargetTapsEnabled = e.target.checked;
+    cfg.spawnCondition.tapCountEnabled = e.target.checked;
+    const condScore = !!cfg.spawnCondition.condScoreEnabled;
+    const condTaps = cfg.spawnCondition.condTargetTapsEnabled !== false && cfg.spawnCondition.tapCountEnabled !== false;
+    const condTime = !!cfg.spawnCondition.condTimeEnabled;
+    cfg.spawnCondition.condAll = condScore && condTaps && condTime;
+
+    const isEnabled = !!cfg.spawnCondition.enabled;
+    if (!isEnabled || !condTaps) {
+      cfg.spawnCondition.matchAny = false;
+    }
+
+    try { sound.init(); sound.playTap(); } catch (err) { }
+    syncUIForActiveChar();
+    saveCurrentConfigToStorage();
+    if (configMatrixModal && !configMatrixModal.classList.contains('hidden')) {
+      renderConfigMatrixTable(matrixCurrentMode);
+    }
+  });
+
+  // ３条件設定: 時間 リスナー
+  chkCharCondTime?.addEventListener('change', (e) => {
+    const cfg = getActiveCharConfig();
+    if (!cfg.spawnCondition) cfg.spawnCondition = {};
+    cfg.spawnCondition.condTimeEnabled = e.target.checked;
+    const condScore = !!cfg.spawnCondition.condScoreEnabled;
+    const condTaps = cfg.spawnCondition.condTargetTapsEnabled !== false && cfg.spawnCondition.tapCountEnabled !== false;
+    const condTime = !!cfg.spawnCondition.condTimeEnabled;
+    cfg.spawnCondition.condAll = condScore && condTaps && condTime;
 
     try { sound.init(); sound.playTap(); } catch (err) { }
     syncUIForActiveChar();
@@ -3977,12 +4075,12 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     html += '</tr>';
 
-    // --- 3. 邪魔キャラ専用設定 ---
-    html += `<tr class="matrix-category-row"><td colspan="${allChars.length + 1}">【3. 邪魔キャラ専用設定】</td></tr>`;
+    // --- 3. 抽選重み ＆ 出現スコア閾値 (全キャラ共通) ---
+    html += `<tr class="matrix-category-row"><td colspan="${allChars.length + 1}">【3. 抽選重み ＆ 出現スコア閾値 (全キャラ共通)】</td></tr>`;
 
     // 出現重み
     html += '<tr>';
-    html += '<td class="matrix-param-cell-label">⚖️ 出現重み (抽選割合)<span class="matrix-param-desc">1 〜 100</span></td>';
+    html += '<td class="matrix-param-cell-label">⚖️ 出現重み (抽選割合)<span class="matrix-param-desc">1 〜 100 (出現時の抽選比率)</span></td>';
     for (const c of allChars) {
       const cfg = charsDict[c.id];
       const isLocked = isCharLocked(c.id);
@@ -3996,15 +4094,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // 出現スコア閾値
     html += '<tr>';
-    html += '<td class="matrix-param-cell-label">🎯 出現スコア閾値 (pt)<span class="matrix-param-desc">0 〜 2000pt（達成回数×10ptと自動連動）</span></td>';
+    html += '<td class="matrix-param-cell-label">🎯 出現スコア閾値 (pt)<span class="matrix-param-desc">全キャラ共通: このスコア以上で出現 (0=最初から出現)</span></td>';
     for (const c of allChars) {
       const cfg = charsDict[c.id];
       const isLocked = isCharLocked(c.id);
       const isSpawnCondEnabled = !!cfg.spawnCondition?.enabled;
       html += `
         <td class="${isLocked ? 'is-locked' : ''} ${isSpawnCondEnabled ? 'spawn-cond-prioritized' : ''}">
-          <input type="number" class="matrix-input-number matrix-field" data-char-id="${c.id}" data-field="scoreThreshold" min="0" max="2000" step="10" value="${cfg.scoreThreshold ?? 150}" ${isLocked ? 'disabled' : ''} style="${isSpawnCondEnabled ? 'opacity:0.65; border-color:#f59e0b;' : ''}" title="${isSpawnCondEnabled ? '※出現条件ONのため出現条件が最優先されます' : '条件4の達成回数×10ptと自動連動します'}">
-          ${isSpawnCondEnabled ? '<div style="font-size:10px; color:#f59e0b; margin-top:2px; font-weight:700;">⚡ 条件最優先</div>' : ''}
+          <input type="number" class="matrix-input-number matrix-field" data-char-id="${c.id}" data-field="scoreThreshold" min="0" max="2000" step="10" value="${cfg.scoreThreshold ?? 150}" ${isLocked ? 'disabled' : ''} style="${isSpawnCondEnabled ? 'opacity:0.65; border-color:#f59e0b;' : ''}" title="${isSpawnCondEnabled ? '※出現条件ONのため出現条件判定と連動します' : 'スコア到達後に海中に出現します'}">
+          ${isSpawnCondEnabled ? '<div style="font-size:10px; color:#f59e0b; margin-top:2px; font-weight:700;">⚡ 出現条件連動</div>' : ''}
         </td>
       `;
     }
@@ -4113,6 +4211,82 @@ window.addEventListener('DOMContentLoaded', () => {
           <button type="button" class="matrix-btn-combo ${isCombo ? 'active' : ''}" data-char-id="${c.id}" data-action="toggle-combo" ${isLocked ? 'disabled' : ''}>
             ${isCombo ? '🔥 連続成功' : 'OFF 延べ'}
           </button>
+        </td>
+      `;
+    }
+    html += '</tr>';
+
+    // 📋 3条件: 全て (ALL)
+    html += '<tr style="background:rgba(234,179,8,0.06);">';
+    html += '<td class="matrix-param-cell-label"><span style="color:#facc15; font-weight:800;">📋 3条件: 全て (ALL)</span><span class="matrix-param-desc">獲得Pt・T捕獲数・時間を全ON/OFF</span></td>';
+    for (const c of allChars) {
+      const cfg = charsDict[c.id];
+      const sc = cfg.spawnCondition || {};
+      const condScore = !!sc.condScoreEnabled;
+      const condTaps = sc.condTargetTapsEnabled !== false && sc.tapCountEnabled !== false;
+      const condTime = !!sc.condTimeEnabled;
+      const isCondAll = condScore && condTaps && condTime;
+      const isLocked = isCharLocked(c.id);
+      html += `
+        <td class="${isLocked ? 'is-locked' : ''}">
+          <label class="matrix-switch" title="獲得Pt・T捕獲数・時間 3条件すべてを一括ON/OFF">
+            <input type="checkbox" class="matrix-checkbox-field" data-char-id="${c.id}" data-field="spawnCondition.condAll" ${isCondAll ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
+            <span class="matrix-switch-slider" style="${isCondAll ? 'background-color:#eab308;' : ''}"></span>
+          </label>
+        </td>
+      `;
+    }
+    html += '</tr>';
+
+    // 💰 3条件: 獲得Pt
+    html += '<tr>';
+    html += '<td class="matrix-param-cell-label">💰 3条件: 獲得Pt<span class="matrix-param-desc">スコア閾値到達を出現条件にする</span></td>';
+    for (const c of allChars) {
+      const cfg = charsDict[c.id];
+      const isScoreCond = !!cfg.spawnCondition?.condScoreEnabled;
+      const isLocked = isCharLocked(c.id);
+      html += `
+        <td class="${isLocked ? 'is-locked' : ''}">
+          <label class="matrix-switch" title="スコア閾値到達を出現条件にする">
+            <input type="checkbox" class="matrix-checkbox-field" data-char-id="${c.id}" data-field="spawnCondition.condScoreEnabled" ${isScoreCond ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
+            <span class="matrix-switch-slider"></span>
+          </label>
+        </td>
+      `;
+    }
+    html += '</tr>';
+
+    // 🎯 3条件: T捕獲数
+    html += '<tr>';
+    html += '<td class="matrix-param-cell-label">🎯 3条件: T捕獲数<span class="matrix-param-desc">ターゲット捕獲数を出現条件にする</span></td>';
+    for (const c of allChars) {
+      const cfg = charsDict[c.id];
+      const isTapsCond = cfg.spawnCondition?.condTargetTapsEnabled !== false && cfg.spawnCondition?.tapCountEnabled !== false;
+      const isLocked = isCharLocked(c.id);
+      html += `
+        <td class="${isLocked ? 'is-locked' : ''}">
+          <label class="matrix-switch" title="達成回数(ターゲット捕獲数)を出現条件にする">
+            <input type="checkbox" class="matrix-checkbox-field" data-char-id="${c.id}" data-field="spawnCondition.condTargetTapsEnabled" ${isTapsCond ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
+            <span class="matrix-switch-slider"></span>
+          </label>
+        </td>
+      `;
+    }
+    html += '</tr>';
+
+    // ⏱️ 3条件: 時間
+    html += '<tr>';
+    html += '<td class="matrix-param-cell-label">⏱️ 3条件: 時間<span class="matrix-param-desc">残り時間を出現条件にする</span></td>';
+    for (const c of allChars) {
+      const cfg = charsDict[c.id];
+      const isTimeCond = !!cfg.spawnCondition?.condTimeEnabled;
+      const isLocked = isCharLocked(c.id);
+      html += `
+        <td class="${isLocked ? 'is-locked' : ''}">
+          <label class="matrix-switch" title="残り時間を出現条件にする">
+            <input type="checkbox" class="matrix-checkbox-field" data-char-id="${c.id}" data-field="spawnCondition.condTimeEnabled" ${isTimeCond ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
+            <span class="matrix-switch-slider"></span>
+          </label>
         </td>
       `;
     }
@@ -4490,24 +4664,79 @@ window.addEventListener('DOMContentLoaded', () => {
         const isChecked = target.checked;
         updateMatrixCharField(charId, 'spawnCondition.matchAny', isChecked);
         if (isChecked) {
-          // 「かたほうでも達成」にチェックがONのときは「出現条件の有効化」「 条件4: 達成回数 (回)」両方ともにチェックONに自動で
+          // 「かたほうでも達成」にチェックがONのときは「出現条件の有効化」「条件4: 達成回数 (回)」両方ともにチェックONに自動で
           updateMatrixCharField(charId, 'spawnCondition.enabled', true);
           updateMatrixCharField(charId, 'spawnCondition.tapCountEnabled', true);
+          updateMatrixCharField(charId, 'spawnCondition.condTargetTapsEnabled', true);
         }
         renderConfigMatrixTable(matrixCurrentMode);
         saveCurrentConfigToStorage();
         return;
       }
 
-      if (field === 'spawnCondition.enabled' || field === 'spawnCondition.tapCountEnabled') {
+      if (field === 'spawnCondition.condAll') {
+        const isChecked = target.checked;
+        updateMatrixCharField(charId, 'spawnCondition.condAll', isChecked);
+        updateMatrixCharField(charId, 'spawnCondition.condScoreEnabled', isChecked);
+        updateMatrixCharField(charId, 'spawnCondition.condTargetTapsEnabled', isChecked);
+        updateMatrixCharField(charId, 'spawnCondition.tapCountEnabled', isChecked);
+        updateMatrixCharField(charId, 'spawnCondition.condTimeEnabled', isChecked);
+        if (!isChecked && !charCfg?.spawnCondition?.enabled) {
+          updateMatrixCharField(charId, 'spawnCondition.matchAny', false);
+        }
+        renderConfigMatrixTable(matrixCurrentMode);
+        saveCurrentConfigToStorage();
+        return;
+      }
+
+      if (field === 'spawnCondition.condScoreEnabled') {
+        const isChecked = target.checked;
+        updateMatrixCharField(charId, field, isChecked);
+        const condScore = isChecked;
+        const condTaps = charCfg?.spawnCondition?.condTargetTapsEnabled !== false && charCfg?.spawnCondition?.tapCountEnabled !== false;
+        const condTime = !!charCfg?.spawnCondition?.condTimeEnabled;
+        updateMatrixCharField(charId, 'spawnCondition.condAll', condScore && condTaps && condTime);
+        renderConfigMatrixTable(matrixCurrentMode);
+        saveCurrentConfigToStorage();
+        return;
+      }
+
+      if (field === 'spawnCondition.condTargetTapsEnabled' || field === 'spawnCondition.tapCountEnabled') {
+        const isChecked = target.checked;
+        updateMatrixCharField(charId, 'spawnCondition.condTargetTapsEnabled', isChecked);
+        updateMatrixCharField(charId, 'spawnCondition.tapCountEnabled', isChecked);
+        const condScore = !!charCfg?.spawnCondition?.condScoreEnabled;
+        const condTaps = isChecked;
+        const condTime = !!charCfg?.spawnCondition?.condTimeEnabled;
+        updateMatrixCharField(charId, 'spawnCondition.condAll', condScore && condTaps && condTime);
+
+        const isEnabled = !!charCfg?.spawnCondition?.enabled;
+        if (!isEnabled || !condTaps) {
+          updateMatrixCharField(charId, 'spawnCondition.matchAny', false);
+        }
+        renderConfigMatrixTable(matrixCurrentMode);
+        saveCurrentConfigToStorage();
+        return;
+      }
+
+      if (field === 'spawnCondition.condTimeEnabled') {
+        const isChecked = target.checked;
+        updateMatrixCharField(charId, field, isChecked);
+        const condScore = !!charCfg?.spawnCondition?.condScoreEnabled;
+        const condTaps = charCfg?.spawnCondition?.condTargetTapsEnabled !== false && charCfg?.spawnCondition?.tapCountEnabled !== false;
+        const condTime = isChecked;
+        updateMatrixCharField(charId, 'spawnCondition.condAll', condScore && condTaps && condTime);
+        renderConfigMatrixTable(matrixCurrentMode);
+        saveCurrentConfigToStorage();
+        return;
+      }
+
+      if (field === 'spawnCondition.enabled') {
         updateMatrixCharField(charId, field, target.checked);
-        if (charCfg?.spawnCondition) {
-          const isEnabled = !!charCfg.spawnCondition.enabled;
-          const isTapEnabled = charCfg.spawnCondition.tapCountEnabled !== false;
-          // 「出現条件の有効化」「 条件4: 達成回数 (回)」いずれか片方のみにチェックONのときは「かたほうでも達成」のチェックは自動で外す
-          if (!isEnabled || !isTapEnabled) {
-            updateMatrixCharField(charId, 'spawnCondition.matchAny', false);
-          }
+        const isEnabled = target.checked;
+        const isTapEnabled = charCfg?.spawnCondition?.condTargetTapsEnabled !== false && charCfg?.spawnCondition?.tapCountEnabled !== false;
+        if (!isEnabled || !isTapEnabled) {
+          updateMatrixCharField(charId, 'spawnCondition.matchAny', false);
         }
         renderConfigMatrixTable(matrixCurrentMode);
         saveCurrentConfigToStorage();
@@ -4515,30 +4744,11 @@ window.addEventListener('DOMContentLoaded', () => {
       }
 
       updateMatrixCharField(charId, field, target.checked);
-      if (field === 'spawnCondition.enabled') {
-        renderConfigMatrixTable(matrixCurrentMode);
-      }
+      renderConfigMatrixTable(matrixCurrentMode);
+      saveCurrentConfigToStorage();
     } else {
       updateMatrixCharField(charId, field, target.value);
-
-      // 連動自動計算: 条件4: 達成回数 (回) と 出現スコア閾値 (pt)
-      if (field === 'spawnCondition.tapCount') {
-        const taps = parseInt(target.value, 10);
-        if (!isNaN(taps)) {
-          const autoScore = taps * 10;
-          const scoreInput = configMatrixTable?.querySelector(`input[data-char-id="${charId}"][data-field="scoreThreshold"]`);
-          if (scoreInput) scoreInput.value = autoScore;
-          updateMatrixCharField(charId, 'scoreThreshold', autoScore);
-        }
-      } else if (field === 'scoreThreshold') {
-        const score = parseInt(target.value, 10);
-        if (!isNaN(score)) {
-          const autoTaps = Math.max(0, Math.min(100, Math.round(score / 10)));
-          const tapInput = configMatrixTable?.querySelector(`input[data-char-id="${charId}"][data-field="spawnCondition.tapCount"]`);
-          if (tapInput) tapInput.value = autoTaps;
-          updateMatrixCharField(charId, 'spawnCondition.tapCount', autoTaps);
-        }
-      }
+      saveCurrentConfigToStorage();
     }
   });
 
@@ -4549,25 +4759,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const field = target.dataset.field;
       if (charId && field) {
         updateMatrixCharField(charId, field, target.value);
-
-        // 入力時のリアルタイム連動自動計算
-        if (field === 'spawnCondition.tapCount') {
-          const taps = parseInt(target.value, 10);
-          if (!isNaN(taps)) {
-            const autoScore = taps * 10;
-            const scoreInput = configMatrixTable?.querySelector(`input[data-char-id="${charId}"][data-field="scoreThreshold"]`);
-            if (scoreInput) scoreInput.value = autoScore;
-            updateMatrixCharField(charId, 'scoreThreshold', autoScore);
-          }
-        } else if (field === 'scoreThreshold') {
-          const score = parseInt(target.value, 10);
-          if (!isNaN(score)) {
-            const autoTaps = Math.max(0, Math.min(100, Math.round(score / 10)));
-            const tapInput = configMatrixTable?.querySelector(`input[data-char-id="${charId}"][data-field="spawnCondition.tapCount"]`);
-            if (tapInput) tapInput.value = autoTaps;
-            updateMatrixCharField(charId, 'spawnCondition.tapCount', autoTaps);
-          }
-        }
+        saveCurrentConfigToStorage();
       }
     }
   });

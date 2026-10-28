@@ -96,16 +96,20 @@ export function isTargetForMode(type, mode, devConfig = null) {
 
 export const DEFAULT_SPAWN_CONDITION = {
   enabled: false,
-  timeSec: 0,             // 0: なし, 1~60: 秒数, 61: ランダム
-  origin: 'silhouette',   // 'seabed' | 'silhouette' | 'left' | 'right' | 'top' | 'random'
-  triggerAction: 'tap_target', // 'tap_target' | 'tap_disturber' | 'tap_specific' | 'tap_background' | 'idle'
-  targetCharacters: [],   // キャラ個別タップ用 (IDリスト)
-  tapCount: 10,           // 0: 無操作, 1~100: 回数, 101: ランダム
-  tapCountEnabled: true,  // 条件4 (達成回数) の有効/無効フラグ
-  matchAny: false,        // かたほうでも達成 (時間または達成回数のいずれかで達成)
-  isCombo: false,         // コンボ達成条件 (false: 延べタップ数, true: 連続タップ成功のみ)
-  probability: 100,       // 1~100%
-  repeatCount: 0          // 0: 無限 (条件達成するたび発生), 1~99: 発動回数制限, 100: 回数ランダム
+  condAll: false,               // 3条件設定: 全て (ALL)
+  condScoreEnabled: false,      // 3条件設定: 獲得Pt (スコア閾値判定の有効化)
+  condTargetTapsEnabled: true,  // 3条件設定: T捕獲数 (達成回数判定の有効化)
+  condTimeEnabled: false,       // 3条件設定: 時間 (残り時間判定の有効化)
+  timeSec: 0,                   // 0: なし, 1~60: 秒数, 61: ランダム
+  origin: 'silhouette',         // 'seabed' | 'silhouette' | 'left' | 'right' | 'top' | 'random'
+  triggerAction: 'tap_target',  // 'tap_target' | 'tap_disturber' | 'tap_specific' | 'tap_background' | 'idle'
+  targetCharacters: [],         // キャラ個別タップ用 (IDリスト)
+  tapCount: 10,                 // 0: 無操作, 1~100: 回数, 101: ランダム
+  tapCountEnabled: true,        // 後方互換用
+  matchAny: false,              // かたほうでも達成 (いずれか達成)
+  isCombo: false,               // コンボ達成条件 (false: 延べタップ数, true: 連続タップ成功のみ)
+  probability: 100,             // 1~100%
+  repeatCount: 0                // 0: 無限 (条件達成するたび発生), 1~99: 発動回数制限, 100: 回数ランダム
 };
 
 export const DEFAULT_AMBIENT_TRIGGER = {
@@ -214,7 +218,7 @@ export const DEFAULT_CHARACTER_SETTINGS = {
     sizeScale: 1.0,
     beginnerAlert: true,
     weight: 20,
-    scoreThreshold: 150,
+    scoreThreshold: 0,
     spawnCondition: { ...DEFAULT_SPAWN_CONDITION },
     ambientTrigger: { ...DEFAULT_AMBIENT_TRIGGER }
   },
@@ -231,7 +235,7 @@ export const DEFAULT_CHARACTER_SETTINGS = {
     sizeScale: 1.0,
     beginnerAlert: true,
     weight: 20,
-    scoreThreshold: 150,
+    scoreThreshold: 0,
     spawnCondition: { ...DEFAULT_SPAWN_CONDITION },
     ambientTrigger: { ...DEFAULT_AMBIENT_TRIGGER }
   },

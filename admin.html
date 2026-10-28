@@ -790,6 +790,32 @@
                     </div>
                   </div>
 
+                  <!-- ３条件設定 (獲得Pt / T捕獲数 / 時間) -->
+                  <div class="form-group" style="padding:12px 14px; background:rgba(30,41,59,0.7); border:1.5px solid rgba(56,189,248,0.3); border-radius:12px; margin-top:10px;">
+                    <div style="font-weight:700; color:#38bdf8; font-size:13px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+                      <span>📋 ３条件設定 (出現に必要な達成条件)</span>
+                      <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; color:#facc15; font-weight:800;">
+                        <input type="checkbox" id="chkCharCondAll" style="width:16px; height:16px; accent-color:#facc15;">
+                        <span>全て (ALL)</span>
+                      </label>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+                      <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; font-weight:700; color:#e2e8f0; background:rgba(15,23,42,0.6); padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+                        <input type="checkbox" id="chkCharCondScore" style="width:16px; height:16px; accent-color:#38bdf8;">
+                        <span>💰 獲得Pt</span>
+                      </label>
+                      <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; font-weight:700; color:#e2e8f0; background:rgba(15,23,42,0.6); padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+                        <input type="checkbox" id="chkCharCondTargetTaps" style="width:16px; height:16px; accent-color:#38bdf8;">
+                        <span>🎯 T捕獲数</span>
+                      </label>
+                      <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; font-weight:700; color:#e2e8f0; background:rgba(15,23,42,0.6); padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+                        <input type="checkbox" id="chkCharCondTime" style="width:16px; height:16px; accent-color:#38bdf8;">
+                        <span>⏱️ 時間</span>
+                      </label>
+                    </div>
+                    <span class="desc-text" style="margin-top:6px; font-size:11px;">チェックを入れた条件を満たすと出現します（「かたほうでも達成」OFF時は全チェック条件のAND一致、ON時はOR一致）。</span>
+                  </div>
+
                   <!-- ５：出現条件の有効化 (条件4の下に配置) -->
                   <div class="form-group" style="padding:14px; background:rgba(15,23,42,0.7); border:1.5px solid rgba(56,189,248,0.3); border-radius:14px; margin-top:14px;">
                     <div class="condition-header-row" style="margin-bottom:0;">
@@ -836,33 +862,33 @@
               </div>
             </div>
 
-            <!-- 5. 邪魔キャラ専用設定 (出現比率ウェイト & 出現スコア閾値) -->
-            <div id="panelDisturberSettings" class="settings-block dedicated-settings-block section-disabled">
+            <!-- 5. 出現重み ＆ スコア閾値設定 (全キャラ共通) -->
+            <div id="panelDisturberSettings" class="settings-block dedicated-settings-block">
               <div class="block-header-row">
                 <div class="block-title">
-                  <span>⚠️ 邪魔キャラ専用設定</span>
-                  <span id="disturberBadgeStatus" class="dedicated-badge-disabled">※邪魔キャラ指定時のみ有効</span>
+                  <span>🎯 出現重み ＆ スコア閾値設定</span>
+                  <span id="disturberBadgeStatus" class="dedicated-badge-active">全キャラ対応</span>
                 </div>
               </div>
 
               <!-- 出現比率 (ウェイト) -->
               <div class="form-group">
                 <div class="label-row">
-                  <label for="charDisturberWeight">邪魔キャラ個別 出現比率 (ウェイト)</label>
+                  <label for="charDisturberWeight">出現抽選比率 (ウェイト)</label>
                   <span id="charDisturberWeightVal" class="val-pill">20</span>
                 </div>
                 <input type="range" id="charDisturberWeight" min="0" max="100" step="5" value="20" class="admin-slider">
-                <span class="desc-text">スコア到達後にスポーンする邪魔キャラの中で選ばれる出現ウェイトです（0で出現なし）。</span>
+                <span class="desc-text">スコア到達後にスポーンする候補の中で選ばれる出現比率ウェイトです（0で出現なし）。</span>
               </div>
 
               <!-- 出現スコア閾値 -->
               <div class="form-group">
                 <div class="label-row">
-                  <label for="charDisturberScoreThreshold">邪魔キャラ個別 出現スコア閾値</label>
+                  <label for="charDisturberScoreThreshold">出現スコア閾値 (全キャラ共通 / 獲得Pt)</label>
                   <span id="charDisturberScoreThresholdVal" class="val-pill">150 pt</span>
                 </div>
                 <input type="range" id="charDisturberScoreThreshold" min="0" max="1500" step="25" value="150" class="admin-slider">
-                <span class="desc-text">この邪魔キャラが出現し始めるスコア条件です（指定スコア到達後にスポーン解禁）。</span>
+                <span class="desc-text">このキャラクターが出現し始めるスコア条件です（0pt = ゲーム開始時から出現、150pt = 150pt到達後に解禁）。</span>
               </div>
             </div>
             </div><!-- /#paneParamSpawn -->

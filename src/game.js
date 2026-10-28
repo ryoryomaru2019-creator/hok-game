@@ -1189,31 +1189,33 @@ export class Game {
     const distTypeCount = Math.max(0, startCfg.startDisturberTypeCount !== undefined ? Number(startCfg.startDisturberTypeCount) : 3);
     const distCountPerType = Math.max(0, startCfg.startDisturberCountPerType !== undefined ? Number(startCfg.startDisturberCountPerType) : 2);
 
-    // カレイ系候補 (バケツA所属 ＆ 出現条件OFFのキャラのみ)
+    // カレイ系候補 (バケツA所属 ＆ 出現条件OFF ＆ スコア閾値0以下のキャラのみ)
     const kareiCandidates = [FISH_TYPES.KAREI, FISH_TYPES.KANJI_KAREI_1, FISH_TYPES.KANJI_KAREI_2]
-      .filter(id => !activeCfg?.characters?.[id]?.spawnCondition?.enabled);
+      .filter(id => !activeCfg?.characters?.[id]?.spawnCondition?.enabled && (activeCfg?.characters?.[id]?.scoreThreshold || 0) <= 0);
     if (activeCfg?.characters) {
       for (const [id, c] of Object.entries(activeCfg.characters)) {
-        if ((c.role === 'bucketA' || (!c.role?.startsWith('bucket') && id.includes('karei'))) && !c.spawnCondition?.enabled && !kareiCandidates.includes(id)) {
+        if ((c.role === 'bucketA' || (!c.role?.startsWith('bucket') && id.includes('karei'))) && !c.spawnCondition?.enabled && (c.scoreThreshold || 0) <= 0 && !kareiCandidates.includes(id)) {
           kareiCandidates.push(id);
         }
       }
     }
+    if (kareiCandidates.length === 0) kareiCandidates.push(FISH_TYPES.KAREI);
 
-    // ヒラメ系候補 (バケツB所属 ＆ 出現条件OFFのキャラのみ)
+    // ヒラメ系候補 (バケツB所属 ＆ 出現条件OFF ＆ スコア閾値0以下のキャラのみ)
     const hirameCandidates = [FISH_TYPES.HIRAME, FISH_TYPES.KANJI_HIRAME]
-      .filter(id => !activeCfg?.characters?.[id]?.spawnCondition?.enabled);
+      .filter(id => !activeCfg?.characters?.[id]?.spawnCondition?.enabled && (activeCfg?.characters?.[id]?.scoreThreshold || 0) <= 0);
     if (activeCfg?.characters) {
       for (const [id, c] of Object.entries(activeCfg.characters)) {
-        if ((c.role === 'bucketB' || (!c.role?.startsWith('bucket') && id.includes('hirame'))) && !c.spawnCondition?.enabled && !hirameCandidates.includes(id)) {
+        if ((c.role === 'bucketB' || (!c.role?.startsWith('bucket') && id.includes('hirame'))) && !c.spawnCondition?.enabled && (c.scoreThreshold || 0) <= 0 && !hirameCandidates.includes(id)) {
           hirameCandidates.push(id);
         }
       }
     }
+    if (hirameCandidates.length === 0) hirameCandidates.push(FISH_TYPES.HIRAME);
 
-    // 邪魔キャラ候補 (出現条件OFFのキャラのみ)
+    // 邪魔キャラ候補 (出現条件OFF ＆ スコア閾値0以下のキャラのみ)
     const disturberTypes = [FISH_TYPES.OCTOPUS, FISH_TYPES.SQUID, FISH_TYPES.STINGRAY, FISH_TYPES.AJI_OPEN, FISH_TYPES.SHITABIRAME]
-      .filter(id => !activeCfg?.characters?.[id]?.spawnCondition?.enabled);
+      .filter(id => !activeCfg?.characters?.[id]?.spawnCondition?.enabled && (activeCfg?.characters?.[id]?.scoreThreshold || 0) <= 0);
 
     let fishesToSpawn = [];
 
@@ -1319,10 +1321,17 @@ export class Game {
     const validTargets = targetCandidates.filter(id => {
       const cfg = activeCfg?.characters?.[id];
       if (cfg?.spawnCondition?.enabled) return false;
+      const threshold = cfg?.scoreThreshold != null ? cfg.scoreThreshold : 0;
+      if (this.score < threshold && !this.isFeverTime) return false;
       return cfg ? cfg.role !== 'disturber' : true;
     });
 
-    const pool = validTargets.length > 0 ? validTargets : targetCandidates.filter(id => !activeCfg?.characters?.[id]?.spawnCondition?.enabled);
+    const pool = validTargets.length > 0 ? validTargets : targetCandidates.filter(id => {
+      const cfg = activeCfg?.characters?.[id];
+      if (cfg?.spawnCondition?.enabled) return false;
+      const threshold = cfg?.scoreThreshold != null ? cfg.scoreThreshold : 0;
+      return this.score >= threshold || this.isFeverTime;
+    });
     if (pool.length === 0) return;
 
     for (let i = 0; i < count; i++) {
@@ -1365,26 +1374,32 @@ export class Game {
       }
     }
 
-    // カレイ系・バケツA候補（出現条件ONのキャラは除外）
+    // カレイ系・バケツA候補（出現条件ONのキャラは除外、全キャラ共通スコア閾値判定）
     const kareiCandidates = Object.keys(activeCfg?.characters || {})
       .filter(id => {
         const c = activeCfg.characters[id];
         if (c.spawnCondition?.enabled || c.role === 'disturber') return false;
+        const threshold = c.scoreThreshold != null ? c.scoreThreshold : 0;
+        if (this.score < threshold && !this.isFeverTime) return false;
         return c.role === 'bucketA' || (!c.role?.startsWith('bucket') && (id === FISH_TYPES.KAREI || id === FISH_TYPES.KANJI_KAREI_1 || id === FISH_TYPES.KANJI_KAREI_2));
       });
     if (kareiCandidates.length === 0) kareiCandidates.push(FISH_TYPES.KAREI);
 
-    // ヒラメ系・バケツB候補（出現条件ONのキャラは除外）
+    // ヒラメ系・バケツB候補（出現条件ONのキャラは除外、全キャラ共通スコア閾値判定）
     const hirameCandidates = Object.keys(activeCfg?.characters || {})
       .filter(id => {
         const c = activeCfg.characters[id];
         if (c.spawnCondition?.enabled || c.role === 'disturber') return false;
+        const threshold = c.scoreThreshold != null ? c.scoreThreshold : 0;
+        if (this.score < threshold && !this.isFeverTime) return false;
         return c.role === 'bucketB' || (!c.role?.startsWith('bucket') && (id === FISH_TYPES.HIRAME || id === FISH_TYPES.KANJI_HIRAME));
       });
     if (hirameCandidates.length === 0) hirameCandidates.push(FISH_TYPES.HIRAME);
 
-    // ぶーちゃん（条件OFFなら全モードでレア出現候補に混ぜる）
-    const booChanAvailable = !activeCfg?.characters?.[FISH_TYPES.BOO_CHAN]?.spawnCondition?.enabled;
+    // ぶーちゃん（条件OFFなら全モードでレア出現候補に混ぜる、スコア閾値到達時のみ）
+    const booCfg = activeCfg?.characters?.[FISH_TYPES.BOO_CHAN];
+    const booThreshold = booCfg?.scoreThreshold != null ? booCfg.scoreThreshold : 0;
+    const booChanAvailable = !booCfg?.spawnCondition?.enabled && (this.score >= booThreshold || this.isFeverTime);
 
     const obstacleRate = (activeCfg?.obstacleRate != null ? activeCfg.obstacleRate / 100 : 0.25);
     const spawnDisturberChance = this.isFeverTime ? 0.35 : obstacleRate;
@@ -1478,22 +1493,27 @@ export class Game {
         continue;
       }
 
-      // 1. 時間条件判定
-      let hasTimeLimit = (sc.timeSec && sc.timeSec > 0);
+      // 1. スコア閾値条件判定 (獲得Pt)
+      const scoreEnabled = !!sc.condScoreEnabled;
+      const reqScore = charCfg.scoreThreshold ?? 0;
+      const scorePassed = (this.score >= reqScore);
+
+      // 2. 時間条件判定 (時間)
+      const timeEnabled = sc.condTimeEnabled !== undefined ? !!sc.condTimeEnabled : (sc.timeSec && sc.timeSec > 0);
       let timePassed = false;
-      if (!hasTimeLimit) {
-        timePassed = true; // 時間指定なし
-      } else if (sc.timeSec === 61) {
+      if (sc.timeSec === 61) {
         // ランダム時間
         const targetTime = this.charRandomTargets[charId]?.targetTime || 30;
         if (this.timeLeft <= targetTime) timePassed = true;
-      } else {
+      } else if (sc.timeSec > 0) {
         // 残り時間指定以下
         if (this.timeLeft <= sc.timeSec) timePassed = true;
+      } else {
+        timePassed = true; // 時間指定なし
       }
 
-      // 2. 行動・タップ回数判定
-      const tapEnabled = sc.tapCountEnabled !== false;
+      // 3. 行動・タップ回数判定 (T捕獲数)
+      const tapEnabled = sc.condTargetTapsEnabled !== undefined ? !!sc.condTargetTapsEnabled : (sc.tapCountEnabled !== false);
       let actionPassed = false;
       if (!tapEnabled) {
         actionPassed = true; // タップ回数条件OFF時は達成とみなす
@@ -1533,12 +1553,23 @@ export class Game {
         }
       }
 
-      // 「かたほうでも達成 (matchAny)」の判定
-      // matchAny有効時: 時間達成 または タップ達成 のどちらか片方でも満たせば発動
-      // matchAny無効時: 両方を満たす必要がある (AND条件)
-      const isConditionMet = sc.matchAny
-        ? (timePassed || actionPassed)
-        : (timePassed && actionPassed);
+      // ３条件設定のチェック判定（有効化されたチェックボックス群の達成状態を評価）
+      const activeConditions = [];
+      if (scoreEnabled) activeConditions.push(scorePassed);
+      if (timeEnabled) activeConditions.push(timePassed);
+      if (tapEnabled) activeConditions.push(actionPassed);
+
+      // 「かたほうでも達成 (matchAny)」の判定:
+      // matchAny有効時: チェックした条件のうち【いずれか1つでも】達成していれば出現 (OR条件)
+      // matchAny無効時: チェックした条件の【全て】を達成していれば出現 (AND条件)
+      let isConditionMet = false;
+      if (activeConditions.length === 0) {
+        isConditionMet = sc.matchAny ? (timePassed || actionPassed) : (timePassed && actionPassed);
+      } else if (sc.matchAny) {
+        isConditionMet = activeConditions.some(Boolean);
+      } else {
+        isConditionMet = activeConditions.every(Boolean);
+      }
 
       if (!isConditionMet) continue;
 

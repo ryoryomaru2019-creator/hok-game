@@ -684,7 +684,12 @@
           "tapCount": 10,
           "isCombo": false,
           "probability": 100,
-          "repeatCount": 0
+          "repeatCount": 0,
+          "condAll": false,
+          "condScoreEnabled": false,
+          "condTargetTapsEnabled": true,
+          "condTimeEnabled": false,
+          "matchAny": false
         },
         "ambientTrigger": {
           "enabled": false,
@@ -729,7 +734,12 @@
           "tapCount": 10,
           "isCombo": false,
           "probability": 100,
-          "repeatCount": 0
+          "repeatCount": 0,
+          "condAll": false,
+          "condScoreEnabled": false,
+          "condTargetTapsEnabled": true,
+          "condTimeEnabled": false,
+          "matchAny": false
         },
         "ambientTrigger": {
           "enabled": false,
@@ -774,7 +784,12 @@
           "tapCount": 10,
           "isCombo": false,
           "probability": 100,
-          "repeatCount": 0
+          "repeatCount": 0,
+          "condAll": false,
+          "condScoreEnabled": false,
+          "condTargetTapsEnabled": true,
+          "condTimeEnabled": false,
+          "matchAny": false
         },
         "ambientTrigger": {
           "enabled": false,
@@ -819,7 +834,12 @@
           "tapCount": 20,
           "isCombo": false,
           "probability": 100,
-          "repeatCount": 0
+          "repeatCount": 0,
+          "condAll": false,
+          "condScoreEnabled": false,
+          "condTargetTapsEnabled": true,
+          "condTimeEnabled": false,
+          "matchAny": false
         },
         "ambientTrigger": {
           "enabled": false,
@@ -864,7 +884,12 @@
           "tapCount": 20,
           "isCombo": false,
           "probability": 100,
-          "repeatCount": 0
+          "repeatCount": 0,
+          "condAll": false,
+          "condScoreEnabled": false,
+          "condTargetTapsEnabled": true,
+          "condTimeEnabled": false,
+          "matchAny": false
         },
         "ambientTrigger": {
           "enabled": false,
@@ -909,7 +934,12 @@
           "tapCount": 20,
           "isCombo": false,
           "probability": 100,
-          "repeatCount": 0
+          "repeatCount": 0,
+          "condAll": false,
+          "condScoreEnabled": false,
+          "condTargetTapsEnabled": true,
+          "condTimeEnabled": false,
+          "matchAny": false
         },
         "ambientTrigger": {
           "enabled": false,
@@ -954,7 +984,12 @@
           "tapCount": 10,
           "isCombo": false,
           "probability": 100,
-          "repeatCount": 0
+          "repeatCount": 0,
+          "condAll": false,
+          "condScoreEnabled": false,
+          "condTargetTapsEnabled": true,
+          "condTimeEnabled": false,
+          "matchAny": false
         },
         "ambientTrigger": {
           "enabled": false,
@@ -999,7 +1034,12 @@
           "tapCount": 10,
           "isCombo": false,
           "probability": 100,
-          "repeatCount": 0
+          "repeatCount": 0,
+          "condAll": false,
+          "condScoreEnabled": false,
+          "condTargetTapsEnabled": true,
+          "condTimeEnabled": false,
+          "matchAny": false
         },
         "ambientTrigger": {
           "enabled": false,
@@ -1044,7 +1084,12 @@
           "tapCount": 10,
           "isCombo": false,
           "probability": 100,
-          "repeatCount": 0
+          "repeatCount": 0,
+          "condAll": false,
+          "condScoreEnabled": false,
+          "condTargetTapsEnabled": true,
+          "condTimeEnabled": false,
+          "matchAny": false
         },
         "ambientTrigger": {
           "enabled": true,
@@ -1089,7 +1134,12 @@
           "tapCount": 10,
           "isCombo": false,
           "probability": 100,
-          "repeatCount": 0
+          "repeatCount": 0,
+          "condAll": false,
+          "condScoreEnabled": false,
+          "condTargetTapsEnabled": true,
+          "condTimeEnabled": false,
+          "matchAny": false
         },
         "ambientTrigger": {
           "enabled": false,
@@ -1134,7 +1184,12 @@
           "tapCount": 10,
           "isCombo": false,
           "probability": 100,
-          "repeatCount": 0
+          "repeatCount": 0,
+          "condAll": false,
+          "condScoreEnabled": false,
+          "condTargetTapsEnabled": true,
+          "condTimeEnabled": false,
+          "matchAny": false
         },
         "ambientTrigger": {
           "enabled": false,
@@ -1358,7 +1413,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1403,7 +1463,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1448,7 +1513,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1493,7 +1563,12 @@
               "tapCount": 20,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1538,7 +1613,12 @@
               "tapCount": 20,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1583,7 +1663,12 @@
               "tapCount": 20,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1628,7 +1713,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1673,7 +1763,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1718,7 +1813,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": true,
@@ -1763,7 +1863,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1808,7 +1913,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1852,7 +1962,12 @@
               "tapCount": 40,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1912,7 +2027,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1950,7 +2070,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1988,7 +2113,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2026,7 +2156,12 @@
               "tapCount": 20,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2064,7 +2199,12 @@
               "tapCount": 20,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2102,7 +2242,12 @@
               "tapCount": 20,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2140,7 +2285,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2178,7 +2328,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2216,7 +2371,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": true,
@@ -2254,7 +2414,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2292,7 +2457,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2329,7 +2499,12 @@
               "tapCount": 40,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2380,7 +2555,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2419,7 +2599,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2458,7 +2643,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2497,7 +2687,12 @@
               "tapCount": 20,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2536,7 +2731,12 @@
               "tapCount": 20,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2575,7 +2775,12 @@
               "tapCount": 20,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2614,7 +2819,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2653,7 +2863,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2692,7 +2907,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": true,
@@ -2731,7 +2951,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2770,7 +2995,12 @@
               "tapCount": 10,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2808,7 +3038,12 @@
               "tapCount": 40,
               "isCombo": false,
               "probability": 100,
-              "repeatCount": 0
+              "repeatCount": 0,
+              "condAll": false,
+              "condScoreEnabled": false,
+              "condTargetTapsEnabled": true,
+              "condTimeEnabled": false,
+              "matchAny": false
             },
             "ambientTrigger": {
               "enabled": false,
