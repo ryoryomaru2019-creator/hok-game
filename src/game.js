@@ -1479,8 +1479,9 @@ export class Game {
       }
 
       // 1. 時間条件判定
+      let hasTimeLimit = (sc.timeSec && sc.timeSec > 0);
       let timePassed = false;
-      if (!sc.timeSec || sc.timeSec === 0) {
+      if (!hasTimeLimit) {
         timePassed = true; // 時間指定なし
       } else if (sc.timeSec === 61) {
         // ランダム時間
@@ -1490,45 +1491,56 @@ export class Game {
         // 残り時間指定以下
         if (this.timeLeft <= sc.timeSec) timePassed = true;
       }
-      if (!timePassed) continue;
 
       // 2. 行動・タップ回数判定
+      const tapEnabled = sc.tapCountEnabled !== false;
       let actionPassed = false;
-      const reqTaps = (sc.tapCount === 101)
-        ? (this.charRandomTargets[charId]?.targetTaps || 10)
-        : (sc.tapCount ?? 10);
-
-      if (sc.isCombo) {
-        // コンボON: 連続タップ成功回数(this.combo)が指定回数以上の場合のみ出現
-        if (reqTaps > 0 && (this.combo || 0) >= reqTaps) {
-          actionPassed = true;
-        }
+      if (!tapEnabled) {
+        actionPassed = true; // タップ回数条件OFF時は達成とみなす
       } else {
-        // コンボOFF (デフォルト): 延べタップ回数
-        if (sc.triggerAction === 'idle') {
-          // 無操作（3秒以上操作なし）
-          if (idleSec >= 3.0) actionPassed = true;
-        } else if (sc.triggerAction === 'tap_target') {
-          if ((this.spawnCondCounters?.targetTaps || 0) >= reqTaps) actionPassed = true;
-        } else if (sc.triggerAction === 'tap_disturber') {
-          if ((this.spawnCondCounters?.disturberTaps || 0) >= reqTaps) actionPassed = true;
-        } else if (sc.triggerAction === 'tap_background') {
-          if ((this.spawnCondCounters?.bgTaps || 0) >= reqTaps) actionPassed = true;
-        } else if (sc.triggerAction === 'tap_specific') {
-          const targetChars = sc.targetCharacters || [];
-          let totalTaps = 0;
-          if (targetChars.length > 0) {
-            for (const tc of targetChars) {
-              totalTaps += (this.spawnCondCounters?.charTaps?.[tc] || 0);
-            }
-          } else {
-            totalTaps = (this.spawnCondCounters?.charTaps?.[charId] || 0);
+        const reqTaps = (sc.tapCount === 101)
+          ? (this.charRandomTargets[charId]?.targetTaps || 10)
+          : (sc.tapCount ?? 10);
+
+        if (sc.isCombo) {
+          // コンボON: 連続タップ成功回数(this.combo)が指定回数以上の場合のみ出現
+          if (reqTaps > 0 && (this.combo || 0) >= reqTaps) {
+            actionPassed = true;
           }
-          if (totalTaps >= reqTaps) actionPassed = true;
+        } else {
+          // コンボOFF (デフォルト): 延べタップ回数
+          if (sc.triggerAction === 'idle') {
+            // 無操作（3秒以上操作なし）
+            if (idleSec >= 3.0) actionPassed = true;
+          } else if (sc.triggerAction === 'tap_target') {
+            if ((this.spawnCondCounters?.targetTaps || 0) >= reqTaps) actionPassed = true;
+          } else if (sc.triggerAction === 'tap_disturber') {
+            if ((this.spawnCondCounters?.disturberTaps || 0) >= reqTaps) actionPassed = true;
+          } else if (sc.triggerAction === 'tap_background') {
+            if ((this.spawnCondCounters?.bgTaps || 0) >= reqTaps) actionPassed = true;
+          } else if (sc.triggerAction === 'tap_specific') {
+            const targetChars = sc.targetCharacters || [];
+            let totalTaps = 0;
+            if (targetChars.length > 0) {
+              for (const tc of targetChars) {
+                totalTaps += (this.spawnCondCounters?.charTaps?.[tc] || 0);
+              }
+            } else {
+              totalTaps = (this.spawnCondCounters?.charTaps?.[charId] || 0);
+            }
+            if (totalTaps >= reqTaps) actionPassed = true;
+          }
         }
       }
 
-      if (!actionPassed) continue;
+      // 「かたほうでも達成 (matchAny)」の判定
+      // matchAny有効時: 時間達成 または タップ達成 のどちらか片方でも満たせば発動
+      // matchAny無効時: 両方を満たす必要がある (AND条件)
+      const isConditionMet = sc.matchAny
+        ? (timePassed || actionPassed)
+        : (timePassed && actionPassed);
+
+      if (!isConditionMet) continue;
 
       // 条件達成！クールダウン更新＆カウンタリセット
       this.spawnCondCooldowns[charId] = now;

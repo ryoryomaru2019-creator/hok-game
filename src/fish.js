@@ -101,6 +101,8 @@ export const DEFAULT_SPAWN_CONDITION = {
   triggerAction: 'tap_target', // 'tap_target' | 'tap_disturber' | 'tap_specific' | 'tap_background' | 'idle'
   targetCharacters: [],   // キャラ個別タップ用 (IDリスト)
   tapCount: 10,           // 0: 無操作, 1~100: 回数, 101: ランダム
+  tapCountEnabled: true,  // 条件4 (達成回数) の有効/無効フラグ
+  matchAny: false,        // かたほうでも達成 (時間または達成回数のいずれかで達成)
   isCombo: false,         // コンボ達成条件 (false: 延べタップ数, true: 連続タップ成功のみ)
   probability: 100,       // 1~100%
   repeatCount: 0          // 0: 無限 (条件達成するたび発生), 1~99: 発動回数制限, 100: 回数ランダム

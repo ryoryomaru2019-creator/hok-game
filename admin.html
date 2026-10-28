@@ -713,15 +713,12 @@
                 <div class="condition-header-row">
                   <div class="condition-title-group">
                     <span class="condition-icon">✨</span>
-                    <strong>出現条件</strong>
+                    <strong>出現条件設定</strong>
                     <span class="condition-sublabel">(特定アクションや時間で出現)</span>
                   </div>
-                  <button type="button" id="btnToggleSpawnCondition" class="btn-condition-toggle condition-off">
-                    <span class="toggle-icon">⚪</span> <span class="toggle-text">OFF (通常出現)</span>
-                  </button>
                 </div>
 
-                <div id="spawnConditionBody" class="condition-body condition-disabled">
+                <div id="spawnConditionBody" class="condition-body">
                   <!-- １：時間 -->
                   <div class="form-group">
                     <div class="label-row">
@@ -777,6 +774,12 @@
                       <label for="charCondTapCount">４：何回タップしたら (達成回数)</label>
                       <span id="charCondTapCountVal" class="val-pill">10 回</span>
                     </div>
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                      <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12px; font-weight:700; color:#38bdf8;">
+                        <input type="checkbox" id="chkCharCondTapCountEnabled" checked style="accent-color:#38bdf8; width:16px; height:16px;">
+                        <span>条件4: 達成回数を有効にする</span>
+                      </label>
+                    </div>
                     <input type="range" id="charCondTapCount" min="0" max="101" step="1" value="10" class="admin-slider">
                     <span class="desc-text">0回 = 無操作 / 1〜100回 = タップ指定回数 / 101回 = ランダム回数 ※「無操作」選択時は入力不可</span>
                     <div class="combo-toggle-row">
@@ -784,6 +787,29 @@
                       <button type="button" id="charCondComboToggle" class="btn-toggle-pill">
                         コンボ: OFF (延べタップ数)
                       </button>
+                    </div>
+                  </div>
+
+                  <!-- ５：出現条件の有効化 (条件4の下に配置) -->
+                  <div class="form-group" style="padding:14px; background:rgba(15,23,42,0.7); border:1.5px solid rgba(56,189,248,0.3); border-radius:14px; margin-top:14px;">
+                    <div class="condition-header-row" style="margin-bottom:0;">
+                      <div class="condition-title-group">
+                        <span class="condition-icon">🚀</span>
+                        <strong>出現条件の有効化</strong>
+                        <span class="condition-sublabel">(条件達成時のみ出現)</span>
+                      </div>
+                      <button type="button" id="btnToggleSpawnCondition" class="btn-condition-toggle condition-off">
+                        <span class="toggle-icon">⚪</span> <span class="toggle-text">OFF (通常出現)</span>
+                      </button>
+                    </div>
+
+                    <!-- かたほうでも達成 チェックボックス -->
+                    <div style="margin-top:12px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1);">
+                      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:700; color:#e0f2fe;">
+                        <input type="checkbox" id="chkCharCondMatchAny" style="width:18px; height:18px; accent-color:#38bdf8;">
+                        <span>✨ かたほうでも達成 (時間・達成回数のいずれかで発動)</span>
+                      </label>
+                      <span class="desc-text" style="margin-top:4px;">※ON時は「出現条件の有効化」と「条件4: 達成回数」が両方自動でONになります</span>
                     </div>
                   </div>
 

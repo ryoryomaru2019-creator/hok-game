@@ -473,6 +473,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const charCondProbabilityVal = document.getElementById('charCondProbabilityVal');
   const charCondRepeatCount = document.getElementById('charCondRepeatCount');
   const charCondRepeatCountVal = document.getElementById('charCondRepeatCountVal');
+  const chkCharCondTapCountEnabled = document.getElementById('chkCharCondTapCountEnabled');
+  const chkCharCondMatchAny = document.getElementById('chkCharCondMatchAny');
 
   // 全モード適用 ＆ 設定一覧マトリクス要素
   const btnApplyCharToAllModes = document.getElementById('btnApplyCharToAllModes');
@@ -1710,13 +1712,21 @@ window.addEventListener('DOMContentLoaded', () => {
       renderSpecificCharChecklist(sc.targetCharacters || []);
 
       const isIdle = (sc.triggerAction === 'idle');
+      const isTapDisabled = isIdle || (sc.tapCountEnabled === false);
       if (charCondTapCount && charCondTapCountGroup) {
-        charCondTapCount.disabled = isIdle;
-        charCondTapCountGroup.style.opacity = isIdle ? '0.5' : '1';
+        charCondTapCount.disabled = isTapDisabled;
+        charCondTapCountGroup.style.opacity = isTapDisabled ? '0.6' : '1';
       }
       if (charCondComboToggle) {
         charCondComboToggle.disabled = isIdle;
       }
+    }
+
+    if (chkCharCondTapCountEnabled) {
+      chkCharCondTapCountEnabled.checked = (sc.tapCountEnabled !== false);
+    }
+    if (chkCharCondMatchAny) {
+      chkCharCondMatchAny.checked = !!sc.matchAny;
     }
 
     if (charCondTapCount && charCondTapCountVal) {
@@ -1870,14 +1880,66 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // 出現条件リスナー
+  // 出現条件の有効化 リスナー
   btnToggleSpawnCondition?.addEventListener('click', () => {
     const cfg = getActiveCharConfig();
     if (!cfg.spawnCondition) cfg.spawnCondition = {};
     cfg.spawnCondition.enabled = !cfg.spawnCondition.enabled;
+
+    // 「出現条件の有効化」「条件4: 達成回数」いずれか片方のみONのときは「かたほうでも達成」のチェックは自動で外す
+    const isEnabled = !!cfg.spawnCondition.enabled;
+    const isTapEnabled = cfg.spawnCondition.tapCountEnabled !== false;
+    if (!isEnabled || !isTapEnabled) {
+      cfg.spawnCondition.matchAny = false;
+    }
+
     try { sound.init(); sound.playTap(); } catch (e) { }
     syncUIForActiveChar();
     saveCurrentConfigToStorage();
+    if (configMatrixModal && !configMatrixModal.classList.contains('hidden')) {
+      renderConfigMatrixTable(matrixCurrentMode);
+    }
+  });
+
+  // 条件4: 達成回数の有効化チェックボックス
+  chkCharCondTapCountEnabled?.addEventListener('change', (e) => {
+    const cfg = getActiveCharConfig();
+    if (!cfg.spawnCondition) cfg.spawnCondition = {};
+    cfg.spawnCondition.tapCountEnabled = e.target.checked;
+
+    // 「出現条件の有効化」「条件4: 達成回数」いずれか片方のみONのときは「かたほうでも達成」のチェックは自動で外す
+    const isEnabled = !!cfg.spawnCondition.enabled;
+    const isTapEnabled = cfg.spawnCondition.tapCountEnabled !== false;
+    if (!isEnabled || !isTapEnabled) {
+      cfg.spawnCondition.matchAny = false;
+    }
+
+    try { sound.init(); sound.playTap(); } catch (err) { }
+    syncUIForActiveChar();
+    saveCurrentConfigToStorage();
+    if (configMatrixModal && !configMatrixModal.classList.contains('hidden')) {
+      renderConfigMatrixTable(matrixCurrentMode);
+    }
+  });
+
+  // かたほうでも達成 チェックボックス
+  chkCharCondMatchAny?.addEventListener('change', (e) => {
+    const cfg = getActiveCharConfig();
+    if (!cfg.spawnCondition) cfg.spawnCondition = {};
+    cfg.spawnCondition.matchAny = e.target.checked;
+
+    // 「かたほうでも達成」にチェックがONのときは「出現条件の有効化」「条件4: 達成回数」両方ともにチェックONに自動で
+    if (e.target.checked) {
+      cfg.spawnCondition.enabled = true;
+      cfg.spawnCondition.tapCountEnabled = true;
+    }
+
+    try { sound.init(); sound.playTap(); } catch (err) { }
+    syncUIForActiveChar();
+    saveCurrentConfigToStorage();
+    if (configMatrixModal && !configMatrixModal.classList.contains('hidden')) {
+      renderConfigMatrixTable(matrixCurrentMode);
+    }
   });
 
   charCondTime?.addEventListener('input', (e) => {
@@ -3951,24 +4013,6 @@ window.addEventListener('DOMContentLoaded', () => {
     // --- 4. 出現条件 (スポーン条件) ---
     html += `<tr class="matrix-category-row"><td colspan="${allChars.length + 1}">【4. 出現条件 (スポーン条件)】</td></tr>`;
 
-    // 出現条件 ON/OFF
-    html += '<tr>';
-    html += '<td class="matrix-param-cell-label">🚀 出現条件の有効化<span class="matrix-param-desc">条件達成時のみ出現</span></td>';
-    for (const c of allChars) {
-      const cfg = charsDict[c.id];
-      const isEnabled = cfg.spawnCondition?.enabled ?? false;
-      const isLocked = isCharLocked(c.id);
-      html += `
-        <td class="${isLocked ? 'is-locked' : ''}">
-          <label class="matrix-switch">
-            <input type="checkbox" class="matrix-checkbox-field" data-char-id="${c.id}" data-field="spawnCondition.enabled" ${isEnabled ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
-            <span class="matrix-switch-slider"></span>
-          </label>
-        </td>
-      `;
-    }
-    html += '</tr>';
-
     // 条件1: 残り時間
     html += '<tr>';
     html += '<td class="matrix-param-cell-label">⏱️ 条件1: 残り時間<span class="matrix-param-desc">発動する残り時間</span></td>';
@@ -4035,16 +4079,23 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     html += '</tr>';
 
-    // 条件4: 達成タップ回数
+    // 条件4: 達成タップ回数 (有効化チェックボックス + 回数数値入力)
     html += '<tr>';
-    html += '<td class="matrix-param-cell-label">🔢 条件4: 達成回数 (回)<span class="matrix-param-desc">0:無操作, 1〜100, 101:🎲</span></td>';
+    html += '<td class="matrix-param-cell-label">🔢 条件4: 達成回数 (回)<span class="matrix-param-desc">スイッチ:ON/OFF, 1〜100, 101:🎲</span></td>';
     for (const c of allChars) {
       const cfg = charsDict[c.id];
       const tCount = cfg.spawnCondition?.tapCount ?? 10;
+      const isTapEnabled = cfg.spawnCondition?.tapCountEnabled !== false;
       const isLocked = isCharLocked(c.id);
       html += `
         <td class="${isLocked ? 'is-locked' : ''}">
-          <input type="number" class="matrix-input-number matrix-field" data-char-id="${c.id}" data-field="spawnCondition.tapCount" min="0" max="101" step="1" value="${tCount}" ${isLocked ? 'disabled' : ''}>
+          <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+            <label class="matrix-switch" title="条件4(達成回数)の有効/無効">
+              <input type="checkbox" class="matrix-checkbox-field" data-char-id="${c.id}" data-field="spawnCondition.tapCountEnabled" ${isTapEnabled ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
+              <span class="matrix-switch-slider"></span>
+            </label>
+            <input type="number" class="matrix-input-number matrix-field" data-char-id="${c.id}" data-field="spawnCondition.tapCount" min="0" max="101" step="1" value="${tCount}" ${isLocked || !isTapEnabled ? 'disabled' : ''} style="width:55px; ${!isTapEnabled ? 'opacity:0.4;' : ''}">
+          </div>
         </td>
       `;
     }
@@ -4062,6 +4113,42 @@ window.addEventListener('DOMContentLoaded', () => {
           <button type="button" class="matrix-btn-combo ${isCombo ? 'active' : ''}" data-char-id="${c.id}" data-action="toggle-combo" ${isLocked ? 'disabled' : ''}>
             ${isCombo ? '🔥 連続成功' : 'OFF 延べ'}
           </button>
+        </td>
+      `;
+    }
+    html += '</tr>';
+
+    // 🚀 出現条件の有効化 (条件4の下の行に移動)
+    html += '<tr>';
+    html += '<td class="matrix-param-cell-label">🚀 出現条件の有効化<span class="matrix-param-desc">条件達成時のみ出現</span></td>';
+    for (const c of allChars) {
+      const cfg = charsDict[c.id];
+      const isEnabled = cfg.spawnCondition?.enabled ?? false;
+      const isLocked = isCharLocked(c.id);
+      html += `
+        <td class="${isLocked ? 'is-locked' : ''}">
+          <label class="matrix-switch" title="出現条件全体の有効/無効">
+            <input type="checkbox" class="matrix-checkbox-field" data-char-id="${c.id}" data-field="spawnCondition.enabled" ${isEnabled ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
+            <span class="matrix-switch-slider"></span>
+          </label>
+        </td>
+      `;
+    }
+    html += '</tr>';
+
+    // ✨ かたほうでも達成 (時間・回数の片方達成で発動)
+    html += '<tr>';
+    html += '<td class="matrix-param-cell-label">✨ かたほうでも達成<span class="matrix-param-desc">時間・達成回数のいずれかで出現</span></td>';
+    for (const c of allChars) {
+      const cfg = charsDict[c.id];
+      const isMatchAny = !!cfg.spawnCondition?.matchAny;
+      const isLocked = isCharLocked(c.id);
+      html += `
+        <td class="${isLocked ? 'is-locked' : ''}">
+          <label class="matrix-switch" title="時間または達成回数の片方でも達成すれば出現">
+            <input type="checkbox" class="matrix-checkbox-field" data-char-id="${c.id}" data-field="spawnCondition.matchAny" ${isMatchAny ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
+            <span class="matrix-switch-slider"></span>
+          </label>
         </td>
       `;
     }
@@ -4396,6 +4483,37 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!field) return;
 
     if (target.type === 'checkbox') {
+      const mode = matrixCurrentMode;
+      const charCfg = currentConfig.modeConfigs?.[mode]?.characters?.[charId];
+
+      if (field === 'spawnCondition.matchAny') {
+        const isChecked = target.checked;
+        updateMatrixCharField(charId, 'spawnCondition.matchAny', isChecked);
+        if (isChecked) {
+          // 「かたほうでも達成」にチェックがONのときは「出現条件の有効化」「 条件4: 達成回数 (回)」両方ともにチェックONに自動で
+          updateMatrixCharField(charId, 'spawnCondition.enabled', true);
+          updateMatrixCharField(charId, 'spawnCondition.tapCountEnabled', true);
+        }
+        renderConfigMatrixTable(matrixCurrentMode);
+        saveCurrentConfigToStorage();
+        return;
+      }
+
+      if (field === 'spawnCondition.enabled' || field === 'spawnCondition.tapCountEnabled') {
+        updateMatrixCharField(charId, field, target.checked);
+        if (charCfg?.spawnCondition) {
+          const isEnabled = !!charCfg.spawnCondition.enabled;
+          const isTapEnabled = charCfg.spawnCondition.tapCountEnabled !== false;
+          // 「出現条件の有効化」「 条件4: 達成回数 (回)」いずれか片方のみにチェックONのときは「かたほうでも達成」のチェックは自動で外す
+          if (!isEnabled || !isTapEnabled) {
+            updateMatrixCharField(charId, 'spawnCondition.matchAny', false);
+          }
+        }
+        renderConfigMatrixTable(matrixCurrentMode);
+        saveCurrentConfigToStorage();
+        return;
+      }
+
       updateMatrixCharField(charId, field, target.checked);
       if (field === 'spawnCondition.enabled') {
         renderConfigMatrixTable(matrixCurrentMode);
