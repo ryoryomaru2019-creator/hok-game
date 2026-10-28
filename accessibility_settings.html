@@ -1033,21 +1033,21 @@
             </div>
           </div>
 
-          <!-- ② 味方と敵の識別色 & 魚図鑑切り替え -->
+          <!-- ② 味方と敵の識別色 & ターゲット切り替え -->
           <div class="preview-block" id="previewUnitBlock">
             <div class="preview-block-title">
-              <span>👥 味方と敵の識別 (魚図鑑)</span>
-              <span style="font-size:11px; color:#38bdf8;">二重枠・点線＋実機Canvas</span>
+              <span>👥 味方と敵の識別 (ターゲット)</span>
+              <span style="font-size:11px; color:#38bdf8;">二重枠・点線＋実機モデル</span>
             </div>
             <div class="unit-cards-row">
               <!-- 味方魚カード (◀ ▶ でカレイ ⇄ ヒラメ切り替え) -->
               <div class="unit-card unit-ally" id="unitAllyCard" style="padding: 10px 8px;">
                 <div style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:4px;">
                   <button type="button" class="fish-nav-btn" id="btnPrevFish" title="前の魚を見る">◀</button>
-                  <span style="font-size:11px; font-weight:800; color:#38bdf8;" id="fishCatalogTitle">魚図鑑 [1/2]</span>
+                  <span style="font-size:11px; font-weight:800; color:#38bdf8;" id="fishCatalogTitle">ターゲット [1/2]</span>
                   <button type="button" class="fish-nav-btn" id="btnNextFish" title="次の魚を見る">▶</button>
                 </div>
-                <canvas id="allyCharCanvas" width="90" height="65" style="display:block; margin: 0 auto 4px;"></canvas>
+                <canvas id="allyCharCanvas" width="160" height="110" style="width: 100px; height: 68px; display:block; margin: 0 auto 4px;"></canvas>
                 <span id="allyFishName" style="font-weight:800; font-size:12px; color:#38bdf8; text-align:center;">カレイ (自軍・右向き)</span>
                 <span class="unit-tag" id="unitAllyTag" style="margin-top:4px;">🛡️ [味方・タップ正解]</span>
               </div>
@@ -1056,7 +1056,7 @@
                 <div style="display:flex; align-items:center; justify-content:center; width:100%; margin-bottom:4px; height:21px;">
                   <span style="font-size:11px; font-weight:800; color:#f87171;">邪魔キャラ (固定)</span>
                 </div>
-                <canvas id="enemyCharCanvas" width="90" height="65" style="display:block; margin: 0 auto 4px;"></canvas>
+                <canvas id="enemyCharCanvas" width="160" height="110" style="width: 100px; height: 68px; display:block; margin: 0 auto 4px;"></canvas>
                 <span style="font-weight:800; font-size:12px; color:#ef4444; text-align:center;">タコ (邪魔キャラ・減点)</span>
                 <span class="unit-tag" id="unitEnemyTag" style="margin-top:4px;">⚔️ [敵・タップ回避]</span>
               </div>
@@ -1167,7 +1167,7 @@
             </tr>
             <tr>
               <td><span class="badge-code">#unitAllyCard</span>, <span class="badge-code">#unitEnemyCard</span></td>
-              <td>味方と敵 (魚図鑑)</td>
+              <td>味方と敵 (ターゲット)</td>
               <td>味方色(青緑系)と敵色(橙/深マゼンタ系)の明度コントラストを最大化</td>
               <td>味方は「二重実線＋🛡️[味方]」、敵は「点線破線＋⚔️[敵/邪魔]」で形状から瞬時に識別</td>
             </tr>
@@ -1442,341 +1442,440 @@
         });
       }
 
-      function drawKarei(ctx, width, height) {
+      // ─── 魚・敵モデル描画 (実機プリセット完全準拠) ───
+      function pointsToSvgPath(points, isClosed = true) {
+        if (!points || points.length === 0) return '';
+        if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+        let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+        for (let i = 0; i < points.length - 1; i++) {
+          const cur = points[i];
+          const next = points[i + 1];
+          const cp1 = cur.outHandle || cur;
+          const cp2 = next.inHandle || next;
+          d += ` C ${cp1.x.toFixed(1)} ${cp1.y.toFixed(1)}, ${cp2.x.toFixed(1)} ${cp2.y.toFixed(1)}, ${next.x.toFixed(1)} ${next.y.toFixed(1)}`;
+        }
+        if (isClosed && points.length > 2) {
+          const last = points[points.length - 1];
+          const first = points[0];
+          const cp1 = last.outHandle || last;
+          const cp2 = first.inHandle || first;
+          d += ` C ${cp1.x.toFixed(1)} ${cp1.y.toFixed(1)}, ${cp2.x.toFixed(1)} ${cp2.y.toFixed(1)}, ${first.x.toFixed(1)} ${first.y.toFixed(1)} Z`;
+        }
+        return d;
+      }
+
+      function renderModelToCanvas(ctx, width, height, parts, scale, offsetX = 0, offsetY = 0) {
         ctx.clearRect(0, 0, width, height);
         ctx.save();
-        ctx.translate(width / 2, height / 2);
-        const w = 34;
-        const h = 23;
+        ctx.translate(width / 2 + offsetX, height / 2 + offsetY);
+        ctx.scale(scale, scale);
 
-        // 1. 扇形の尾びれ
-        ctx.fillStyle = '#caa062';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.moveTo(-w * 0.65, -h * 0.15);
-        ctx.lineTo(-w * 1.25, -h * 0.48);
-        ctx.quadraticCurveTo(-w * 1.35, 0, -w * 1.25, h * 0.48);
-        ctx.lineTo(-w * 0.65, h * 0.15);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
+        const sorted = [...parts].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+        for (const p of sorted) {
+          if (p.isCircle || p.type === 'circle') {
+            ctx.beginPath();
+            ctx.arc(p.cx, p.cy, p.r, 0, Math.PI * 2);
+            if (p.fill && p.fill !== 'none') {
+              ctx.fillStyle = p.fill;
+              ctx.fill();
+            }
+            if (p.stroke && p.stroke !== 'none' && p.strokeWidth > 0) {
+              ctx.strokeStyle = p.stroke;
+              ctx.lineWidth = p.strokeWidth;
+              ctx.stroke();
+            }
+          } else if (p.points && p.points.length > 0) {
+            const d = pointsToSvgPath(p.points, p.closed !== false);
+            const path2d = new Path2D(d);
+            if (p.fill && p.fill !== 'none') {
+              ctx.fillStyle = p.fill;
+              ctx.fill(path2d);
+            }
+            if (p.stroke && p.stroke !== 'none' && p.strokeWidth > 0) {
+              ctx.strokeStyle = p.stroke;
+              ctx.lineWidth = p.strokeWidth;
+              ctx.lineJoin = 'round';
+              ctx.lineCap = 'round';
+              ctx.stroke(path2d);
+            }
+          }
 
-        // 尾びれ条
-        ctx.lineWidth = 1.4;
-        for (let r = -0.38; r <= 0.38; r += 0.15) {
-          ctx.beginPath();
-          ctx.moveTo(-w * 0.7, r * h * 0.3);
-          ctx.lineTo(-w * 1.25, r * h * 1.15);
-          ctx.stroke();
+          if (p.subPaths && p.subPaths.length > 0) {
+            for (const sub of p.subPaths) {
+              if (sub.type === 'circle') {
+                ctx.beginPath();
+                ctx.arc(sub.cx, sub.cy, sub.r, 0, Math.PI * 2);
+                if (sub.fill && sub.fill !== 'none') {
+                  ctx.fillStyle = sub.fill;
+                  ctx.fill();
+                }
+                if (sub.stroke && sub.stroke !== 'none' && sub.strokeWidth > 0) {
+                  ctx.strokeStyle = sub.stroke;
+                  ctx.lineWidth = sub.strokeWidth;
+                  ctx.stroke();
+                }
+              }
+            }
+          }
         }
-
-        // 2. 背びれ・腹びれ
-        ctx.fillStyle = '#b88d4e';
-        ctx.beginPath();
-        ctx.moveTo(-w * 0.6, -h * 0.3);
-        ctx.quadraticCurveTo(0, -h * 1.25, w * 0.55, -h * 0.3);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(-w * 0.6, h * 0.3);
-        ctx.quadraticCurveTo(0, h * 1.25, w * 0.55, h * 0.3);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // 3. 体（ひし形楕円）
-        ctx.fillStyle = '#caa062';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, w * 0.82, h * 0.88, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // 白水玉模様
-        ctx.fillStyle = 'rgba(255,255,255,0.88)';
-        const spots = [
-          { x: -w * 0.35, y: -h * 0.25, r: 3 },
-          { x: -w * 0.1, y: -h * 0.45, r: 3.5 },
-          { x: w * 0.15, y: -h * 0.2, r: 4 },
-          { x: -w * 0.25, y: h * 0.25, r: 3.5 },
-          { x: 0, y: h * 0.4, r: 3 },
-          { x: w * 0.25, y: h * 0.25, r: 3.2 },
-          { x: -w * 0.05, y: 0, r: 3.5 }
-        ];
-        for (const s of spots) {
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // 4. おちょぼ口
-        ctx.fillStyle = '#ff7b72';
-        ctx.beginPath();
-        ctx.ellipse(w * 0.84, h * 0.1, 3.5, 2.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // 5. 飛び出たとぼけ目（右カレイ）
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(w * 0.48, -h * 0.35, 5.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(w * 0.52, -h * 0.35, 2.2, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(w * 0.62, -h * 0.05, 4.8, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(w * 0.65, -h * 0.05, 1.9, 0, Math.PI * 2);
-        ctx.fill();
-
         ctx.restore();
       }
 
-      function drawOctopus(ctx, width, height) {
-        ctx.clearRect(0, 0, width, height);
-        ctx.save();
-        ctx.translate(width / 2, height / 2 - 2);
-        const w = 28;
-        const h = 28;
-
-        // 1. 跳ねる足
-        ctx.fillStyle = '#dc2626';
-        ctx.strokeStyle = '#b91c1c';
-        ctx.lineWidth = 1.6;
-
-        ctx.beginPath();
-        ctx.moveTo(-w * 0.35, h * 0.1);
-        ctx.bezierCurveTo(-w * 0.7, h * 0.05, -w * 0.95, -h * 0.05, -w * 0.85, -h * 0.2);
-        ctx.bezierCurveTo(-w * 0.75, -h * 0.25, -w * 0.55, 0, -w * 0.25, h * 0.25);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(w * 0.35, h * 0.1);
-        ctx.bezierCurveTo(w * 0.7, h * 0.05, w * 0.95, -h * 0.05, w * 0.85, -h * 0.2);
-        ctx.bezierCurveTo(w * 0.75, -h * 0.25, w * 0.55, 0, w * 0.25, h * 0.25);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // 下垂れ足
-        const tentacleBases = [-w * 0.3, -w * 0.1, w * 0.1, w * 0.3];
-        for (let i = 0; i < tentacleBases.length; i++) {
-          const bx = tentacleBases[i];
-          ctx.beginPath();
-          ctx.moveTo(bx - 3, h * 0.2);
-          ctx.quadraticCurveTo(bx + (i % 2 === 0 ? -5 : 5), h * 0.65, bx + (i % 2 === 0 ? -2 : 2), h * 0.85);
-          ctx.quadraticCurveTo(bx + (i % 2 === 0 ? -1 : 1), h * 0.65, bx + 3, h * 0.2);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
+      // 1. ヒラメ（左向き・暗オリーブ褐色・淡色ヒレ・鋭い牙・受け口）
+      const HIRAME_PARTS = [
+        {
+          id: 'hirame_tail', zIndex: 1, fill: '#3d352b', stroke: '#1c1814', strokeWidth: 2.8, closed: true,
+          points: [
+            { x: 45, y: -8, type: 'corner', inHandle: { x: 45, y: -8 }, outHandle: { x: 58, y: -18 } },
+            { x: 85, y: -26, type: 'corner', inHandle: { x: 75, y: -24 }, outHandle: { x: 88, y: -10 } },
+            { x: 90, y: 0, type: 'smooth', inHandle: { x: 88, y: -10 }, outHandle: { x: 88, y: 10 } },
+            { x: 85, y: 26, type: 'corner', inHandle: { x: 88, y: 10 }, outHandle: { x: 75, y: 24 } },
+            { x: 45, y: 8, type: 'corner', inHandle: { x: 58, y: 18 }, outHandle: { x: 45, y: 8 } }
+          ]
+        },
+        {
+          id: 'hirame_dorsal', zIndex: 2, fill: '#d5ceb8', stroke: '#383226', strokeWidth: 2.8, closed: true,
+          points: [
+            { x: 42, y: -10, type: 'corner', inHandle: { x: 42, y: -10 }, outHandle: { x: 20, y: -35 } },
+            { x: -5, y: -40, type: 'smooth', inHandle: { x: 15, y: -40 }, outHandle: { x: -25, y: -30 } },
+            { x: -42, y: -18, type: 'corner', inHandle: { x: -35, y: -25 }, outHandle: { x: -42, y: -18 } },
+            { x: -32, y: -12, type: 'corner', inHandle: { x: -32, y: -12 }, outHandle: { x: -15, y: -22 } },
+            { x: 25, y: -8, type: 'smooth', inHandle: { x: 0, y: -18 }, outHandle: { x: 35, y: -8 } }
+          ]
+        },
+        {
+          id: 'hirame_ventral', zIndex: 2, fill: '#d5ceb8', stroke: '#383226', strokeWidth: 2.8, closed: true,
+          points: [
+            { x: 42, y: 10, type: 'corner', inHandle: { x: 42, y: 10 }, outHandle: { x: 20, y: 35 } },
+            { x: 0, y: 42, type: 'smooth', inHandle: { x: 18, y: 38 }, outHandle: { x: -20, y: 36 } },
+            { x: -36, y: 18, type: 'corner', inHandle: { x: -28, y: 26 }, outHandle: { x: -36, y: 18 } },
+            { x: -25, y: 12, type: 'corner', inHandle: { x: -25, y: 12 }, outHandle: { x: 0, y: 20 } },
+            { x: 25, y: 8, type: 'smooth', inHandle: { x: 10, y: 16 }, outHandle: { x: 35, y: 8 } }
+          ]
+        },
+        {
+          id: 'hirame_body_back', zIndex: 3, fill: '#453d33', stroke: '#1c1814', strokeWidth: 2.8, closed: true,
+          points: [
+            { x: 15, y: -18, type: 'smooth', inHandle: { x: 8, y: -18 }, outHandle: { x: 32, y: -12 } },
+            { x: 45, y: -8, type: 'corner', inHandle: { x: 38, y: -10 }, outHandle: { x: 45, y: 0 } },
+            { x: 45, y: 8, type: 'corner', inHandle: { x: 45, y: 0 }, outHandle: { x: 38, y: 10 } },
+            { x: 15, y: 18, type: 'smooth', inHandle: { x: 32, y: 12 }, outHandle: { x: 8, y: 18 } }
+          ]
+        },
+        {
+          id: 'hirame_body_mid', zIndex: 4, fill: '#453d33', stroke: '#1c1814', strokeWidth: 3, closed: true,
+          points: [
+            { x: -30, y: -16, type: 'smooth', inHandle: { x: -35, y: -12 }, outHandle: { x: -10, y: -26 } },
+            { x: -5, y: -28, type: 'smooth', inHandle: { x: -15, y: -28 }, outHandle: { x: 15, y: -20 } },
+            { x: 20, y: 0, type: 'smooth', inHandle: { x: 18, y: -12 }, outHandle: { x: 18, y: 12 } },
+            { x: 0, y: 28, type: 'smooth', inHandle: { x: 15, y: 22 }, outHandle: { x: -15, y: 28 } },
+            { x: -30, y: 16, type: 'smooth', inHandle: { x: -15, y: 26 }, outHandle: { x: -35, y: 12 } }
+          ]
+        },
+        { isCircle: true, cx: -15, cy: -8, r: 3.8, zIndex: 4.2, fill: '#2b251e', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: 0, cy: -14, r: 4.2, zIndex: 4.2, fill: '#5c5446', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: 15, cy: -8, r: 3.5, zIndex: 4.2, fill: '#2b251e', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: -18, cy: 8, r: 4.0, zIndex: 4.2, fill: '#5c5446', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: -4, cy: 14, r: 4.2, zIndex: 4.2, fill: '#2b251e', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: 10, cy: 10, r: 3.5, zIndex: 4.2, fill: '#5c5446', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: 0, cy: -1, r: 3.8, zIndex: 4.2, fill: '#2b251e', stroke: 'none', strokeWidth: 0 },
+        {
+          id: 'hirame_head', zIndex: 5, fill: '#453d33', stroke: '#1c1814', strokeWidth: 3, closed: true,
+          points: [
+            { x: -30, y: -16, type: 'corner', inHandle: { x: -30, y: -16 }, outHandle: { x: -44, y: -12 } },
+            { x: -56, y: -6, type: 'corner', inHandle: { x: -48, y: -10 }, outHandle: { x: -56, y: -6 } },
+            { x: -44, y: 2, type: 'corner', inHandle: { x: -50, y: 0 }, outHandle: { x: -44, y: 2 } },
+            { x: -64, y: 9, type: 'corner', inHandle: { x: -52, y: 4 }, outHandle: { x: -64, y: 9 } },
+            { x: -50, y: 15, type: 'corner', inHandle: { x: -58, y: 14 }, outHandle: { x: -42, y: 16 } },
+            { x: -30, y: 16, type: 'corner', inHandle: { x: -38, y: 15 }, outHandle: { x: -30, y: 16 } }
+          ]
+        },
+        {
+          id: 'hirame_mouth_inside', zIndex: 5.2, fill: '#4a0e0e', stroke: '#200505', strokeWidth: 1, closed: true,
+          points: [
+            { x: -56, y: -5, type: 'corner', inHandle: { x: -56, y: -5 }, outHandle: { x: -48, y: -2 } },
+            { x: -44, y: 2, type: 'corner', inHandle: { x: -46, y: 1 }, outHandle: { x: -48, y: 5 } },
+            { x: -64, y: 9, type: 'corner', inHandle: { x: -54, y: 6 }, outHandle: { x: -64, y: 9 } }
+          ]
+        },
+        {
+          id: 'hirame_jaw', zIndex: 5.8, fill: '#453d33', stroke: '#1c1814', strokeWidth: 2.5, closed: true,
+          points: [
+            { x: -44, y: 2, type: 'corner', inHandle: { x: -44, y: 2 }, outHandle: { x: -52, y: 5 } },
+            { x: -64, y: 9, type: 'corner', inHandle: { x: -58, y: 8 }, outHandle: { x: -62, y: 14 } },
+            { x: -50, y: 15, type: 'smooth', inHandle: { x: -58, y: 14 }, outHandle: { x: -42, y: 16 } },
+            { x: -38, y: 10, type: 'corner', inHandle: { x: -40, y: 12 }, outHandle: { x: -44, y: 2 } }
+          ]
+        },
+        {
+          id: 'hirame_teeth_upper', zIndex: 6.2, fill: '#ffffff', stroke: '#1c1814', strokeWidth: 0.8, closed: true,
+          points: [
+            { x: -55, y: -5, type: 'corner', inHandle: { x: -55, y: -5 }, outHandle: { x: -55, y: -5 } },
+            { x: -53, y: 0, type: 'corner', inHandle: { x: -53, y: 0 }, outHandle: { x: -53, y: 0 } },
+            { x: -51, y: -4, type: 'corner', inHandle: { x: -51, y: -4 }, outHandle: { x: -51, y: -4 } },
+            { x: -49, y: 1, type: 'corner', inHandle: { x: -49, y: 1 }, outHandle: { x: -49, y: 1 } },
+            { x: -47, y: -2, type: 'corner', inHandle: { x: -47, y: -2 }, outHandle: { x: -47, y: -2 } }
+          ]
+        },
+        {
+          id: 'hirame_teeth_lower', zIndex: 6.3, fill: '#ffffff', stroke: '#1c1814', strokeWidth: 0.8, closed: true,
+          points: [
+            { x: -61, y: 8, type: 'corner', inHandle: { x: -61, y: 8 }, outHandle: { x: -61, y: 8 } },
+            { x: -58, y: 3, type: 'corner', inHandle: { x: -58, y: 3 }, outHandle: { x: -58, y: 3 } },
+            { x: -55, y: 7, type: 'corner', inHandle: { x: -55, y: 7 }, outHandle: { x: -55, y: 7 } },
+            { x: -51, y: 3, type: 'corner', inHandle: { x: -51, y: 3 }, outHandle: { x: -51, y: 3 } },
+            { x: -47, y: 5, type: 'corner', inHandle: { x: -47, y: 5 }, outHandle: { x: -47, y: 5 } }
+          ]
+        },
+        // 目1
+        { isCircle: true, cx: -37, cy: -15, r: 6.0, zIndex: 6.8, fill: '#453d33', stroke: '#1c1814', strokeWidth: 1.5 },
+        { isCircle: true, cx: -37, cy: -15, r: 4.6, zIndex: 7.0, fill: '#ffffff', stroke: '#0f172a', strokeWidth: 1.2 },
+        { isCircle: true, cx: -38.5, cy: -15, r: 2.4, zIndex: 7.2, fill: '#0f172a', stroke: 'none', strokeWidth: 0 },
+        // 目2
+        { isCircle: true, cx: -31, cy: -9, r: 5.5, zIndex: 6.9, fill: '#453d33', stroke: '#1c1814', strokeWidth: 1.5 },
+        { isCircle: true, cx: -31, cy: -9, r: 4.2, zIndex: 7.1, fill: '#ffffff', stroke: '#0f172a', strokeWidth: 1.2 },
+        { isCircle: true, cx: -32.5, cy: -9, r: 2.2, zIndex: 7.3, fill: '#0f172a', stroke: 'none', strokeWidth: 0 },
+        // 胸ビレ
+        {
+          id: 'hirame_pectoral', zIndex: 8, fill: '#d5ceb8', stroke: '#383226', strokeWidth: 1.8, closed: true,
+          points: [
+            { x: -22, y: 2, type: 'corner', inHandle: { x: -22, y: 2 }, outHandle: { x: -34, y: -4 } },
+            { x: -38, y: 10, type: 'smooth', inHandle: { x: -36, y: 4 }, outHandle: { x: -28, y: 12 } },
+            { x: -22, y: 8, type: 'corner', inHandle: { x: -25, y: 10 }, outHandle: { x: -22, y: 8 } }
+          ]
         }
+      ];
 
-        // 吸盤
-        ctx.fillStyle = '#f97316';
-        ctx.beginPath();
-        ctx.arc(-w * 0.75, -h * 0.1, 2.2, 0, Math.PI * 2);
-        ctx.arc(w * 0.75, -h * 0.1, 2.2, 0, Math.PI * 2);
-        ctx.fill();
+      // 2. カレイ（右向き・キャメル色・白水玉・嘴状口・飛び出たとぼけ目）
+      const KAREI_PARTS = [
+        {
+          id: 'karei_tail', zIndex: 1, fill: '#8b4b2a', stroke: '#382013', strokeWidth: 2.8, closed: true,
+          points: [
+            { x: -45, y: -8, type: 'corner', inHandle: { x: -45, y: -8 }, outHandle: { x: -58, y: -18 } },
+            { x: -85, y: -26, type: 'corner', inHandle: { x: -75, y: -24 }, outHandle: { x: -88, y: -10 } },
+            { x: -90, y: 0, type: 'smooth', inHandle: { x: -88, y: -10 }, outHandle: { x: -88, y: 10 } },
+            { x: -85, y: 26, type: 'corner', inHandle: { x: -88, y: 10 }, outHandle: { x: -75, y: 24 } },
+            { x: -45, y: 8, type: 'corner', inHandle: { x: -58, y: 18 }, outHandle: { x: -45, y: 8 } }
+          ]
+        },
+        {
+          id: 'karei_dorsal', zIndex: 2, fill: '#8b4b2a', stroke: '#382013', strokeWidth: 2.8, closed: true,
+          points: [
+            { x: -42, y: -10, type: 'corner', inHandle: { x: -42, y: -10 }, outHandle: { x: -20, y: -35 } },
+            { x: 5, y: -40, type: 'smooth', inHandle: { x: -15, y: -40 }, outHandle: { x: 25, y: -30 } },
+            { x: 42, y: -18, type: 'corner', inHandle: { x: 35, y: -25 }, outHandle: { x: 42, y: -18 } },
+            { x: 32, y: -12, type: 'corner', inHandle: { x: 32, y: -12 }, outHandle: { x: 15, y: -22 } },
+            { x: -25, y: -8, type: 'smooth', inHandle: { x: 0, y: -18 }, outHandle: { x: -35, y: -8 } }
+          ]
+        },
+        {
+          id: 'karei_ventral', zIndex: 2, fill: '#8b4b2a', stroke: '#382013', strokeWidth: 2.8, closed: true,
+          points: [
+            { x: -42, y: 10, type: 'corner', inHandle: { x: -42, y: 10 }, outHandle: { x: -20, y: 35 } },
+            { x: 0, y: 42, type: 'smooth', inHandle: { x: -18, y: 38 }, outHandle: { x: 20, y: 36 } },
+            { x: 36, y: 18, type: 'corner', inHandle: { x: 28, y: 26 }, outHandle: { x: 36, y: 18 } },
+            { x: 25, y: 12, type: 'corner', inHandle: { x: 25, y: 12 }, outHandle: { x: 0, y: 20 } },
+            { x: -25, y: 8, type: 'smooth', inHandle: { x: -10, y: 16 }, outHandle: { x: -35, y: 8 } }
+          ]
+        },
+        {
+          id: 'karei_body_back', zIndex: 3, fill: '#ba8551', stroke: '#382013', strokeWidth: 2.8, closed: true,
+          points: [
+            { x: -15, y: -18, type: 'smooth', inHandle: { x: -8, y: -18 }, outHandle: { x: -32, y: -12 } },
+            { x: -45, y: -8, type: 'corner', inHandle: { x: -38, y: -10 }, outHandle: { x: -45, y: 0 } },
+            { x: -45, y: 8, type: 'corner', inHandle: { x: -45, y: 0 }, outHandle: { x: -38, y: 10 } },
+            { x: -15, y: 18, type: 'smooth', inHandle: { x: -32, y: 12 }, outHandle: { x: -8, y: 18 } }
+          ]
+        },
+        {
+          id: 'karei_body_mid', zIndex: 4, fill: '#ba8551', stroke: '#382013', strokeWidth: 3, closed: true,
+          points: [
+            { x: 30, y: -16, type: 'smooth', inHandle: { x: 35, y: -12 }, outHandle: { x: 10, y: -26 } },
+            { x: 5, y: -28, type: 'smooth', inHandle: { x: 15, y: -28 }, outHandle: { x: -15, y: -20 } },
+            { x: -20, y: 0, type: 'smooth', inHandle: { x: -18, y: -12 }, outHandle: { x: -18, y: 12 } },
+            { x: 0, y: 28, type: 'smooth', inHandle: { x: -15, y: 22 }, outHandle: { x: 15, y: 28 } },
+            { x: 30, y: 16, type: 'smooth', inHandle: { x: 15, y: 26 }, outHandle: { x: 35, y: 12 } }
+          ]
+        },
+        { isCircle: true, cx: 15, cy: -8, r: 3.8, zIndex: 4.2, fill: '#e5be90', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: 0, cy: -14, r: 4.2, zIndex: 4.2, fill: '#e5be90', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: -15, cy: -8, r: 3.5, zIndex: 4.2, fill: '#e5be90', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: 18, cy: 8, r: 4.0, zIndex: 4.2, fill: '#e5be90', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: 4, cy: 14, r: 4.2, zIndex: 4.2, fill: '#e5be90', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: -10, cy: 10, r: 3.5, zIndex: 4.2, fill: '#e5be90', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: 0, cy: -1, r: 3.8, zIndex: 4.2, fill: '#e5be90', stroke: 'none', strokeWidth: 0 },
+        {
+          id: 'karei_head', zIndex: 5, fill: '#ba8551', stroke: '#382013', strokeWidth: 3, closed: true,
+          points: [
+            { x: 30, y: -16, type: 'corner', inHandle: { x: 30, y: -16 }, outHandle: { x: 45, y: -10 } },
+            { x: 62, y: -5, type: 'corner', inHandle: { x: 50, y: -8 }, outHandle: { x: 62, y: -5 } },
+            { x: 50, y: 0, type: 'corner', inHandle: { x: 56, y: -2 }, outHandle: { x: 56, y: 4 } },
+            { x: 60, y: 10, type: 'corner', inHandle: { x: 50, y: 0 }, outHandle: { x: 60, y: 10 } },
+            { x: 48, y: 12, type: 'corner', inHandle: { x: 55, y: 11 }, outHandle: { x: 42, y: 15 } },
+            { x: 30, y: 16, type: 'corner', inHandle: { x: 40, y: 14 }, outHandle: { x: 30, y: 16 } }
+          ]
+        },
+        // 目1
+        { isCircle: true, cx: 48, cy: -14, r: 6.0, zIndex: 6.8, fill: '#ba8551', stroke: '#382013', strokeWidth: 1.5 },
+        { isCircle: true, cx: 48, cy: -14, r: 4.6, zIndex: 7.0, fill: '#ffffff', stroke: '#0f172a', strokeWidth: 1.2 },
+        { isCircle: true, cx: 49.5, cy: -14, r: 2.4, zIndex: 7.2, fill: '#0f172a', stroke: 'none', strokeWidth: 0 },
+        // 目2
+        { isCircle: true, cx: 40, cy: -9, r: 5.5, zIndex: 6.9, fill: '#ba8551', stroke: '#382013', strokeWidth: 1.5 },
+        { isCircle: true, cx: 40, cy: -9, r: 4.2, zIndex: 7.1, fill: '#ffffff', stroke: '#0f172a', strokeWidth: 1.2 },
+        { isCircle: true, cx: 41.5, cy: -9, r: 2.2, zIndex: 7.3, fill: '#0f172a', stroke: 'none', strokeWidth: 0 },
+        // 胸ビレ
+        {
+          id: 'karei_pectoral', zIndex: 8, fill: '#8b4b2a', stroke: '#382013', strokeWidth: 2.2, closed: true,
+          points: [
+            { x: 22, y: 2, type: 'corner', inHandle: { x: 22, y: 2 }, outHandle: { x: 34, y: -4 } },
+            { x: 38, y: 10, type: 'smooth', inHandle: { x: 36, y: 4 }, outHandle: { x: 28, y: 12 } },
+            { x: 22, y: 8, type: 'corner', inHandle: { x: 25, y: 10 }, outHandle: { x: 22, y: 8 } }
+          ]
+        }
+      ];
 
-        // 2. 丸い頭部
-        ctx.fillStyle = '#dc2626';
-        ctx.strokeStyle = '#991b1b';
-        ctx.lineWidth = 2.0;
-        ctx.beginPath();
-        ctx.ellipse(0, -h * 0.15, w * 0.65, h * 0.6, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // ハイライト
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
-        ctx.beginPath();
-        ctx.ellipse(-w * 0.25, -h * 0.35, w * 0.22, h * 0.16, -0.4, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 3. 怒り目
-        ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1.3;
-
-        ctx.beginPath();
-        ctx.arc(-w * 0.22, -h * 0.12, 4.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(-w * 0.18, -h * 0.12, 2.0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(w * 0.22, -h * 0.12, 4.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(w * 0.18, -h * 0.12, 2.0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 怒り眉
-        ctx.strokeStyle = '#7f1d1d';
-        ctx.lineWidth = 2.0;
-        ctx.beginPath();
-        ctx.moveTo(-w * 0.35, -h * 0.24);
-        ctx.lineTo(-w * 0.1, -h * 0.16);
-        ctx.moveTo(w * 0.35, -h * 0.24);
-        ctx.lineTo(w * 0.1, -h * 0.16);
-        ctx.stroke();
-
+      // 3. タコ（赤い大頭・怒り眉・つぶらな黒目・丸いおちょぼ口・跳ね足2本＋垂れ足6本・オレンジ吸盤）
+      const OCTOPUS_PARTS = [
+        {
+          id: 'octopus_tentacle_1', zIndex: 1, fill: '#ea1d2d', stroke: '#b91c1c', strokeWidth: 1.5, closed: true,
+          points: [
+            { x: -14, y: 4, type: 'corner', inHandle: { x: -14, y: 4 }, outHandle: { x: -26, y: 2 } },
+            { x: -42, y: -4, type: 'smooth', inHandle: { x: -34, y: 2 }, outHandle: { x: -46, y: -10 } },
+            { x: -40, y: -12, type: 'corner', inHandle: { x: -44, y: -12 }, outHandle: { x: -36, y: -8 } },
+            { x: -24, y: 0, type: 'smooth', inHandle: { x: -32, y: -4 }, outHandle: { x: -16, y: 6 } },
+            { x: -10, y: 10, type: 'corner', inHandle: { x: -16, y: 6 }, outHandle: { x: -10, y: 10 } }
+          ],
+          subPaths: [
+            { type: 'circle', cx: -36, cy: -5, r: 2.2, fill: '#f97316' },
+            { type: 'circle', cx: -28, cy: 0, r: 2.5, fill: '#f97316' },
+            { type: 'circle', cx: -18, cy: 5, r: 2.7, fill: '#f97316' }
+          ]
+        },
+        {
+          id: 'octopus_tentacle_8', zIndex: 1, fill: '#ea1d2d', stroke: '#b91c1c', strokeWidth: 1.5, closed: true,
+          points: [
+            { x: 10, y: 10, type: 'corner', inHandle: { x: 10, y: 10 }, outHandle: { x: 16, y: 6 } },
+            { x: 24, y: 0, type: 'smooth', inHandle: { x: 16, y: 6 }, outHandle: { x: 32, y: -4 } },
+            { x: 40, y: -12, type: 'corner', inHandle: { x: 36, y: -8 }, outHandle: { x: 44, y: -12 } },
+            { x: 42, y: -4, type: 'smooth', inHandle: { x: 46, y: -10 }, outHandle: { x: 34, y: 2 } },
+            { x: 14, y: 4, type: 'corner', inHandle: { x: 26, y: 2 }, outHandle: { x: 14, y: 4 } }
+          ],
+          subPaths: [
+            { type: 'circle', cx: 36, cy: -5, r: 2.2, fill: '#f97316' },
+            { type: 'circle', cx: 28, cy: 0, r: 2.5, fill: '#f97316' },
+            { type: 'circle', cx: 18, cy: 5, r: 2.7, fill: '#f97316' }
+          ]
+        },
+        {
+          id: 'octopus_tentacle_2', zIndex: 2, fill: '#dc2626', stroke: '#b91c1c', strokeWidth: 1.5, closed: true,
+          points: [
+            { x: -18, y: 6, type: 'corner', inHandle: { x: -18, y: 6 }, outHandle: { x: -20, y: 14 } },
+            { x: -22, y: 22, type: 'smooth', inHandle: { x: -24, y: 18 }, outHandle: { x: -20, y: 26 } },
+            { x: -15, y: 26, type: 'smooth', inHandle: { x: -18, y: 27 }, outHandle: { x: -13, y: 24 } },
+            { x: -14, y: 16, type: 'smooth', inHandle: { x: -13, y: 22 }, outHandle: { x: -14, y: 10 } },
+            { x: -13, y: 7, type: 'corner', inHandle: { x: -13, y: 10 }, outHandle: { x: -13, y: 7 } }
+          ],
+          subPaths: [
+            { type: 'circle', cx: -18, cy: 16, r: 2.2, fill: '#f97316' },
+            { type: 'circle', cx: -16, cy: 22, r: 2.0, fill: '#f97316' }
+          ]
+        },
+        {
+          id: 'octopus_tentacle_3', zIndex: 3, fill: '#ea1d2d', stroke: '#b91c1c', strokeWidth: 1.5, closed: true,
+          points: [
+            { x: -12, y: 7, type: 'corner', inHandle: { x: -12, y: 7 }, outHandle: { x: -13, y: 16 } },
+            { x: -13, y: 26, type: 'smooth', inHandle: { x: -15, y: 22 }, outHandle: { x: -11, y: 30 } },
+            { x: -6, y: 29, type: 'smooth', inHandle: { x: -10, y: 31 }, outHandle: { x: -4, y: 27 } },
+            { x: -6, y: 18, type: 'smooth', inHandle: { x: -5, y: 24 }, outHandle: { x: -6, y: 12 } },
+            { x: -6, y: 8, type: 'corner', inHandle: { x: -6, y: 12 }, outHandle: { x: -6, y: 8 } }
+          ],
+          subPaths: [
+            { type: 'circle', cx: -9, cy: 17, r: 2.3, fill: '#f97316' },
+            { type: 'circle', cx: -8, cy: 24, r: 2.1, fill: '#f97316' }
+          ]
+        },
+        {
+          id: 'octopus_tentacle_4', zIndex: 4, fill: '#dc2626', stroke: '#b91c1c', strokeWidth: 1.5, closed: true,
+          points: [
+            { x: -5, y: 8, type: 'corner', inHandle: { x: -5, y: 8 }, outHandle: { x: -6, y: 18 } },
+            { x: -5, y: 29, type: 'smooth', inHandle: { x: -7, y: 24 }, outHandle: { x: -3, y: 33 } },
+            { x: 1, y: 32, type: 'smooth', inHandle: { x: -3, y: 34 }, outHandle: { x: 3, y: 29 } },
+            { x: 1, y: 19, type: 'smooth', inHandle: { x: 2, y: 25 }, outHandle: { x: 1, y: 13 } },
+            { x: 0, y: 9, type: 'corner', inHandle: { x: 1, y: 13 }, outHandle: { x: 0, y: 9 } }
+          ],
+          subPaths: [
+            { type: 'circle', cx: -2, cy: 18, r: 2.4, fill: '#f97316' },
+            { type: 'circle', cx: -1, cy: 26, r: 2.2, fill: '#f97316' }
+          ]
+        },
+        {
+          id: 'octopus_tentacle_5', zIndex: 4, fill: '#ea1d2d', stroke: '#b91c1c', strokeWidth: 1.5, closed: true,
+          points: [
+            { x: 0, y: 9, type: 'corner', inHandle: { x: 0, y: 9 }, outHandle: { x: -1, y: 13 } },
+            { x: -1, y: 19, type: 'smooth', inHandle: { x: -1, y: 13 }, outHandle: { x: -2, y: 25 } },
+            { x: -1, y: 32, type: 'smooth', inHandle: { x: -3, y: 29 }, outHandle: { x: 3, y: 34 } },
+            { x: 5, y: 29, type: 'smooth', inHandle: { x: 3, y: 33 }, outHandle: { x: 7, y: 24 } },
+            { x: 5, y: 8, type: 'corner', inHandle: { x: 6, y: 18 }, outHandle: { x: 5, y: 8 } }
+          ],
+          subPaths: [
+            { type: 'circle', cx: 2, cy: 18, r: 2.4, fill: '#f97316' },
+            { type: 'circle', cx: 1, cy: 26, r: 2.2, fill: '#f97316' }
+          ]
+        },
+        {
+          id: 'octopus_tentacle_6', zIndex: 3, fill: '#dc2626', stroke: '#b91c1c', strokeWidth: 1.5, closed: true,
+          points: [
+            { x: 6, y: 8, type: 'corner', inHandle: { x: 6, y: 8 }, outHandle: { x: 6, y: 12 } },
+            { x: 6, y: 18, type: 'smooth', inHandle: { x: 6, y: 12 }, outHandle: { x: 5, y: 24 } },
+            { x: 6, y: 29, type: 'smooth', inHandle: { x: 4, y: 27 }, outHandle: { x: 10, y: 31 } },
+            { x: 13, y: 26, type: 'smooth', inHandle: { x: 11, y: 30 }, outHandle: { x: 15, y: 22 } },
+            { x: 12, y: 7, type: 'corner', inHandle: { x: 13, y: 16 }, outHandle: { x: 12, y: 7 } }
+          ],
+          subPaths: [
+            { type: 'circle', cx: 9, cy: 17, r: 2.3, fill: '#f97316' },
+            { type: 'circle', cx: 8, cy: 24, r: 2.1, fill: '#f97316' }
+          ]
+        },
+        {
+          id: 'octopus_tentacle_7', zIndex: 2, fill: '#ea1d2d', stroke: '#b91c1c', strokeWidth: 1.5, closed: true,
+          points: [
+            { x: 13, y: 7, type: 'corner', inHandle: { x: 13, y: 7 }, outHandle: { x: 13, y: 10 } },
+            { x: 14, y: 16, type: 'smooth', inHandle: { x: 14, y: 10 }, outHandle: { x: 13, y: 22 } },
+            { x: 15, y: 26, type: 'smooth', inHandle: { x: 13, y: 24 }, outHandle: { x: 18, y: 27 } },
+            { x: 22, y: 22, type: 'smooth', inHandle: { x: 20, y: 26 }, outHandle: { x: 24, y: 18 } },
+            { x: 18, y: 6, type: 'corner', inHandle: { x: 20, y: 14 }, outHandle: { x: 18, y: 6 } }
+          ],
+          subPaths: [
+            { type: 'circle', cx: 18, cy: 16, r: 2.2, fill: '#f97316' },
+            { type: 'circle', cx: 16, cy: 22, r: 2.0, fill: '#f97316' }
+          ]
+        },
+        // 丸い赤頭
+        { isCircle: true, cx: 0, cy: -8, r: 26, zIndex: 5, fill: '#ea1d2d', stroke: '#be123c', strokeWidth: 2 },
+        // 眉毛
+        {
+          id: 'octopus_brow_left', zIndex: 6, fill: 'none', stroke: '#991b1b', strokeWidth: 1.6, closed: false,
+          points: [
+            { x: -14, y: -11, type: 'corner', inHandle: { x: -14, y: -11 }, outHandle: { x: -12, y: -13 } },
+            { x: -10, y: -13, type: 'smooth', inHandle: { x: -12, y: -13 }, outHandle: { x: -8, y: -13 } },
+            { x: -6, y: -11, type: 'corner', inHandle: { x: -8, y: -13 }, outHandle: { x: -6, y: -11 } }
+          ]
+        },
+        {
+          id: 'octopus_brow_right', zIndex: 6, fill: 'none', stroke: '#991b1b', strokeWidth: 1.6, closed: false,
+          points: [
+            { x: 6, y: -11, type: 'corner', inHandle: { x: 6, y: -11 }, outHandle: { x: 8, y: -13 } },
+            { x: 10, y: -13, type: 'smooth', inHandle: { x: 8, y: -13 }, outHandle: { x: 12, y: -13 } },
+            { x: 14, y: -11, type: 'corner', inHandle: { x: 12, y: -13 }, outHandle: { x: 14, y: -11 } }
+          ]
+        },
+        // つぶらな黒目
+        { isCircle: true, cx: -10, cy: -5, r: 3.8, zIndex: 7, fill: '#1e293b', stroke: 'none', strokeWidth: 0 },
+        { isCircle: true, cx: 10, cy: -5, r: 3.8, zIndex: 7, fill: '#1e293b', stroke: 'none', strokeWidth: 0 },
         // おちょぼ口
-        ctx.fillStyle = '#450a0a';
-        ctx.beginPath();
-        ctx.arc(0, h * 0.08, 2.8, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-      }
-
-      function drawHirame(ctx, width, height) {
-        ctx.clearRect(0, 0, width, height);
-        ctx.save();
-        ctx.translate(width / 2 + 2, height / 2);
-        const w = 32;
-        const h = 21;
-
-        // 1. 背ビレ & 腹ビレ (黄金色 ＋ 黒ヒレ条)
-        ctx.fillStyle = '#eab308';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1.8;
-
-        // 背ビレ (左向き: 頭側 -w*0.55 から 尾側 w*0.72)
-        ctx.beginPath();
-        ctx.moveTo(-w * 0.55, -h * 0.4);
-        ctx.quadraticCurveTo(-w * 0.1, -h * 1.15, w * 0.72, -h * 0.2);
-        ctx.lineTo(w * 0.65, -h * 0.15);
-        ctx.quadraticCurveTo(-w * 0.1, -h * 0.7, -w * 0.55, -h * 0.3);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // 背ビレ条
-        ctx.lineWidth = 1.2;
-        for (let x = -w * 0.45; x <= w * 0.62; x += w * 0.15) {
-          const topY = -h * 0.5 - (1 - Math.abs((x - w * 0.05) / (w * 0.65))) * h * 0.5;
-          const baseY = -h * 0.35;
-          ctx.beginPath();
-          ctx.moveTo(x, baseY);
-          ctx.lineTo(x, topY);
-          ctx.stroke();
-        }
-
-        // 腹ビレ (下側)
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.moveTo(-w * 0.35, h * 0.45);
-        ctx.quadraticCurveTo(-w * 0.05, h * 1.15, w * 0.72, h * 0.2);
-        ctx.lineTo(w * 0.65, h * 0.15);
-        ctx.quadraticCurveTo(-w * 0.05, h * 0.7, -w * 0.35, h * 0.35);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // 腹ビレ条
-        ctx.lineWidth = 1.2;
-        for (let x = -w * 0.25; x <= w * 0.62; x += w * 0.15) {
-          const botY = h * 0.5 + (1 - Math.abs((x - w * 0.1) / (w * 0.65))) * h * 0.5;
-          const baseY = h * 0.35;
-          ctx.beginPath();
-          ctx.moveTo(x, baseY);
-          ctx.lineTo(x, botY);
-          ctx.stroke();
-        }
-
-        // 2. 尾びれ (右側・扇形)
-        ctx.fillStyle = '#eab308';
-        ctx.lineWidth = 2.0;
-        ctx.beginPath();
-        ctx.moveTo(w * 0.68, -h * 0.12);
-        ctx.lineTo(w * 1.25, -h * 0.52);
-        ctx.quadraticCurveTo(w * 1.35, 0, w * 1.25, h * 0.52);
-        ctx.lineTo(w * 0.68, h * 0.12);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // 尾の白い外縁
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.moveTo(w * 1.22, -h * 0.45);
-        ctx.quadraticCurveTo(w * 1.32, 0, w * 1.22, h * 0.45);
-        ctx.stroke();
-
-        // 3. 体幹とヒレを分ける白い境界線
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.moveTo(-w * 0.55, -h * 0.35);
-        ctx.quadraticCurveTo(-w * 0.05, -h * 0.76, w * 0.68, -h * 0.15);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(-w * 0.35, h * 0.38);
-        ctx.quadraticCurveTo(-w * 0.05, h * 0.76, w * 0.68, h * 0.15);
-        ctx.stroke();
-
-        // 4. 体幹（黄金マスタードイエロー）
-        ctx.fillStyle = '#bfa33a';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.moveTo(-w * 0.55, -h * 0.38);
-        ctx.lineTo(-w * 0.8, -h * 0.22);
-        ctx.lineTo(-w * 1.0, -h * 0.12); // 上唇
-        ctx.lineTo(-w * 0.82, -h * 0.02); // 口
-        ctx.lineTo(-w * 0.95, h * 0.1);  // 下唇
-        ctx.quadraticCurveTo(-w * 0.4, h * 0.6, w * 0.7, h * 0.15);
-        ctx.lineTo(w * 0.7, -h * 0.15);
-        ctx.quadraticCurveTo(-w * 0.2, -h * 0.6, -w * 0.55, -h * 0.38);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // 5. 左ヒラメの鋭い目（2つの目）
-        ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 1.3;
-        ctx.beginPath();
-        ctx.arc(-w * 0.55, -h * 0.18, 4.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(-w * 0.58, -h * 0.18, 1.8, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(-w * 0.42, -h * 0.28, 3.6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(-w * 0.44, -h * 0.28, 1.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-      }
+        { isCircle: true, cx: 0, cy: 3, r: 6.2, zIndex: 8, fill: '#f97316', stroke: '#ea580c', strokeWidth: 1.2 },
+        { isCircle: true, cx: 0, cy: 3, r: 3.4, zIndex: 9, fill: '#7f1d1d', stroke: 'none', strokeWidth: 0 }
+      ];
 
       function renderPreviewCharacters() {
         const allyC = document.getElementById('allyCharCanvas');
@@ -1786,20 +1885,20 @@
         if (allyC) {
           const ctx = allyC.getContext('2d');
           if (fishCatalogIndex === 0) {
-            drawKarei(ctx, allyC.width, allyC.height);
+            renderModelToCanvas(ctx, allyC.width, allyC.height, KAREI_PARTS, 0.72, -4, 0);
             if (allyFishName) allyFishName.innerText = 'カレイ (自軍・右向き)';
-            if (fishCatalogTitle) fishCatalogTitle.innerText = '魚図鑑 [1/2]';
+            if (fishCatalogTitle) fishCatalogTitle.innerText = 'ターゲット [1/2]';
           } else {
-            drawHirame(ctx, allyC.width, allyC.height);
+            renderModelToCanvas(ctx, allyC.width, allyC.height, HIRAME_PARTS, 0.72, 4, 0);
             if (allyFishName) allyFishName.innerText = 'ヒラメ (自軍・左向き)';
-            if (fishCatalogTitle) fishCatalogTitle.innerText = '魚図鑑 [2/2]';
+            if (fishCatalogTitle) fishCatalogTitle.innerText = 'ターゲット [2/2]';
           }
         }
 
         const enemyC = document.getElementById('enemyCharCanvas');
         if (enemyC) {
           const ctx = enemyC.getContext('2d');
-          drawOctopus(ctx, enemyC.width, enemyC.height);
+          renderModelToCanvas(ctx, enemyC.width, enemyC.height, OCTOPUS_PARTS, 1.25, 0, -2);
         }
       }
 
