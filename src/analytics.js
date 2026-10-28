@@ -38,3 +38,4 @@ export function trackPageView(pageTitle, pagePath) {
     console.debug('[GA4] Pageview dispatch skipped:', err);
   }
 }
+

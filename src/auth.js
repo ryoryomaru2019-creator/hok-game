@@ -129,3 +129,4 @@ function getDeviceSummary() {
 
   return `${os} / ${browser}`;
 }
+
