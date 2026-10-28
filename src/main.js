@@ -656,6 +656,26 @@ window.addEventListener('DOMContentLoaded', () => {
     console.warn("Failed to load saved custom character", e);
   }
 
+  // Web公開環境用: 同梱デフォルト設定 (default_game_data.json) があれば自動取得して未設定端末へ適用
+  try {
+    fetch('./default_game_data.json')
+      .then(res => res.ok ? res.json() : null)
+      .then(bundle => {
+        if (!bundle) return;
+        if (bundle.customRoster) {
+          renderer.setCustomCharacters(bundle.customRoster);
+        }
+        if (bundle.customCharacter) {
+          renderer.setCustomCharacter(bundle.customCharacter);
+        }
+        if (bundle.devConfig && !localStorage.getItem('hirame_dev_config')) {
+          game.setDevConfig(bundle.devConfig);
+          applyTitleAndModeScreenConfig(game.devConfig);
+        }
+      })
+      .catch(() => {});
+  } catch (e) {}
+
   window.addEventListener('storage', (e) => {
     if (e.key === 'hirame_dev_config') {
       game.setDevConfig(game.loadDevConfig());
