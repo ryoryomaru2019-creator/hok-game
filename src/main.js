@@ -340,9 +340,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // BGM音量ツマミの再生・停止トグル (音量チェック用: フェードイン・フェードアウトなし、ランダム位置20秒再生)
     const gameBgmPlayToggleBtn = document.getElementById('gameBgmPlayToggleBtn');
-    const updateGameKnobBtn = (isPlaying) => {
+    const updateGameKnobBtn = (isPlaying = null) => {
       if (!gameBgmPlayToggleBtn) return;
-      if (isPlaying) {
+      const playing = (isPlaying !== null) ? isPlaying : sound.isPlaying();
+      if (playing) {
         gameBgmPlayToggleBtn.innerText = '⏹';
         gameBgmPlayToggleBtn.classList.add('playing');
         gameBgmPlayToggleBtn.title = 'BGMを停止';
@@ -359,11 +360,12 @@ window.addEventListener('DOMContentLoaded', () => {
         if (sound.isPlaying()) {
           sound.stopTrackAudition(false);
           sound.pauseBGM();
+          updateGameKnobBtn(false);
         } else {
           // BGM音量コンテナ: フェードなしで即座に設定音量でランダム開始20秒再生
           sound.startTrackAudition(sound.currentTrackIndex, { fade: false, duration: 20 });
+          updateGameKnobBtn(true);
         }
-        updateGameKnobBtn(sound.isPlaying());
         renderTrackCards();
       });
     }
@@ -401,7 +403,7 @@ window.addEventListener('DOMContentLoaded', () => {
     dom.trackSelectGrid.innerHTML = playableList.map((track) => {
       const globalIdx = BGM_PLAYLIST.indexOf(track);
       const isCurrent = curTrack && (curTrack.id === track.id || curTrack.src === track.src);
-      const isTrackPlaying = isCurrent && isPlaying;
+      const isTrackPlaying = (sound.isAuditioning && sound.auditionTrackIndex === globalIdx) || (!sound.isAuditioning && isCurrent && isPlaying);
       const statusText = isTrackPlaying ? t('trackPlaying') : (isCurrent ? t('trackSelected') : t('trackTapToPlay'));
       const actionTitle = isTrackPlaying ? t('stop') : t('play');
       return `
@@ -425,23 +427,20 @@ window.addEventListener('DOMContentLoaded', () => {
         const idx = parseInt(card.dataset.idx, 10);
         sound.init();
 
-        const isCurrent = idx === sound.currentTrackIndex;
-        const isPlaying = sound.isPlaying();
+        const isThisTrackAuditioning = sound.isAuditioning && (sound.auditionTrackIndex === idx);
+        const isCurrentPlaying = (idx === sound.currentTrackIndex) && sound.isPlaying();
 
-        if (isCurrent && isPlaying) {
+        if (isThisTrackAuditioning || isCurrentPlaying) {
           // 既に再生中の同一曲をタップした場合は停止
           sound.stopTrackAudition(false);
           sound.pauseBGM();
+          updateGameKnobBtn(false);
         } else {
           // 楽曲一覧＆試聴: フェードイン＆フェードアウト、ランダム位置20秒再生（1曲で終了）
           sound.startTrackAudition(idx, { fade: true, duration: 20 });
+          updateGameKnobBtn(true);
         }
         renderTrackCards();
-        const knobBtn = document.getElementById('gameBgmPlayToggleBtn');
-        if (knobBtn) {
-          knobBtn.innerText = sound.isPlaying() ? '⏹' : '▶';
-          knobBtn.classList.toggle('playing', sound.isPlaying());
-        }
       });
     });
   }
@@ -764,6 +763,14 @@ window.addEventListener('DOMContentLoaded', () => {
   // 設定モーダル開閉
   const openSettings = () => {
     sound.playTap();
+    renderTrackCards();
+    const knobBtn = document.getElementById('gameBgmPlayToggleBtn');
+    if (knobBtn) {
+      const playing = sound.isPlaying();
+      knobBtn.innerText = playing ? '⏹' : '▶';
+      knobBtn.classList.toggle('playing', playing);
+      knobBtn.title = playing ? 'BGMを停止' : 'BGMを再生 (音量確認・フェードなし20秒)';
+    }
     dom.settingsModal.classList.remove('hidden');
   };
   dom.openSettingsBtn.addEventListener('click', openSettings);

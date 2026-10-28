@@ -8,7 +8,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         admin: resolve(__dirname, 'admin.html'),
-        shortcuts: resolve(__dirname, 'shortcuts.html')
+        shortcuts: resolve(__dirname, 'shortcuts.html'),
+        accessibility: resolve(__dirname, 'accessibility_settings.html')
       }
     }
   }

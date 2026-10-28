@@ -347,10 +347,16 @@ class SoundSystem {
   }
 
   isPlaying() {
-    if (this.isAuditioning && this.auditionAudio && !this.auditionAudio.paused) {
+    if (this.isAuditioning) {
       return true;
     }
     return !!(this.bgmAudio && !this.bgmAudio.paused);
+  }
+
+  isAuditionPlaying(index = null) {
+    if (!this.isAuditioning) return false;
+    if (index === null) return true;
+    return this.auditionTrackIndex === index;
   }
 
   togglePlayPause() {
@@ -392,80 +398,110 @@ class SoundSystem {
     this.currentTrackIndex = idx;
     if (this.onTrackChange) this.onTrackChange(track);
 
-    this.auditionAudio = new Audio(encodeURI(resolveAssetPath(track.src)));
-    this.previewAudio = this.auditionAudio; // 後方互換
+    const audio = new Audio(encodeURI(resolveAssetPath(track.src)));
+    this.auditionAudio = audio;
+    this.previewAudio = audio; // 後方互換
 
+    // 初期音量設定
     if (fade) {
-      this.auditionAudio._fadeLevel = 0;
-      this.applyAuditionVolume(0);
+      audio._fadeLevel = 0;
+      audio.volume = 0;
     } else {
-      this.auditionAudio._fadeLevel = 1.0;
+      audio._fadeLevel = 1.0;
       this.applyAuditionVolume(1.0);
     }
 
-    const onMetadata = () => {
-      if (!this.isAuditioning || !this.auditionAudio) return;
-      const totalDur = this.auditionAudio.duration || 120;
-      // ランダム開始位置 (曲長から20秒を引いた範囲、最低0秒)
+    // ユーザー操作の同期コールスタックで直ちに再生開始（モバイルブラウザ等のAutoplayポリシー対応）
+    audio.play().catch(e => {
+      console.warn("Audition play prevented or blocked:", e);
+    });
+
+    // メタデータ読み込み時にランダム位置へシーク
+    let hasSeeked = false;
+    const applyRandomSeek = () => {
+      if (hasSeeked || !this.auditionAudio || this.auditionAudio !== audio) return;
+      hasSeeked = true;
+      const totalDur = audio.duration || 120;
       const maxStart = Math.max(0, totalDur - duration - 2);
       const startSec = maxStart > 5 ? Math.floor(5 + Math.random() * (maxStart - 5)) : 0;
-      this.auditionAudio.currentTime = startSec;
-
-      this.auditionAudio.play().catch(e => console.log("Audition play prevented:", e));
-
-      if (fade) {
-        // 1.2秒かけてフェードイン
-        let currentFade = 0;
-        this.auditionFadeInterval = setInterval(() => {
-          currentFade += 0.08;
-          if (currentFade >= 1.0) {
-            currentFade = 1.0;
-            clearInterval(this.auditionFadeInterval);
-            this.auditionFadeInterval = null;
-          }
-          if (this.auditionAudio) {
-            this.auditionAudio._fadeLevel = currentFade;
-            this.applyAuditionVolume(currentFade);
-          } else {
-            clearInterval(this.auditionFadeInterval);
-            this.auditionFadeInterval = null;
-          }
-        }, 80);
-
-        // (duration - 2) 秒後にフェードアウト開始
-        const fadeOutDelay = Math.max(500, (duration - 2.0) * 1000);
-        this.auditionFadeTimeout = setTimeout(() => {
-          let outFade = 1.0;
-          this.auditionFadeInterval = setInterval(() => {
-            outFade -= 0.08;
-            if (outFade <= 0) {
-              outFade = 0;
-              clearInterval(this.auditionFadeInterval);
-              this.auditionFadeInterval = null;
-            }
-            if (this.auditionAudio) {
-              this.auditionAudio._fadeLevel = outFade;
-              this.applyAuditionVolume(outFade);
-            } else {
-              clearInterval(this.auditionFadeInterval);
-              this.auditionFadeInterval = null;
-            }
-          }, 80);
-        }, fadeOutDelay);
+      try {
+        if (startSec > 0 && Number.isFinite(startSec)) {
+          audio.currentTime = startSec;
+        }
+      } catch (err) {
+        console.warn("Audition seek error:", err);
       }
-
-      // duration 秒後に完全停止（1曲で止まる、リピートなし）
-      this.auditionTimeout = setTimeout(() => {
-        this.stopTrackAudition(false);
-      }, duration * 1000);
     };
 
-    this.auditionAudio.addEventListener('loadedmetadata', onMetadata);
-    setTimeout(() => {
-      if (this.auditionAudio && this.auditionAudio.paused) {
-        onMetadata();
+    if (audio.readyState >= 1) {
+      applyRandomSeek();
+    } else {
+      audio.addEventListener('loadedmetadata', applyRandomSeek, { once: true });
+    }
+
+    // 終了・エラーハンドラ
+    audio.addEventListener('ended', () => {
+      if (this.auditionAudio === audio) {
+        this.stopTrackAudition(false);
       }
-    }, 350);
+    }, { once: true });
+
+    audio.addEventListener('error', () => {
+      if (this.auditionAudio === audio) {
+        this.stopTrackAudition(false);
+      }
+    }, { once: true });
+
+    if (fade) {
+      // 1.5秒かけて滑らかにフェードイン (50ms毎に更新)
+      const fadeInSteps = 30;
+      let inStep = 0;
+      this.auditionFadeInInterval = setInterval(() => {
+        if (this.auditionAudio !== audio) {
+          clearInterval(this.auditionFadeInInterval);
+          this.auditionFadeInInterval = null;
+          return;
+        }
+        inStep++;
+        const factor = Math.min(1.0, inStep / fadeInSteps);
+        audio._fadeLevel = factor;
+        this.applyAuditionVolume(factor);
+        if (inStep >= fadeInSteps) {
+          clearInterval(this.auditionFadeInInterval);
+          this.auditionFadeInInterval = null;
+        }
+      }, 50);
+
+      // (duration - 2秒) 後にフェードアウト開始
+      const fadeOutDelay = Math.max(500, (duration - 2.0) * 1000);
+      this.auditionFadeTimeout = setTimeout(() => {
+        if (this.auditionAudio !== audio) return;
+        const fadeOutSteps = 30;
+        let outStep = 0;
+        this.auditionFadeOutInterval = setInterval(() => {
+          if (this.auditionAudio !== audio) {
+            clearInterval(this.auditionFadeOutInterval);
+            this.auditionFadeOutInterval = null;
+            return;
+          }
+          outStep++;
+          const factor = Math.max(0, 1.0 - (outStep / fadeOutSteps));
+          audio._fadeLevel = factor;
+          this.applyAuditionVolume(factor);
+          if (outStep >= fadeOutSteps) {
+            clearInterval(this.auditionFadeOutInterval);
+            this.auditionFadeOutInterval = null;
+          }
+        }, 50);
+      }, fadeOutDelay);
+    }
+
+    // duration 秒後に完全停止（1曲で終了）
+    this.auditionTimeout = setTimeout(() => {
+      if (this.auditionAudio === audio) {
+        this.stopTrackAudition(false);
+      }
+    }, duration * 1000);
 
     if (this.onPreviewStateChange) {
       this.onPreviewStateChange(idx, true);
@@ -484,12 +520,21 @@ class SoundSystem {
       clearTimeout(this.auditionFadeTimeout);
       this.auditionFadeTimeout = null;
     }
+    if (this.auditionFadeInInterval) {
+      clearInterval(this.auditionFadeInInterval);
+      this.auditionFadeInInterval = null;
+    }
+    if (this.auditionFadeOutInterval) {
+      clearInterval(this.auditionFadeOutInterval);
+      this.auditionFadeOutInterval = null;
+    }
     if (this.auditionFadeInterval) {
       clearInterval(this.auditionFadeInterval);
       this.auditionFadeInterval = null;
     }
     if (this.auditionAudio) {
       this.auditionAudio.pause();
+      this.auditionAudio.src = '';
       this.auditionAudio = null;
     }
     this.previewAudio = null;
