@@ -107,6 +107,7 @@ export const DEFAULT_SPAWN_CONDITION = {
   tapCount: 10,                 // 0: 無操作, 1~100: 回数, 101: ランダム
   tapCountEnabled: true,        // 後方互換用
   matchAny: false,              // かたほうでも達成 (いずれか達成)
+  showAlert: true,              // ◯◯出現！ ポップアップ文字演出 (ON/OFF)
   isCombo: false,               // コンボ達成条件 (false: 延べタップ数, true: 連続タップ成功のみ)
   probability: 100,             // 1~100%
   repeatCount: 0                // 0: 無限 (条件達成するたび発生), 1~99: 発動回数制限, 100: 回数ランダム

@@ -1600,11 +1600,14 @@ export class Game {
         const spawnedFish = new Fish(charId, bounds, activeCfg, this.mode, { origin });
         this.fishes.push(spawnedFish);
 
-        // 出現演出メッセージ＆効果音
+        // 出現演出メッセージ＆効果音 (ON/OFF設定判定)
         const charName = charCfg.name || (charId === 'boo_chan' ? 'ぶーちゃん' : charId);
         console.log(`[SpawnCondition] ✨ ${charName} (${charId}) 出現条件達成！スポーンしました。 origin=${origin}`);
-        this.renderer.addFloatingText(`✨ ${charName} 出現！`, spawnedFish.x, Math.max(90, spawnedFish.y), "#f472b6", 26);
-        try { sound.playCatch(); } catch (e) {}
+        const showAlert = (sc.showAlert !== undefined) ? !!sc.showAlert : (charCfg.showSpawnAlert !== undefined ? !!charCfg.showSpawnAlert : true);
+        if (showAlert) {
+          this.renderer.addFloatingText(`✨ ${charName} 出現！`, spawnedFish.x, Math.max(90, spawnedFish.y), "#f472b6", 26);
+          try { sound.playCatch(); } catch (e) {}
+        }
       }
     }
   }

@@ -474,6 +474,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const charCondRepeatCount = document.getElementById('charCondRepeatCount');
   const charCondRepeatCountVal = document.getElementById('charCondRepeatCountVal');
   const chkCharCondTapCountEnabled = document.getElementById('chkCharCondTapCountEnabled');
+  const chkCharCondShowAlert = document.getElementById('chkCharCondShowAlert');
   const chkCharCondMatchAny = document.getElementById('chkCharCondMatchAny');
   const chkCharCondAll = document.getElementById('chkCharCondAll');
   const chkCharCondScore = document.getElementById('chkCharCondScore');
@@ -1732,6 +1733,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (chkCharCondMatchAny) {
       chkCharCondMatchAny.checked = !!sc.matchAny;
     }
+    if (chkCharCondShowAlert) {
+      chkCharCondShowAlert.checked = (sc.showAlert !== false);
+    }
 
     const condScore = !!sc.condScoreEnabled;
     const condTaps = sc.condTargetTapsEnabled !== false && sc.tapCountEnabled !== false;
@@ -1927,6 +1931,20 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!isEnabled || !isTapEnabled) {
       cfg.spawnCondition.matchAny = false;
     }
+
+    try { sound.init(); sound.playTap(); } catch (err) { }
+    syncUIForActiveChar();
+    saveCurrentConfigToStorage();
+    if (configMatrixModal && !configMatrixModal.classList.contains('hidden')) {
+      renderConfigMatrixTable(matrixCurrentMode);
+    }
+  });
+
+  // 「◯◯出現！」表示 チェックボックス
+  chkCharCondShowAlert?.addEventListener('change', (e) => {
+    const cfg = getActiveCharConfig();
+    if (!cfg.spawnCondition) cfg.spawnCondition = {};
+    cfg.spawnCondition.showAlert = e.target.checked;
 
     try { sound.init(); sound.playTap(); } catch (err) { }
     syncUIForActiveChar();
@@ -4303,6 +4321,24 @@ window.addEventListener('DOMContentLoaded', () => {
         <td class="${isLocked ? 'is-locked' : ''}">
           <label class="matrix-switch" title="出現条件全体の有効/無効">
             <input type="checkbox" class="matrix-checkbox-field" data-char-id="${c.id}" data-field="spawnCondition.enabled" ${isEnabled ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
+            <span class="matrix-switch-slider"></span>
+          </label>
+        </td>
+      `;
+    }
+    html += '</tr>';
+
+    // 📢 「◯◯出現！」表示
+    html += '<tr>';
+    html += '<td class="matrix-param-cell-label">📢 「◯◯出現！」表示<span class="matrix-param-desc">出現時ポップアップ文字のON/OFF</span></td>';
+    for (const c of allChars) {
+      const cfg = charsDict[c.id];
+      const isShowAlert = cfg.spawnCondition?.showAlert !== false;
+      const isLocked = isCharLocked(c.id);
+      html += `
+        <td class="${isLocked ? 'is-locked' : ''}">
+          <label class="matrix-switch" title="出現時に「◯◯出現！」を表示する">
+            <input type="checkbox" class="matrix-checkbox-field" data-char-id="${c.id}" data-field="spawnCondition.showAlert" ${isShowAlert ? 'checked' : ''} ${isLocked ? 'disabled' : ''}>
             <span class="matrix-switch-slider"></span>
           </label>
         </td>

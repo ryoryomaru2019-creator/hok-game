@@ -689,7 +689,8 @@
           "condScoreEnabled": false,
           "condTargetTapsEnabled": true,
           "condTimeEnabled": false,
-          "matchAny": false
+          "matchAny": false,
+          "showAlert": true
         },
         "ambientTrigger": {
           "enabled": false,
@@ -739,7 +740,8 @@
           "condScoreEnabled": false,
           "condTargetTapsEnabled": true,
           "condTimeEnabled": false,
-          "matchAny": false
+          "matchAny": false,
+          "showAlert": true
         },
         "ambientTrigger": {
           "enabled": false,
@@ -789,7 +791,8 @@
           "condScoreEnabled": false,
           "condTargetTapsEnabled": true,
           "condTimeEnabled": false,
-          "matchAny": false
+          "matchAny": false,
+          "showAlert": true
         },
         "ambientTrigger": {
           "enabled": false,
@@ -839,7 +842,8 @@
           "condScoreEnabled": false,
           "condTargetTapsEnabled": true,
           "condTimeEnabled": false,
-          "matchAny": false
+          "matchAny": false,
+          "showAlert": true
         },
         "ambientTrigger": {
           "enabled": false,
@@ -889,7 +893,8 @@
           "condScoreEnabled": false,
           "condTargetTapsEnabled": true,
           "condTimeEnabled": false,
-          "matchAny": false
+          "matchAny": false,
+          "showAlert": true
         },
         "ambientTrigger": {
           "enabled": false,
@@ -939,7 +944,8 @@
           "condScoreEnabled": false,
           "condTargetTapsEnabled": true,
           "condTimeEnabled": false,
-          "matchAny": false
+          "matchAny": false,
+          "showAlert": true
         },
         "ambientTrigger": {
           "enabled": false,
@@ -989,7 +995,8 @@
           "condScoreEnabled": false,
           "condTargetTapsEnabled": true,
           "condTimeEnabled": false,
-          "matchAny": false
+          "matchAny": false,
+          "showAlert": true
         },
         "ambientTrigger": {
           "enabled": false,
@@ -1039,7 +1046,8 @@
           "condScoreEnabled": false,
           "condTargetTapsEnabled": true,
           "condTimeEnabled": false,
-          "matchAny": false
+          "matchAny": false,
+          "showAlert": true
         },
         "ambientTrigger": {
           "enabled": false,
@@ -1089,7 +1097,8 @@
           "condScoreEnabled": false,
           "condTargetTapsEnabled": true,
           "condTimeEnabled": false,
-          "matchAny": false
+          "matchAny": false,
+          "showAlert": true
         },
         "ambientTrigger": {
           "enabled": true,
@@ -1139,7 +1148,8 @@
           "condScoreEnabled": false,
           "condTargetTapsEnabled": true,
           "condTimeEnabled": false,
-          "matchAny": false
+          "matchAny": false,
+          "showAlert": true
         },
         "ambientTrigger": {
           "enabled": false,
@@ -1189,7 +1199,8 @@
           "condScoreEnabled": false,
           "condTargetTapsEnabled": true,
           "condTimeEnabled": false,
-          "matchAny": false
+          "matchAny": false,
+          "showAlert": true
         },
         "ambientTrigger": {
           "enabled": false,
@@ -1418,7 +1429,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1468,7 +1480,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1518,7 +1531,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1568,7 +1582,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1618,7 +1633,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1668,7 +1684,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1718,7 +1735,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1768,7 +1786,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1818,7 +1837,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": true,
@@ -1868,7 +1888,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1918,7 +1939,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -1967,7 +1989,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2032,7 +2055,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2075,7 +2099,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2118,7 +2143,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2161,7 +2187,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2204,7 +2231,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2247,7 +2275,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2290,7 +2319,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2333,7 +2363,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2376,7 +2407,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": true,
@@ -2419,7 +2451,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2462,7 +2495,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2504,7 +2538,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2560,7 +2595,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2604,7 +2640,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2648,7 +2685,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2692,7 +2730,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2736,7 +2775,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2780,7 +2820,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2824,7 +2865,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2868,7 +2910,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -2912,7 +2955,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": true,
@@ -2956,7 +3000,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -3000,7 +3045,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
@@ -3043,7 +3089,8 @@
               "condScoreEnabled": false,
               "condTargetTapsEnabled": true,
               "condTimeEnabled": false,
-              "matchAny": false
+              "matchAny": false,
+              "showAlert": true
             },
             "ambientTrigger": {
               "enabled": false,
