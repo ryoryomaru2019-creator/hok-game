@@ -6,6 +6,8 @@ import { sound } from './audio.js';
 import { DEFAULT_PLAYER_TITLES, DEFAULT_X_SHARE_TEMPLATE, DEFAULT_X_SHARE_TEMPLATES, DEFAULT_TITLE_SCREEN, DEFAULT_MODE_SELECT_SCREEN, DEFAULT_BGM_BANNER_CONFIG, DEFAULT_CHARACTER_LORE, DEFAULT_CHAOS_FEVER_CONFIG, normalizeCharacterLore, applyTextCustomStyles } from './game.js';
 import { t } from './i18n.js';
 import confetti from 'canvas-confetti';
+import { verifyCredentials, isAuthenticated, setAuthenticated, logout, recordLoginLog, getLoginLogs, clearLoginLogs } from './auth.js';
+import { trackEvent } from './analytics.js';
 
 const DEFAULT_CONFIG = {
   targetFishCount: 40,
@@ -178,6 +180,126 @@ window.addEventListener('DOMContentLoaded', () => {
   } catch (e) {
     console.warn("BroadcastChannel not supported", e);
   }
+
+  // ===== 🔐 管理者認証ゲートウェイ制御 =====
+  const adminLoginOverlay = document.getElementById('adminLoginOverlay');
+  const adminLoginForm = document.getElementById('adminLoginForm');
+  const adminLoginUser = document.getElementById('adminLoginUser');
+  const adminLoginPass = document.getElementById('adminLoginPass');
+  const btnToggleLoginPass = document.getElementById('btnToggleLoginPass');
+  const chkRememberAuth = document.getElementById('chkRememberAuth');
+  const adminLoginErrorMsg = document.getElementById('adminLoginErrorMsg');
+  const btnLogoutAdmin = document.getElementById('btnLogoutAdmin');
+  const btnOpenLoginLogs = document.getElementById('btnOpenLoginLogs');
+  const loginLogsModal = document.getElementById('loginLogsModal');
+  const btnCloseLoginLogs = document.getElementById('btnCloseLoginLogs');
+  const btnCloseLoginLogsFooter = document.getElementById('btnCloseLoginLogsFooter');
+  const btnClearLoginLogs = document.getElementById('btnClearLoginLogs');
+  const loginLogsTableBody = document.getElementById('loginLogsTableBody');
+
+  function checkAuthGate() {
+    if (!isAuthenticated()) {
+      if (adminLoginOverlay) {
+        adminLoginOverlay.style.display = 'flex';
+        adminLoginUser?.focus();
+      }
+    } else {
+      if (adminLoginOverlay) {
+        adminLoginOverlay.style.display = 'none';
+      }
+    }
+  }
+
+  // 初回認証チェック
+  checkAuthGate();
+
+  // パスワード表示切替
+  btnToggleLoginPass?.addEventListener('click', () => {
+    if (!adminLoginPass) return;
+    const isPass = adminLoginPass.type === 'password';
+    adminLoginPass.type = isPass ? 'text' : 'password';
+    btnToggleLoginPass.innerText = isPass ? '🙈' : '👁️';
+  });
+
+  // ログインフォーム送信
+  adminLoginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = adminLoginUser?.value.trim() || '';
+    const password = adminLoginPass?.value || '';
+
+    const valid = await verifyCredentials(username, password);
+    recordLoginLog(valid, username);
+
+    if (valid) {
+      setAuthenticated(chkRememberAuth?.checked);
+      if (adminLoginErrorMsg) adminLoginErrorMsg.classList.add('hidden');
+      if (adminLoginOverlay) adminLoginOverlay.style.display = 'none';
+      trackEvent('admin_login_success', { user: username });
+      try { sound.init(); sound.playSuccess(1); } catch (e) {}
+    } else {
+      if (adminLoginErrorMsg) {
+        adminLoginErrorMsg.classList.remove('hidden');
+        adminLoginErrorMsg.style.animation = 'none';
+        adminLoginErrorMsg.offsetHeight; // reflow
+        adminLoginErrorMsg.style.animation = 'shake 0.4s ease';
+      }
+      trackEvent('admin_login_fail', { user: username });
+      try { sound.init(); sound.playError(); } catch (e) {}
+    }
+  });
+
+  // ログアウト処理
+  btnLogoutAdmin?.addEventListener('click', () => {
+    if (confirm('管理コンソールからログアウトして画面をロックしますか？')) {
+      logout();
+      if (adminLoginPass) adminLoginPass.value = '';
+      if (adminLoginErrorMsg) adminLoginErrorMsg.classList.add('hidden');
+      checkAuthGate();
+      trackEvent('admin_logout');
+      try { sound.init(); sound.playTap(); } catch (e) {}
+    }
+  });
+
+  // ログイン履歴ログ モーダル描画＆制御
+  function renderLoginLogsTable() {
+    if (!loginLogsTableBody) return;
+    const logs = getLoginLogs();
+    if (logs.length === 0) {
+      loginLogsTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:#64748b;">ログイン履歴はまだありません</td></tr>`;
+      return;
+    }
+    loginLogsTableBody.innerHTML = logs.map(l => `
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+        <td style="padding:8px 6px; color:#cbd5e1; white-space:nowrap;">${l.dateStr}</td>
+        <td style="padding:8px 6px; font-weight:800; color:${l.success ? '#34d399' : '#f87171'}; white-space:nowrap;">
+          ${l.success ? '✅ 成功' : '❌ 失敗'}
+        </td>
+        <td style="padding:8px 6px; font-family:monospace; color:#f1f5f9;">${(l.user || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m])}</td>
+        <td style="padding:8px 6px; color:#94a3b8; font-size:11px;">${(l.device || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m])}</td>
+      </tr>
+    `).join('');
+  }
+
+  btnOpenLoginLogs?.addEventListener('click', () => {
+    renderLoginLogsTable();
+    loginLogsModal?.classList.remove('hidden');
+    try { sound.init(); sound.playTap(); } catch (e) {}
+  });
+
+  const closeLoginLogsModal = () => loginLogsModal?.classList.add('hidden');
+  btnCloseLoginLogs?.addEventListener('click', closeLoginLogsModal);
+  btnCloseLoginLogsFooter?.addEventListener('click', closeLoginLogsModal);
+  loginLogsModal?.addEventListener('click', (e) => {
+    if (e.target === loginLogsModal) closeLoginLogsModal();
+  });
+
+  btnClearLoginLogs?.addEventListener('click', () => {
+    if (confirm('すべてのログイン履歴ログを消去しますか？')) {
+      clearLoginLogs();
+      renderLoginLogsTable();
+      try { sound.init(); sound.playTap(); } catch (e) {}
+    }
+  });
 
   // ===== キャラクタースタジオ インスタンス変数 =====
   let studioApp = null;

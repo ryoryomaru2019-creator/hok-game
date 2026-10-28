@@ -8,6 +8,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=DotGothic16&family=Hachi+Maru+Pop&family=M+PLUS+Rounded+1c:wght@400;700;800;900&family=Noto+Sans+JP:wght@400;700;900&family=Outfit:wght@600;800;900&family=Shippori+Mincho:wght@700;800&family=Yuji+Boku&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX', { send_page_view: true });
+  </script>
 </head>
 <body>
   <div class="admin-app">
@@ -28,6 +37,12 @@
           <span>📂</span> 設定全網羅 読込
           <input type="file" id="fileImportAllGameData" accept=".json" style="display:none;">
         </label>
+        <button type="button" id="btnOpenLoginLogs" class="btn-header-json" title="管理者のログイン履歴ログを確認します">
+          <span>📋</span> ログイン履歴
+        </button>
+        <button type="button" id="btnLogoutAdmin" class="btn-header-json" style="border-color:#f43f5e; color:#fecdd3;" title="ログアウトして画面をロックします">
+          <span>🚪</span> ログアウト
+        </button>
       </div>
       <div class="header-nav">
         <button id="btnOpenGameBuilder" class="nav-tab" style="background: linear-gradient(135deg, #ec4899, #8b5cf6); color: white; font-weight: 800; border: 1px solid #f472b6;" title="質問に答えるだけで新規オリジナル仕分けゲームを1分で自動生成・試遊できるビルダー">
@@ -3192,6 +3207,92 @@
         <button type="button" id="btnBuilderPrev" class="btn-secondary-sm" style="display:none;">◀ 戻る</button>
         <span id="builderStepNumText" style="color:#94a3b8; font-size:12px;">Step 1 / 8</span>
         <button type="button" id="btnBuilderNext" class="btn-primary" style="padding:8px 24px; font-weight:800;">次へ進む ▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 管理者認証 ログインオーバーレイ ===== -->
+  <div id="adminLoginOverlay" class="admin-login-overlay" style="display:none;">
+    <div class="admin-login-box">
+      <div class="login-brand-badge">🔐 SECURITY GATEWAY</div>
+      <h2 class="login-title">HoK！ 管理コンソール</h2>
+      <p class="login-sub">管理者権限の認証が必要です</p>
+
+      <form id="adminLoginForm" onsubmit="return false;" style="margin-top:20px; display:flex; flex-direction:column; gap:16px;">
+        <div class="login-field">
+          <label for="adminLoginUser">ログインID</label>
+          <div class="input-wrap">
+            <span class="field-icon">👤</span>
+            <input type="text" id="adminLoginUser" class="login-input" placeholder="admin" autocomplete="username" required autofocus>
+          </div>
+        </div>
+
+        <div class="login-field">
+          <label for="adminLoginPass">パスワード</label>
+          <div class="input-wrap">
+            <span class="field-icon">🔑</span>
+            <input type="password" id="adminLoginPass" class="login-input" placeholder="••••••••••••••" autocomplete="current-password" required>
+            <button type="button" id="btnToggleLoginPass" class="btn-toggle-eye" title="パスワードの表示切替">👁️</button>
+          </div>
+        </div>
+
+        <div class="login-options-row" style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#94a3b8;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="checkbox" id="chkRememberAuth" style="accent-color:#38bdf8;">
+            <span>このブラウザでログインを保持</span>
+          </label>
+        </div>
+
+        <div id="adminLoginErrorMsg" class="login-error-msg hidden">
+          ⚠️ ログインIDまたはパスワードが正しくありません
+        </div>
+
+        <button type="submit" id="btnAdminLoginSubmit" class="btn-login-submit">
+          <span>🚀</span> ログインして入室
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== ログイン履歴ログ モーダル ===== -->
+  <div id="loginLogsModal" class="confirm-modal-overlay hidden">
+    <div class="confirm-modal-box glass-card" style="max-width: 680px; width: 90%; max-height: 80vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+      <div style="padding:16px 20px; background:rgba(15,23,42,0.95); border-bottom:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:20px;">📋</span>
+          <h3 style="margin:0; font-size:16px; color:#f8fafc; font-weight:800;">管理者ログイン履歴ログ</h3>
+        </div>
+        <button type="button" id="btnCloseLoginLogs" class="btn-close-round" title="閉じる">✕</button>
+      </div>
+
+      <div style="padding:14px 20px; overflow-y:auto; flex:1;">
+        <p style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+          管理コンソールへの直近のログイン試行履歴です（最大100件記録）。不正アクセス試行も自動記録されます。
+        </p>
+        <div style="overflow-x:auto;">
+          <table class="login-logs-table" style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.15); color:#38bdf8;">
+                <th style="padding:8px 6px;">日時</th>
+                <th style="padding:8px 6px;">結果</th>
+                <th style="padding:8px 6px;">入力ID</th>
+                <th style="padding:8px 6px;">OS / ブラウザ</th>
+              </tr>
+            </thead>
+            <tbody id="loginLogsTableBody">
+              <!-- JSで動的描画 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="padding:12px 20px; background:rgba(15,23,42,0.9); border-top:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center;">
+        <button type="button" id="btnClearLoginLogs" class="btn-secondary-sm" style="color:#f43f5e; border-color:#f43f5e;" title="すべてのログイン履歴を消去します">
+          🗑️ 履歴をクリア
+        </button>
+        <button type="button" id="btnCloseLoginLogsFooter" class="btn-secondary-sm" style="padding:6px 20px;">
+          閉じる
+        </button>
       </div>
     </div>
   </div>

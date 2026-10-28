@@ -2,6 +2,7 @@ import { Game, GAME_STATES, MODES, applyTextCustomStyles, DEFAULT_BGM_BANNER_CON
 import { GameRenderer, getFishEyeOffset } from './renderer.js';
 import { initI18n, setLang, getCurrentLang, t, onLangChange, getLocalizedPlayerName, getLocalizedTitle } from './i18n.js';
 import { sound, BGM_PLAYLIST, LINKCORE_URL } from './audio.js';
+import { trackEvent } from './analytics.js';
 import {
   loadOrCreateUserIdentity,
   savePlayerName,
@@ -1215,6 +1216,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // カウントダウン開始
     game.startCountdown();
+    trackEvent('game_start', { mode });
   };
 
   dom.chooseKareiMode.addEventListener('click', () => startWithMode(MODES.KAREI));
@@ -2000,6 +2002,7 @@ window.addEventListener('DOMContentLoaded', () => {
       appendLog(dom.rankingIdentityLog, `🏆 本日の水揚げ結果: ${game.score} pt (${game.getPlayerTitle()})`);
 
       dom.resultModal.classList.remove('hidden');
+      trackEvent('game_over', { score: game.score, combo: game.maxCombo, mode: game.mode });
     }
   }
 
