@@ -1546,11 +1546,11 @@ window.addEventListener('DOMContentLoaded', () => {
       charPointBadge.className = isPlus ? 'val-pill val-pill-success' : 'val-pill val-pill-danger';
     }
 
-    // パネルの有効・無効切り替え
+    // パネルの有効・無効切り替え（全キャラ共通で出現条件＆重み・閾値設定が可能）
     if (panelTargetSettings && targetBadgeStatus) {
-      panelTargetSettings.classList.toggle('section-disabled', !isTarget);
-      targetBadgeStatus.innerText = isTarget ? '有効中' : '※ターゲット指定時のみ有効';
-      targetBadgeStatus.className = isTarget ? 'dedicated-badge-active' : 'dedicated-badge-disabled';
+      panelTargetSettings.classList.remove('section-disabled');
+      targetBadgeStatus.innerText = '全キャラ対応';
+      targetBadgeStatus.className = 'dedicated-badge-active';
     }
 
     if (panelDisturberSettings && disturberBadgeStatus) {

@@ -678,21 +678,9 @@
                 </div>
                 <span class="desc-text">シルエット化した際の奥方向への縮小サイズ倍率です（70%で通常サイズの0.7倍の大きさになります）。</span>
               </div>
-            </div>
-            </div><!-- /#paneParamSwim -->
 
-            <!-- TAB 3: 出現条件・専用設定 -->
-            <div id="paneParamSpawn" class="inner-tab-pane hidden">
-            <!-- 4. ターゲット専用設定 (初心者機能ON/OFF) -->
-            <div id="panelTargetSettings" class="settings-block dedicated-settings-block">
-              <div class="block-header-row">
-                <div class="block-title">
-                  <span>🎯 ターゲット専用設定</span>
-                  <span id="targetBadgeStatus" class="dedicated-badge-active">有効中</span>
-                </div>
-              </div>
-
-              <div class="form-group beginner-alert-group">
+              <!-- 初心者機能 (逃走2秒前 点滅警告) -->
+              <div class="form-group beginner-alert-group" style="margin-top:16px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.1);">
                 <div class="label-row">
                   <label for="charBeginnerAlert">初心者機能 (逃走2秒前 点滅警告)</label>
                   <span id="charBeginnerAlertVal" class="val-pill val-pill-success">ON (点滅あり)</span>
@@ -707,17 +695,52 @@
                   </span>
                 </div>
               </div>
+            </div>
+            </div><!-- /#paneParamSwim -->
 
-              <!-- 出現条件設定 -->
-              <div class="spawn-condition-container">
-                <div class="condition-header-row">
-                  <div class="condition-title-group">
-                    <span class="condition-icon">✨</span>
-                    <strong>出現条件設定</strong>
-                    <span class="condition-sublabel">(特定アクションや時間で出現)</span>
-                  </div>
+            <!-- TAB 3: 出現・スポーン条件 (全キャラ共通) -->
+            <div id="paneParamSpawn" class="inner-tab-pane hidden">
+            <!-- 3. 出現重み ＆ スコア閾値設定 (全キャラ共通) -->
+            <div id="panelDisturberSettings" class="settings-block dedicated-settings-block">
+              <div class="block-header-row">
+                <div class="block-title">
+                  <span>🎯 3. 抽選重み ＆ 出現スコア閾値 (全キャラ共通)</span>
+                  <span id="disturberBadgeStatus" class="dedicated-badge-active">全キャラ対応</span>
                 </div>
+              </div>
 
+              <!-- 出現比率 (ウェイト) -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="charDisturberWeight">出現抽選比率 (ウェイト)</label>
+                  <span id="charDisturberWeightVal" class="val-pill">20</span>
+                </div>
+                <input type="range" id="charDisturberWeight" min="0" max="100" step="5" value="20" class="admin-slider">
+                <span class="desc-text">スコア到達後にスポーンする候補の中で選ばれる出現比率ウェイトです（0で出現なし）。</span>
+              </div>
+
+              <!-- 出現スコア閾値 -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="charDisturberScoreThreshold">出現スコア閾値 (全キャラ共通 / 獲得Pt)</label>
+                  <span id="charDisturberScoreThresholdVal" class="val-pill">150 pt</span>
+                </div>
+                <input type="range" id="charDisturberScoreThreshold" min="0" max="1500" step="25" value="150" class="admin-slider">
+                <span class="desc-text">このキャラクターが出現し始めるスコア条件です（0pt = ゲーム開始時から出現、150pt = 150pt到達後に解禁）。</span>
+              </div>
+            </div>
+
+            <!-- 4. 出現条件設定 (全キャラ共通) -->
+            <div id="panelTargetSettings" class="settings-block dedicated-settings-block">
+              <div class="block-header-row">
+                <div class="block-title">
+                  <span>✨ 4. 出現条件設定 (全キャラ共通)</span>
+                  <span id="targetBadgeStatus" class="dedicated-badge-active">全キャラ対応</span>
+                </div>
+              </div>
+
+              <!-- 出現条件コンテナ -->
+              <div class="spawn-condition-container">
                 <div id="spawnConditionBody" class="condition-body">
                   <!-- １：時間 -->
                   <div class="form-group">
@@ -859,36 +882,6 @@
                     <span class="desc-text">0回 = 無限 (条件達成するたび発生) / 1〜99回 = 発動回数制限 / 100 = 🎲 回数ランダム</span>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <!-- 5. 出現重み ＆ スコア閾値設定 (全キャラ共通) -->
-            <div id="panelDisturberSettings" class="settings-block dedicated-settings-block">
-              <div class="block-header-row">
-                <div class="block-title">
-                  <span>🎯 出現重み ＆ スコア閾値設定</span>
-                  <span id="disturberBadgeStatus" class="dedicated-badge-active">全キャラ対応</span>
-                </div>
-              </div>
-
-              <!-- 出現比率 (ウェイト) -->
-              <div class="form-group">
-                <div class="label-row">
-                  <label for="charDisturberWeight">出現抽選比率 (ウェイト)</label>
-                  <span id="charDisturberWeightVal" class="val-pill">20</span>
-                </div>
-                <input type="range" id="charDisturberWeight" min="0" max="100" step="5" value="20" class="admin-slider">
-                <span class="desc-text">スコア到達後にスポーンする候補の中で選ばれる出現比率ウェイトです（0で出現なし）。</span>
-              </div>
-
-              <!-- 出現スコア閾値 -->
-              <div class="form-group">
-                <div class="label-row">
-                  <label for="charDisturberScoreThreshold">出現スコア閾値 (全キャラ共通 / 獲得Pt)</label>
-                  <span id="charDisturberScoreThresholdVal" class="val-pill">150 pt</span>
-                </div>
-                <input type="range" id="charDisturberScoreThreshold" min="0" max="1500" step="25" value="150" class="admin-slider">
-                <span class="desc-text">このキャラクターが出現し始めるスコア条件です（0pt = ゲーム開始時から出現、150pt = 150pt到達後に解禁）。</span>
               </div>
             </div>
             </div><!-- /#paneParamSpawn -->

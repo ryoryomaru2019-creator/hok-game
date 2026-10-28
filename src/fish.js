@@ -565,6 +565,9 @@ export class Fish {
     } else if (type === FISH_TYPES.BOO_CHAN) {
       this.baseWidth = 85;
       this.baseHeight = 55;
+    } else if (type === FISH_TYPES.KANJI_HIRAME || type === FISH_TYPES.KANJI_KAREI_1 || type === FISH_TYPES.KANJI_KAREI_2) {
+      this.baseWidth = 75;
+      this.baseHeight = 75;
     }
     this.width = this.baseWidth * this.sizeScale;
     this.height = this.baseHeight * this.sizeScale;

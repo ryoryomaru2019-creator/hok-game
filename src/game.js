@@ -1070,6 +1070,7 @@ export class Game {
       lastInteractionTime: performance.now()
     };
     this.spawnCondCooldowns = {};
+    this.spawnCondLastTriggerTap = {}; // キャラごとの達成時カウンタ（差分管理で相互干渉を防止）
     this.charRandomTargets = {};
     this.spawnConditionTriggerCounts = {};
     this.charRandomRepeatLimits = {};
@@ -1295,48 +1296,54 @@ export class Game {
     const maxCount = this.isFeverTime ? feverLimit : baseTarget;
     if (maxCount === 0) return;
 
-    // モードに応じたターゲット候補プール
-    const targetCandidates = [];
-    if (this.mode === MODES.KAREI) {
-      targetCandidates.push(FISH_TYPES.KAREI, FISH_TYPES.KANJI_KAREI_1, FISH_TYPES.KANJI_KAREI_2);
-    } else if (this.mode === MODES.HIRAME) {
-      targetCandidates.push(FISH_TYPES.HIRAME, FISH_TYPES.KANJI_HIRAME);
-    } else {
-      targetCandidates.push(FISH_TYPES.KAREI, FISH_TYPES.HIRAME, FISH_TYPES.KANJI_KAREI_1, FISH_TYPES.KANJI_KAREI_2, FISH_TYPES.KANJI_HIRAME);
-    }
+    const pickWeighted = (candidates, fallback) => {
+      if (!candidates || candidates.length === 0) return fallback;
+      const totalWeight = candidates.reduce((sum, c) => sum + (c.weight > 0 ? c.weight : 20), 0);
+      if (totalWeight <= 0) return candidates[0].type || fallback;
+      let rand = Math.random() * totalWeight;
+      for (const c of candidates) {
+        const w = c.weight > 0 ? c.weight : 20;
+        if (rand < w) return c.type;
+        rand -= w;
+      }
+      return candidates[0].type || fallback;
+    };
 
-    // 各バケツ・ターゲット設定キャラも候補に追加
+    // ターゲット候補の収集（スコア閾値到達済み、出現条件OFF、ウェイト>0）
+    const targetPool = [];
+    const isKareiMode = (this.mode === MODES.KAREI);
+    const isHirameMode = (this.mode === MODES.HIRAME);
+
     if (activeCfg?.characters) {
-      for (const [id, c] of Object.entries(activeCfg.characters)) {
-        if (c.spawnCondition?.enabled || c.role === 'disturber') continue;
-        if (this.mode === MODES.KAREI && (c.role === 'bucketA' || c.role === 'target') && !targetCandidates.includes(id)) targetCandidates.push(id);
-        if (this.mode === MODES.HIRAME && (c.role === 'bucketB' || c.role === 'target') && !targetCandidates.includes(id)) targetCandidates.push(id);
-        if (this.mode === MODES.HIRAI && (c.role?.startsWith('bucket') || c.role === 'target') && !targetCandidates.includes(id)) targetCandidates.push(id);
+      for (const [id, cfg] of Object.entries(activeCfg.characters)) {
+        if (cfg.spawnCondition?.enabled) continue;
+        const threshold = cfg.scoreThreshold != null ? cfg.scoreThreshold : 0;
+        if (this.score < threshold && !this.isFeverTime) continue;
+        const weight = cfg.weight != null ? cfg.weight : 20;
+        if (weight <= 0) continue;
+
+        // モード別の正解ターゲット判定
+        const isKareiFish = (id === FISH_TYPES.KAREI || id === FISH_TYPES.KANJI_KAREI_1 || id === FISH_TYPES.KANJI_KAREI_2 || cfg.role === 'bucketA');
+        const isHirameFish = (id === FISH_TYPES.HIRAME || id === FISH_TYPES.KANJI_HIRAME || cfg.role === 'bucketB');
+
+        if (isKareiMode && isKareiFish) {
+          targetPool.push({ type: id, weight });
+        } else if (isHirameMode && isHirameFish) {
+          targetPool.push({ type: id, weight });
+        } else if (!isKareiMode && !isHirameMode && (isKareiFish || isHirameFish || cfg.role === 'target')) {
+          targetPool.push({ type: id, weight });
+        }
       }
     }
 
-    // スペシャルキャラ「ぶーちゃん」は条件OFFならターゲット候補に加わる
-    targetCandidates.push(FISH_TYPES.BOO_CHAN);
-
-    const validTargets = targetCandidates.filter(id => {
-      const cfg = activeCfg?.characters?.[id];
-      if (cfg?.spawnCondition?.enabled) return false;
-      const threshold = cfg?.scoreThreshold != null ? cfg.scoreThreshold : 0;
-      if (this.score < threshold && !this.isFeverTime) return false;
-      return cfg ? cfg.role !== 'disturber' : true;
-    });
-
-    const pool = validTargets.length > 0 ? validTargets : targetCandidates.filter(id => {
-      const cfg = activeCfg?.characters?.[id];
-      if (cfg?.spawnCondition?.enabled) return false;
-      const threshold = cfg?.scoreThreshold != null ? cfg.scoreThreshold : 0;
-      return this.score >= threshold || this.isFeverTime;
-    });
-    if (pool.length === 0) return;
+    const fallbackType = isHirameMode ? FISH_TYPES.HIRAME : FISH_TYPES.KAREI;
+    if (targetPool.length === 0) {
+      targetPool.push({ type: fallbackType, weight: 20 });
+    }
 
     for (let i = 0; i < count; i++) {
       if (this.fishes.length >= maxCount) break;
-      const type = pool[Math.floor(Math.random() * pool.length)];
+      const type = pickWeighted(targetPool, fallbackType);
       if (!type || activeCfg?.characters?.[type]?.spawnCondition?.enabled) continue;
       this.fishes.push(new Fish(type, bounds, activeCfg, this.mode));
     }
@@ -1357,46 +1364,52 @@ export class Game {
     const maxCount = this.isFeverTime ? feverLimit : baseTarget;
     if (maxCount === 0) return;
 
-    // 特殊障害物候補（タコ・イカ・エイなどの障害生物：スコア閾値到達済み ＆ ウェイト > 0）
-    const obstacleTypes = [FISH_TYPES.OCTOPUS, FISH_TYPES.SQUID, FISH_TYPES.STINGRAY, FISH_TYPES.AJI_OPEN, FISH_TYPES.SHITABIRAME];
+    const pickWeighted = (candidates, fallback) => {
+      if (!candidates || candidates.length === 0) return fallback;
+      const totalWeight = candidates.reduce((sum, c) => sum + (c.weight > 0 ? c.weight : 20), 0);
+      if (totalWeight <= 0) return candidates[0].type || fallback;
+      let rand = Math.random() * totalWeight;
+      for (const c of candidates) {
+        const w = c.weight > 0 ? c.weight : 20;
+        if (rand < w) return c.type;
+        rand -= w;
+      }
+      return candidates[0].type || fallback;
+    };
+
+    // キャラクター候補を分類（出現条件OFFかつスコア閾値到達済みのキャラ）
+    const kareiCandidates = [];
+    const hirameCandidates = [];
     const disturberCandidates = [];
+
+    const isKareiMode = (this.mode === MODES.KAREI);
+    const isHirameMode = (this.mode === MODES.HIRAME);
+
     if (activeCfg?.characters) {
       for (const [id, cfg] of Object.entries(activeCfg.characters)) {
-        if (cfg.role === 'disturber' && obstacleTypes.includes(id)) {
-          // 出現条件ONのキャラは除外
-          if (cfg.spawnCondition?.enabled) continue;
-          const weight = cfg.weight != null ? cfg.weight : 20;
-          const threshold = cfg.scoreThreshold != null ? cfg.scoreThreshold : 150;
-          if (weight > 0 && (this.score >= threshold || this.isFeverTime)) {
-            disturberCandidates.push({ type: id, weight });
-          }
+        if (cfg.spawnCondition?.enabled) continue;
+        const threshold = cfg.scoreThreshold != null ? cfg.scoreThreshold : 0;
+        if (this.score < threshold && !this.isFeverTime) continue;
+        const weight = cfg.weight != null ? cfg.weight : 20;
+        if (weight <= 0) continue;
+
+        const isKareiType = (id === FISH_TYPES.KAREI || id === FISH_TYPES.KANJI_KAREI_1 || id === FISH_TYPES.KANJI_KAREI_2 || cfg.role === 'bucketA');
+        const isHirameType = (id === FISH_TYPES.HIRAME || id === FISH_TYPES.KANJI_HIRAME || cfg.role === 'bucketB');
+
+        if (isKareiType) {
+          kareiCandidates.push({ type: id, weight });
+        } else if (isHirameType) {
+          hirameCandidates.push({ type: id, weight });
+        } else if (cfg.role === 'disturber' || id === FISH_TYPES.OCTOPUS || id === FISH_TYPES.SQUID || id === FISH_TYPES.STINGRAY || id === FISH_TYPES.AJI_OPEN || id === FISH_TYPES.SHITABIRAME) {
+          disturberCandidates.push({ type: id, weight });
         }
       }
     }
 
-    // カレイ系・バケツA候補（出現条件ONのキャラは除外、全キャラ共通スコア閾値判定）
-    const kareiCandidates = Object.keys(activeCfg?.characters || {})
-      .filter(id => {
-        const c = activeCfg.characters[id];
-        if (c.spawnCondition?.enabled || c.role === 'disturber') return false;
-        const threshold = c.scoreThreshold != null ? c.scoreThreshold : 0;
-        if (this.score < threshold && !this.isFeverTime) return false;
-        return c.role === 'bucketA' || (!c.role?.startsWith('bucket') && (id === FISH_TYPES.KAREI || id === FISH_TYPES.KANJI_KAREI_1 || id === FISH_TYPES.KANJI_KAREI_2));
-      });
-    if (kareiCandidates.length === 0) kareiCandidates.push(FISH_TYPES.KAREI);
+    if (kareiCandidates.length === 0) kareiCandidates.push({ type: FISH_TYPES.KAREI, weight: 20 });
+    if (hirameCandidates.length === 0) hirameCandidates.push({ type: FISH_TYPES.HIRAME, weight: 20 });
 
-    // ヒラメ系・バケツB候補（出現条件ONのキャラは除外、全キャラ共通スコア閾値判定）
-    const hirameCandidates = Object.keys(activeCfg?.characters || {})
-      .filter(id => {
-        const c = activeCfg.characters[id];
-        if (c.spawnCondition?.enabled || c.role === 'disturber') return false;
-        const threshold = c.scoreThreshold != null ? c.scoreThreshold : 0;
-        if (this.score < threshold && !this.isFeverTime) return false;
-        return c.role === 'bucketB' || (!c.role?.startsWith('bucket') && (id === FISH_TYPES.HIRAME || id === FISH_TYPES.KANJI_HIRAME));
-      });
-    if (hirameCandidates.length === 0) hirameCandidates.push(FISH_TYPES.HIRAME);
-
-    // ぶーちゃん（条件OFFなら全モードでレア出現候補に混ぜる、スコア閾値到達時のみ）
+    // ぶーちゃん（出現条件OFF時のみ低確率で全モードに出現）
     const booCfg = activeCfg?.characters?.[FISH_TYPES.BOO_CHAN];
     const booThreshold = booCfg?.scoreThreshold != null ? booCfg.scoreThreshold : 0;
     const booChanAvailable = !booCfg?.spawnCondition?.enabled && (this.score >= booThreshold || this.isFeverTime);
@@ -1408,50 +1421,23 @@ export class Game {
       if (this.fishes.length >= maxCount) break;
       let type;
       if (disturberCandidates.length > 0 && Math.random() < spawnDisturberChance) {
-        const totalWeight = disturberCandidates.reduce((sum, c) => sum + c.weight, 0);
-        let rand = Math.random() * totalWeight;
-        for (const c of disturberCandidates) {
-          if (rand < c.weight) {
-            type = c.type;
-            break;
-          }
-          rand -= c.weight;
-        }
-        if (!type) type = disturberCandidates[0].type;
+        type = pickWeighted(disturberCandidates, disturberCandidates[0]?.type);
       } else {
         // まれにぶーちゃんが出現（条件OFF時、約7%）
         if (booChanAvailable && Math.random() < 0.07) {
           type = FISH_TYPES.BOO_CHAN;
-        } else if (this.mode === MODES.KAREI) {
-          // カレイ派：カレイ系(約55%〜60%)とヒラメ系オトリ(約40%〜45%)を共存
+        } else if (isKareiMode) {
+          // カレイ派：カレイ系(約58%)とヒラメ系オトリ(約42%)
           const isKarei = Math.random() < 0.58;
-          if (isKarei && kareiCandidates.length > 0) {
-            type = kareiCandidates[Math.floor(Math.random() * kareiCandidates.length)];
-          } else if (hirameCandidates.length > 0) {
-            type = hirameCandidates[Math.floor(Math.random() * hirameCandidates.length)];
-          } else {
-            type = kareiCandidates[0] || FISH_TYPES.KAREI;
-          }
-        } else if (this.mode === MODES.HIRAME) {
-          // ヒラメ派：ヒラメ系(約55%〜60%)とカレイ系オトリ(約40%〜45%)を共存
+          type = isKarei ? pickWeighted(kareiCandidates, FISH_TYPES.KAREI) : pickWeighted(hirameCandidates, FISH_TYPES.HIRAME);
+        } else if (isHirameMode) {
+          // ヒラメ派：ヒラメ系(約58%)とカレイ系オトリ(約42%)
           const isHirame = Math.random() < 0.58;
-          if (isHirame && hirameCandidates.length > 0) {
-            type = hirameCandidates[Math.floor(Math.random() * hirameCandidates.length)];
-          } else if (kareiCandidates.length > 0) {
-            type = kareiCandidates[Math.floor(Math.random() * kareiCandidates.length)];
-          } else {
-            type = hirameCandidates[0] || FISH_TYPES.HIRAME;
-          }
+          type = isHirame ? pickWeighted(hirameCandidates, FISH_TYPES.HIRAME) : pickWeighted(kareiCandidates, FISH_TYPES.KAREI);
         } else {
           // ヒライ派：両方がターゲット（50% / 50%）
           const isKarei = Math.random() < 0.5;
-          if (isKarei && kareiCandidates.length > 0) {
-            type = kareiCandidates[Math.floor(Math.random() * kareiCandidates.length)];
-          } else if (hirameCandidates.length > 0) {
-            type = hirameCandidates[Math.floor(Math.random() * hirameCandidates.length)];
-          } else {
-            type = Math.random() < 0.5 ? (kareiCandidates[0] || FISH_TYPES.KAREI) : (hirameCandidates[0] || FISH_TYPES.HIRAME);
-          }
+          type = isKarei ? pickWeighted(kareiCandidates, FISH_TYPES.KAREI) : pickWeighted(hirameCandidates, FISH_TYPES.HIRAME);
         }
       }
       if (!type || activeCfg?.characters?.[type]?.spawnCondition?.enabled) {
@@ -1528,27 +1514,32 @@ export class Game {
             actionPassed = true;
           }
         } else {
-          // コンボOFF (デフォルト): 延べタップ回数
+          // コンボOFF (デフォルト): 延べタップ回数（キャラ個別差分で管理し他キャラのタップリセット影響を防止）
+          let curTaps = 0;
           if (sc.triggerAction === 'idle') {
-            // 無操作（3秒以上操作なし）
             if (idleSec >= 3.0) actionPassed = true;
           } else if (sc.triggerAction === 'tap_target') {
-            if ((this.spawnCondCounters?.targetTaps || 0) >= reqTaps) actionPassed = true;
+            curTaps = (this.spawnCondCounters?.targetTaps || 0);
           } else if (sc.triggerAction === 'tap_disturber') {
-            if ((this.spawnCondCounters?.disturberTaps || 0) >= reqTaps) actionPassed = true;
+            curTaps = (this.spawnCondCounters?.disturberTaps || 0);
           } else if (sc.triggerAction === 'tap_background') {
-            if ((this.spawnCondCounters?.bgTaps || 0) >= reqTaps) actionPassed = true;
+            curTaps = (this.spawnCondCounters?.bgTaps || 0);
           } else if (sc.triggerAction === 'tap_specific') {
             const targetChars = sc.targetCharacters || [];
-            let totalTaps = 0;
             if (targetChars.length > 0) {
               for (const tc of targetChars) {
-                totalTaps += (this.spawnCondCounters?.charTaps?.[tc] || 0);
+                curTaps += (this.spawnCondCounters?.charTaps?.[tc] || 0);
               }
             } else {
-              totalTaps = (this.spawnCondCounters?.charTaps?.[charId] || 0);
+              curTaps = (this.spawnCondCounters?.charTaps?.[charId] || 0);
             }
-            if (totalTaps >= reqTaps) actionPassed = true;
+          }
+
+          if (sc.triggerAction !== 'idle') {
+            const lastTaps = this.spawnCondLastTriggerTap?.[charId] || 0;
+            if ((curTaps - lastTaps) >= reqTaps) {
+              actionPassed = true;
+            }
           }
         }
       }
@@ -1573,15 +1564,25 @@ export class Game {
 
       if (!isConditionMet) continue;
 
-      // 条件達成！クールダウン更新＆カウンタリセット
+      // 条件達成！クールダウン更新＆キャラ個別の差分カウンタを更新
       this.spawnCondCooldowns[charId] = now;
-      if (sc.triggerAction === 'tap_target') this.spawnCondCounters.targetTaps = 0;
-      else if (sc.triggerAction === 'tap_disturber') this.spawnCondCounters.disturberTaps = 0;
-      else if (sc.triggerAction === 'tap_background') this.spawnCondCounters.bgTaps = 0;
-      else if (sc.triggerAction === 'tap_specific') {
-        for (const tc of (sc.targetCharacters || [])) {
-          if (this.spawnCondCounters.charTaps) this.spawnCondCounters.charTaps[tc] = 0;
+      if (!this.spawnCondLastTriggerTap) this.spawnCondLastTriggerTap = {};
+
+      if (sc.triggerAction === 'tap_target') {
+        this.spawnCondLastTriggerTap[charId] = this.spawnCondCounters?.targetTaps || 0;
+      } else if (sc.triggerAction === 'tap_disturber') {
+        this.spawnCondLastTriggerTap[charId] = this.spawnCondCounters?.disturberTaps || 0;
+      } else if (sc.triggerAction === 'tap_background') {
+        this.spawnCondLastTriggerTap[charId] = this.spawnCondCounters?.bgTaps || 0;
+      } else if (sc.triggerAction === 'tap_specific') {
+        const targetChars = sc.targetCharacters || [];
+        let total = 0;
+        if (targetChars.length > 0) {
+          for (const tc of targetChars) total += (this.spawnCondCounters?.charTaps?.[tc] || 0);
+        } else {
+          total = (this.spawnCondCounters?.charTaps?.[charId] || 0);
         }
+        this.spawnCondLastTriggerTap[charId] = total;
       } else if (sc.triggerAction === 'idle') {
         this.spawnCondCounters.lastInteractionTime = now;
       }
