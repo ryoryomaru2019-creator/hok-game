@@ -53,7 +53,7 @@
     body {
       background-color: var(--bg-dark);
       color: var(--text-main);
-      padding: 24px 16px;
+      padding: 24px 16px 220px; /* 下部固定バーに被らないよう十分な下部パディングを確保 */
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -594,41 +594,135 @@
     }
 
     /* ────────────────────────────────────────────────────────
-       5. 操作アクションバー (設定保存・ホーム・デフォルト)
+       5. 操作アクションバー (常時最前面固定バー & モード即時切替)
        ──────────────────────────────────────────────────────── */
-    .action-bar-card {
-      background: rgba(15, 23, 42, 0.95);
-      border: 1.5px solid rgba(56, 189, 248, 0.4);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.2);
-      position: sticky;
-      bottom: 16px;
-      z-index: 100;
+    .action-bar-wrapper {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      padding: 0 12px 12px;
+      pointer-events: none;
     }
 
+    .action-bar-card {
+      pointer-events: auto;
+      width: 100%;
+      max-width: 960px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1.5px solid rgba(56, 189, 248, 0.5);
+      border-radius: 16px;
+      box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.7), 0 0 25px rgba(56, 189, 248, 0.25);
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    /* 下部バー上段: 視覚サポートモード横並び4ボタン */
+    .fixed-mode-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(30, 41, 59, 0.7);
+      padding: 6px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .fixed-mode-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #38bdf8;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .fixed-mode-buttons {
+      display: flex;
+      gap: 6px;
+      flex: 1;
+      width: 100%;
+    }
+
+    .btn-quick-mode {
+      flex: 1;
+      min-width: 0;
+      padding: 8px 6px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      background: rgba(15, 23, 42, 0.85);
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .btn-quick-mode:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: #38bdf8;
+      color: #ffffff;
+    }
+
+    .btn-quick-mode.active {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border-color: #38bdf8;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+      font-weight: 800;
+    }
+
+    .mode-circle {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .circle-off { background: #94a3b8; }
+    .circle-prot { background: #f43f5e; box-shadow: 0 0 5px #f43f5e; }
+    .circle-deut { background: #22c55e; box-shadow: 0 0 5px #22c55e; }
+    .circle-trit { background: #3b82f6; box-shadow: 0 0 5px #3b82f6; }
+
+    /* 下部バー下段: 設定保存・ホーム・デフォルト */
     .action-bar-grid {
       display: flex;
-      gap: 14px;
+      gap: 10px;
       justify-content: center;
-      flex-wrap: wrap;
     }
 
     .main-action-btn {
       flex: 1;
-      min-width: 180px;
-      max-width: 280px;
-      padding: 12px 20px;
+      min-width: 0;
+      padding: 10px 14px;
       border-radius: 10px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       border: 1px solid transparent;
       user-select: none;
+      white-space: nowrap;
     }
 
     .main-action-btn:hover {
@@ -637,6 +731,88 @@
 
     .main-action-btn:active {
       transform: translateY(1px);
+    }
+
+    /* 魚図鑑ナビゲーションボタン */
+    .fish-nav-btn {
+      background: rgba(56, 189, 248, 0.2);
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .fish-nav-btn:hover {
+      background: #38bdf8;
+      color: #0f172a;
+    }
+
+    /* ◯◯出現！文字色パレットチップ */
+    .spawn-color-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .spawn-chip {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      background: rgba(15, 23, 42, 0.8);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      color: #cbd5e1;
+    }
+
+    .spawn-chip:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .spawn-chip.active {
+      border-color: #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      font-weight: 800;
+    }
+
+    /* ◯◯出現！プレビューアニメーション表示バナー */
+    .spawn-preview-banner {
+      margin-top: 10px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      background: radial-gradient(circle at center, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .spawn-preview-text {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-shadow: 0 0 15px currentColor, 0 2px 4px rgba(0, 0, 0, 0.9);
+      display: inline-block;
+      animation: spawnPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes spawnPulse {
+      0%, 100% { transform: scale(1); filter: brightness(1); }
+      50% { transform: scale(1.06); filter: brightness(1.25); }
     }
 
     /* 設定保存ボタン (エメラルドグリーン) */
@@ -709,12 +885,18 @@
       .preview-grid {
         grid-template-columns: 1fr;
       }
-      .action-bar-grid {
+      .fixed-mode-row {
         flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .btn-quick-mode {
+        font-size: 11px;
+        padding: 6px 4px;
       }
       .main-action-btn {
-        max-width: 100%;
-        width: 100%;
+        padding: 8px 10px;
+        font-size: 12px;
       }
     }
   </style>
@@ -814,122 +996,145 @@
 
       <div class="preview-container">
         <div class="preview-grid">
-          <!-- ① HPバー -->
+          <!-- ① TIMEゲージ & HUD (HoK！ 準拠) -->
           <div class="preview-block" id="previewHpBlock">
             <div class="preview-block-title">
-              <span>❤️ HPバー表示</span>
+              <span>⏱️ TIMEゲージ & ゲームHUD (HoK！実機表示)</span>
               <span style="font-size:11px; color:#38bdf8;">残量＋文字ラベル＋模様</span>
             </div>
             <div class="hp-bar-wrap">
               <div class="hp-item">
                 <div class="hp-label-row">
-                  <span id="hpHighLabel">🛡️ 安全領域 (85%)</span>
-                  <span>85/100</span>
+                  <span id="hpHighLabel">🛡️ 通常タイム (残り 60秒)</span>
+                  <span>SCORE: 1,250 pt</span>
                 </div>
                 <div class="hp-track">
-                  <div class="hp-fill hp-fill-high" id="hpFillHigh">85%</div>
+                  <div class="hp-fill hp-fill-high" id="hpFillHigh">60s (余裕)</div>
                 </div>
               </div>
               <div class="hp-item">
                 <div class="hp-label-row">
-                  <span id="hpMidLabel">⚠️ 注意領域 (50%)</span>
-                  <span>50/100</span>
+                  <span id="hpMidLabel">⚠️ 注意タイム (残り 20秒)</span>
+                  <span style="color:#facc15; font-weight:800;">🔥 12 COMBO!</span>
                 </div>
                 <div class="hp-track">
-                  <div class="hp-fill hp-fill-mid" id="hpFillMid">50%</div>
+                  <div class="hp-fill hp-fill-mid" id="hpFillMid">20s (警戒)</div>
                 </div>
               </div>
               <div class="hp-item">
                 <div class="hp-label-row">
-                  <span id="hpLowLabel" style="color:var(--color-hp-low);">⚡ 危険領域 (20%) [瀕死]</span>
-                  <span>20/100</span>
+                  <span id="hpLowLabel" style="color:var(--color-hp-low);">⚡ ラストスパート！ (残り 5秒)</span>
+                  <span style="color:var(--color-hp-low); font-weight:800;">TIME UP間近</span>
                 </div>
                 <div class="hp-track">
-                  <div class="hp-fill hp-fill-low" id="hpFillLow">20%</div>
+                  <div class="hp-fill hp-fill-low" id="hpFillLow">5s (緊急)</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- ② 味方と敵の識別色 -->
+          <!-- ② 味方と敵の識別色 & 魚図鑑切り替え -->
           <div class="preview-block" id="previewUnitBlock">
             <div class="preview-block-title">
-              <span>👥 味方と敵の識別</span>
-              <span style="font-size:11px; color:#38bdf8;">二重枠・点線＋アイコン</span>
+              <span>👥 味方と敵の識別 (魚図鑑)</span>
+              <span style="font-size:11px; color:#38bdf8;">二重枠・点線＋実機Canvas</span>
             </div>
             <div class="unit-cards-row">
-              <div class="unit-card unit-ally" id="unitAllyCard" style="padding: 12px 10px;">
-                <canvas id="allyCharCanvas" width="90" height="65" style="display:block; margin: 0 auto 6px;"></canvas>
-                <span style="font-weight:700; font-size:13px; color:#38bdf8;">カレイ (自軍・ターゲット)</span>
+              <!-- 味方魚カード (◀ ▶ でカレイ ⇄ ヒラメ切り替え) -->
+              <div class="unit-card unit-ally" id="unitAllyCard" style="padding: 10px 8px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-bottom:4px;">
+                  <button type="button" class="fish-nav-btn" id="btnPrevFish" title="前の魚を見る">◀</button>
+                  <span style="font-size:11px; font-weight:800; color:#38bdf8;" id="fishCatalogTitle">魚図鑑 [1/2]</span>
+                  <button type="button" class="fish-nav-btn" id="btnNextFish" title="次の魚を見る">▶</button>
+                </div>
+                <canvas id="allyCharCanvas" width="90" height="65" style="display:block; margin: 0 auto 4px;"></canvas>
+                <span id="allyFishName" style="font-weight:800; font-size:12px; color:#38bdf8; text-align:center;">カレイ (自軍・右向き)</span>
                 <span class="unit-tag" id="unitAllyTag" style="margin-top:4px;">🛡️ [味方・タップ正解]</span>
               </div>
-              <div class="unit-card unit-enemy" id="unitEnemyCard" style="padding: 12px 10px;">
-                <canvas id="enemyCharCanvas" width="90" height="65" style="display:block; margin: 0 auto 6px;"></canvas>
-                <span style="font-weight:700; font-size:13px; color:#ef4444;">タコ (邪魔キャラ・減点)</span>
+              <!-- 敵タコカード (固定) -->
+              <div class="unit-card unit-enemy" id="unitEnemyCard" style="padding: 10px 8px;">
+                <div style="display:flex; align-items:center; justify-content:center; width:100%; margin-bottom:4px; height:21px;">
+                  <span style="font-size:11px; font-weight:800; color:#f87171;">邪魔キャラ (固定)</span>
+                </div>
+                <canvas id="enemyCharCanvas" width="90" height="65" style="display:block; margin: 0 auto 4px;"></canvas>
+                <span style="font-weight:800; font-size:12px; color:#ef4444; text-align:center;">タコ (邪魔キャラ・減点)</span>
                 <span class="unit-tag" id="unitEnemyTag" style="margin-top:4px;">⚔️ [敵・タップ回避]</span>
               </div>
             </div>
           </div>
 
-          <!-- ③ レアリティ色 -->
-          <div class="preview-block" id="previewRarityBlock">
+          <!-- ③ 「◯◯出現！」ポップアップ文字色設定＆プレビュー (HoK！専用) -->
+          <div class="preview-block" id="previewSpawnBlock">
             <div class="preview-block-title">
-              <span>💎 レアリティ識別</span>
-              <span style="font-size:11px; color:#38bdf8;">星数＋固有枠線＋英字記号</span>
+              <span>✨ 「◯◯出現！」文字演出色設定</span>
+              <span style="font-size:11px; color:#f472b6;">ゲーム実機に即時反映</span>
             </div>
-            <div class="rarity-chips-wrap">
-              <div class="rarity-chip rarity-common" id="rarityCommonChip">
-                <span>★1 コモン</span>
-                <span class="badge-code">[N]</span>
-              </div>
-              <div class="rarity-chip rarity-rare" id="rarityRareChip">
-                <span>★★2 レア</span>
-                <span class="badge-code">[R]</span>
-              </div>
-              <div class="rarity-chip rarity-epic" id="rarityEpicChip">
-                <span>★★★3 エピック</span>
-                <span class="badge-code">[SR]</span>
-              </div>
-              <div class="rarity-chip rarity-legend" id="rarityLegendChip">
-                <span>★★★★4 レジェンド</span>
-                <span class="badge-code">[UR]</span>
-              </div>
+            <p class="setting-hint" style="margin-bottom:6px;">キャラクター出現時のポップアップ文字色をお好みのカラーにカスタマイズできます。</p>
+            <div class="spawn-color-chips" id="spawnColorChips">
+              <button type="button" class="spawn-chip active" data-color="#f472b6" style="color:#f472b6;">
+                <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#f472b6;"></span>
+                <span>ピンク</span>
+              </button>
+              <button type="button" class="spawn-chip" data-color="#fbbf24" style="color:#fbbf24;">
+                <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#fbbf24;"></span>
+                <span>ゴールド</span>
+              </button>
+              <button type="button" class="spawn-chip" data-color="#38bdf8" style="color:#38bdf8;">
+                <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#38bdf8;"></span>
+                <span>シアン</span>
+              </button>
+              <button type="button" class="spawn-chip" data-color="#ffffff" style="color:#ffffff;">
+                <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#ffffff;"></span>
+                <span>ホワイト</span>
+              </button>
+              <button type="button" class="spawn-chip" data-color="#34d399" style="color:#34d399;">
+                <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#34d399;"></span>
+                <span>ミント</span>
+              </button>
+              <button type="button" class="spawn-chip" data-color="#fb923c" style="color:#fb923c;">
+                <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#fb923c;"></span>
+                <span>オレンジ</span>
+              </button>
+            </div>
+            <!-- 出現アニメーションプレビューバナー -->
+            <div class="spawn-preview-banner">
+              <span class="spawn-preview-text" id="spawnPreviewText" style="color:#f472b6;">✨ 黄金ヒラメ 出現！ ✨</span>
             </div>
           </div>
 
-          <!-- ④ 警告表示色 -->
+          <!-- ④ 警告・アラート表示 (サメ接近・タコ乱入) -->
           <div class="preview-block" id="previewWarningBlock">
             <div class="preview-block-title">
-              <span>🚨 警告・アラート表示</span>
+              <span>🚨 警告・邪魔キャラアラート表示</span>
               <span style="font-size:11px; color:#38bdf8;">警告マーク＋ストライプ</span>
             </div>
             <div class="warning-banner" id="warningBanner">
               <span class="warning-icon">⚠️</span>
               <div class="warning-text">
-                <span class="warning-title" id="warningTitleText">緊急警戒 / DANGER</span>
-                <span class="warning-sub" id="warningSubText">巨大サメが接近中！画面端へ退避してください</span>
+                <span class="warning-title" id="warningTitleText">邪魔キャラ接近 / WARNING</span>
+                <span class="warning-sub" id="warningSubText">タコが墨を吐いて視界を遮ろうとしています！回避してください</span>
               </div>
             </div>
           </div>
 
-          <!-- ⑤ ボタン状態色 -->
+          <!-- ⑤ ボタン状態色 (HoK！操作ボタン) -->
           <div class="preview-block" style="grid-column: 1 / -1;" id="previewButtonBlock">
             <div class="preview-block-title">
-              <span>🔘 ボタン状態色</span>
+              <span>🔘 ボタン状態色 (HoK！ 操作フィードバック)</span>
               <span style="font-size:11px; color:#38bdf8;">立体押し込み＋アイコン＋枠線</span>
             </div>
             <div class="buttons-preview-row">
               <button type="button" class="state-btn state-btn-normal" id="btnStateNormal">
-                <span>▶ 通常状態</span>
+                <span>▶ ゲームスタート (通常)</span>
               </button>
               <button type="button" class="state-btn state-btn-hover" id="btnStateHover">
-                <span>✨ ホバー状態 (浮上)</span>
+                <span>✨ タップ待機 (ホバー浮上)</span>
               </button>
               <button type="button" class="state-btn state-btn-active" id="btnStateActive">
-                <span>✓ 選択・決定済み (ON)</span>
+                <span>✓ モード選択完了 (ON)</span>
               </button>
               <button type="button" class="state-btn state-btn-disabled" id="btnStateDisabled">
-                <span>✕ 無効 (Disabled)</span>
+                <span>✕ ロック中 (Disabled)</span>
               </button>
             </div>
           </div>
@@ -956,31 +1161,31 @@
           <tbody>
             <tr>
               <td><span class="badge-code">.hp-fill</span> (<span class="badge-code">#hpFillHigh/Mid/Low</span>)</td>
-              <td>HPバー</td>
-              <td>緑・黄・赤の色相を各色覚特性に合わせて最適調整</td>
-              <td>低HP時に斜線ストライプ模様をオーバーレイ表示＋残量%と「安全/注意/危険」文字ラベル</td>
+              <td>TIMEゲージ</td>
+              <td>通常(緑系)・警戒(黄系)・緊急(赤系)の色相を各色覚特性に合わせて最適調整</td>
+              <td>残り5秒で斜線ストライプ模様をオーバーレイ表示＋秒数表示と「通常/警戒/緊急」文字ラベル</td>
             </tr>
             <tr>
               <td><span class="badge-code">#unitAllyCard</span>, <span class="badge-code">#unitEnemyCard</span></td>
-              <td>味方と敵</td>
+              <td>味方と敵 (魚図鑑)</td>
               <td>味方色(青緑系)と敵色(橙/深マゼンタ系)の明度コントラストを最大化</td>
               <td>味方は「二重実線＋🛡️[味方]」、敵は「点線破線＋⚔️[敵/邪魔]」で形状から瞬時に識別</td>
             </tr>
             <tr>
-              <td><span class="badge-code">.rarity-chip</span> (<span class="badge-code">#rarity*</span>)</td>
-              <td>レアリティ</td>
-              <td>青系・紫系・金系の混同を避ける明度差・彩度調整</td>
-              <td>星の個数（★1〜★4）、二重線（エピック）、グロー光彩（レジェンド）、[N][R][SR][UR]英字表記</td>
+              <td><span class="badge-code">.spawn-preview-text</span></td>
+              <td>◯◯出現！文字演出</td>
+              <td>ユーザーが指定したカラー（ピンク/金/シアン/白/ミント/橙）を適用</td>
+              <td>「✨」シンボルマーク＋脈動アニメーション＋高輝度テキストグロー光彩</td>
             </tr>
             <tr>
               <td><span class="badge-code">#warningBanner</span></td>
-              <td>警告表示</td>
+              <td>邪魔キャラ警告</td>
               <td>赤色背景の明度・色相をシフト</td>
               <td>警告アイコン⚠️、斜線ハザードストライプテクスチャ、白枠線の強調</td>
             </tr>
             <tr>
               <td><span class="badge-code">.state-btn</span> (<span class="badge-code">#btnState*</span>)</td>
-              <td>ボタン状態</td>
+              <td>操作ボタン</td>
               <td>通常、ホバー、決定ON、無効のカラーパレットを切り替え</td>
               <td>「✓」や「✕」の記号、浮上シャドウ、インセット（押し込み陰影）による立体的フィードバック</td>
             </tr>
@@ -989,21 +1194,48 @@
       </div>
     </section>
 
-    <!-- 5. 操作アクションバー (設定保存・ホーム画面に戻る・デフォルトに戻す) -->
-    <section class="glass-card action-bar-card">
-      <div class="action-bar-grid">
-        <button type="button" id="btnSaveSettings" class="main-action-btn btn-save" title="現在の設定をブラウザに保存します">
-          <span>💾</span> <span>設定保存</span>
-        </button>
-        <button type="button" id="btnGoHome" class="main-action-btn btn-home" title="ゲームタイトル・メイン画面に戻ります">
-          <span>🏠</span> <span>ホーム画面に戻る</span>
-        </button>
-        <button type="button" id="btnResetAll" class="main-action-btn btn-reset" title="すべての設定を初期値に戻します">
-          <span>🔄</span> <span>デフォルトに戻す</span>
-        </button>
-      </div>
-      <div id="saveToast" class="save-toast hidden">✅ 設定をブラウザに保存しました！</div>
-    </section>
+    <!-- 5. 常時最前面固定アクションバー (視覚モード横並び4ボタン ＋ 設定保存・ホーム・デフォルト) -->
+    <div class="action-bar-wrapper">
+      <section class="glass-card action-bar-card">
+        <!-- 上段: 視覚サポートモード横並び4ボタン (スクロール不要で常にワンタップ切り替え) -->
+        <div class="fixed-mode-row">
+          <span class="fixed-mode-title">🎨 視覚モード切替:</span>
+          <div class="fixed-mode-buttons">
+            <button type="button" class="btn-quick-mode active" data-mode="off">
+              <span class="mode-circle circle-off"></span>
+              <span>オフ (通常)</span>
+            </button>
+            <button type="button" class="btn-quick-mode" data-mode="protanopia">
+              <span class="mode-circle circle-prot"></span>
+              <span>赤系 (1型)</span>
+            </button>
+            <button type="button" class="btn-quick-mode" data-mode="deuteranopia">
+              <span class="mode-circle circle-deut"></span>
+              <span>緑系 (2型)</span>
+            </button>
+            <button type="button" class="btn-quick-mode" data-mode="tritanopia">
+              <span class="mode-circle circle-trit"></span>
+              <span>青系 (3型)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 下段: アクションボタン (設定保存・ホーム画面・デフォルト) -->
+        <div class="action-bar-grid">
+          <button type="button" id="btnSaveSettings" class="main-action-btn btn-save" title="現在の設定をブラウザに保存します">
+            <span>💾</span> <span>設定保存</span>
+          </button>
+          <button type="button" id="btnGoHome" class="main-action-btn btn-home" title="ゲームタイトル・メイン画面に戻ります">
+            <span>🏠</span> <span>ホーム画面に戻る</span>
+          </button>
+          <button type="button" id="btnResetAll" class="main-action-btn btn-reset" title="すべての設定を初期値に戻します">
+            <span>🔄</span> <span>デフォルトに戻す</span>
+          </button>
+        </div>
+        <div id="saveToast" class="save-toast hidden">✅ 設定をブラウザに保存しました！</div>
+      </section>
+    </div>
+  </div>
   </div>
 
   <!-- ────────────────────────────────────────────────────────
@@ -1023,8 +1255,12 @@
       const state = {
         fps: 60,                // 30 or 60
         colorMode: 'off',       // 'off' | 'protanopia' | 'deuteranopia' | 'tritanopia'
-        intensity: 100          // 0 〜 100
+        intensity: 100,         // 0 〜 100
+        spawnAlertColor: '#f472b6' // ◯◯出現！文字色
       };
+
+      // 魚図鑑インデックス (0: カレイ, 1: ヒラメ)
+      let fishCatalogIndex = 0;
 
       // ─── 2. カラーパレット定義 (アクセシビリティ原則に基づく最適配色) ───
       const PALETTES = {
@@ -1412,12 +1648,154 @@
         ctx.restore();
       }
 
+      function drawHirame(ctx, width, height) {
+        ctx.clearRect(0, 0, width, height);
+        ctx.save();
+        ctx.translate(width / 2 + 2, height / 2);
+        const w = 32;
+        const h = 21;
+
+        // 1. 背ビレ & 腹ビレ (黄金色 ＋ 黒ヒレ条)
+        ctx.fillStyle = '#eab308';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.8;
+
+        // 背ビレ (左向き: 頭側 -w*0.55 から 尾側 w*0.72)
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.55, -h * 0.4);
+        ctx.quadraticCurveTo(-w * 0.1, -h * 1.15, w * 0.72, -h * 0.2);
+        ctx.lineTo(w * 0.65, -h * 0.15);
+        ctx.quadraticCurveTo(-w * 0.1, -h * 0.7, -w * 0.55, -h * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 背ビレ条
+        ctx.lineWidth = 1.2;
+        for (let x = -w * 0.45; x <= w * 0.62; x += w * 0.15) {
+          const topY = -h * 0.5 - (1 - Math.abs((x - w * 0.05) / (w * 0.65))) * h * 0.5;
+          const baseY = -h * 0.35;
+          ctx.beginPath();
+          ctx.moveTo(x, baseY);
+          ctx.lineTo(x, topY);
+          ctx.stroke();
+        }
+
+        // 腹ビレ (下側)
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.35, h * 0.45);
+        ctx.quadraticCurveTo(-w * 0.05, h * 1.15, w * 0.72, h * 0.2);
+        ctx.lineTo(w * 0.65, h * 0.15);
+        ctx.quadraticCurveTo(-w * 0.05, h * 0.7, -w * 0.35, h * 0.35);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 腹ビレ条
+        ctx.lineWidth = 1.2;
+        for (let x = -w * 0.25; x <= w * 0.62; x += w * 0.15) {
+          const botY = h * 0.5 + (1 - Math.abs((x - w * 0.1) / (w * 0.65))) * h * 0.5;
+          const baseY = h * 0.35;
+          ctx.beginPath();
+          ctx.moveTo(x, baseY);
+          ctx.lineTo(x, botY);
+          ctx.stroke();
+        }
+
+        // 2. 尾びれ (右側・扇形)
+        ctx.fillStyle = '#eab308';
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        ctx.moveTo(w * 0.68, -h * 0.12);
+        ctx.lineTo(w * 1.25, -h * 0.52);
+        ctx.quadraticCurveTo(w * 1.35, 0, w * 1.25, h * 0.52);
+        ctx.lineTo(w * 0.68, h * 0.12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 尾の白い外縁
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(w * 1.22, -h * 0.45);
+        ctx.quadraticCurveTo(w * 1.32, 0, w * 1.22, h * 0.45);
+        ctx.stroke();
+
+        // 3. 体幹とヒレを分ける白い境界線
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.55, -h * 0.35);
+        ctx.quadraticCurveTo(-w * 0.05, -h * 0.76, w * 0.68, -h * 0.15);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.35, h * 0.38);
+        ctx.quadraticCurveTo(-w * 0.05, h * 0.76, w * 0.68, h * 0.15);
+        ctx.stroke();
+
+        // 4. 体幹（黄金マスタードイエロー）
+        ctx.fillStyle = '#bfa33a';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(-w * 0.55, -h * 0.38);
+        ctx.lineTo(-w * 0.8, -h * 0.22);
+        ctx.lineTo(-w * 1.0, -h * 0.12); // 上唇
+        ctx.lineTo(-w * 0.82, -h * 0.02); // 口
+        ctx.lineTo(-w * 0.95, h * 0.1);  // 下唇
+        ctx.quadraticCurveTo(-w * 0.4, h * 0.6, w * 0.7, h * 0.15);
+        ctx.lineTo(w * 0.7, -h * 0.15);
+        ctx.quadraticCurveTo(-w * 0.2, -h * 0.6, -w * 0.55, -h * 0.38);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 5. 左ヒラメの鋭い目（2つの目）
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.arc(-w * 0.55, -h * 0.18, 4.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(-w * 0.58, -h * 0.18, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(-w * 0.42, -h * 0.28, 3.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(-w * 0.44, -h * 0.28, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
       function renderPreviewCharacters() {
         const allyC = document.getElementById('allyCharCanvas');
+        const allyFishName = document.getElementById('allyFishName');
+        const fishCatalogTitle = document.getElementById('fishCatalogTitle');
+
         if (allyC) {
           const ctx = allyC.getContext('2d');
-          drawKarei(ctx, allyC.width, allyC.height);
+          if (fishCatalogIndex === 0) {
+            drawKarei(ctx, allyC.width, allyC.height);
+            if (allyFishName) allyFishName.innerText = 'カレイ (自軍・右向き)';
+            if (fishCatalogTitle) fishCatalogTitle.innerText = '魚図鑑 [1/2]';
+          } else {
+            drawHirame(ctx, allyC.width, allyC.height);
+            if (allyFishName) allyFishName.innerText = 'ヒラメ (自軍・左向き)';
+            if (fishCatalogTitle) fishCatalogTitle.innerText = '魚図鑑 [2/2]';
+          }
         }
+
         const enemyC = document.getElementById('enemyCharCanvas');
         if (enemyC) {
           const ctx = enemyC.getContext('2d');
@@ -1476,14 +1854,27 @@
           fpsBadge.innerText = `${state.fps} FPS`;
         }
 
-        // ボタングループのactiveクラス更新
+        // ボタングループのactiveクラス更新 (カード内 ＆ 下部常駐固定バーの横並び4ボタンの両方を完全同期)
         document.querySelectorAll('#modeButtonGroup .btn-choice').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.mode === state.colorMode);
+        });
+
+        document.querySelectorAll('.btn-quick-mode').forEach(btn => {
           btn.classList.toggle('active', btn.dataset.mode === state.colorMode);
         });
 
         document.querySelectorAll('#fpsButtonGroup .btn-choice').forEach(btn => {
           btn.classList.toggle('active', parseInt(btn.dataset.fps, 10) === state.fps);
         });
+
+        // ◯◯出現！文字色チップのactiveクラスとプレビューテキスト更新
+        document.querySelectorAll('#spawnColorChips .spawn-chip').forEach(chip => {
+          chip.classList.toggle('active', chip.dataset.color === state.spawnAlertColor);
+        });
+        const spawnPreview = document.getElementById('spawnPreviewText');
+        if (spawnPreview) {
+          spawnPreview.style.color = state.spawnAlertColor;
+        }
 
         // 強度スライダーの無効化切り替え (オフ時はスライダー非活性)
         const slider = document.getElementById('intensitySlider');
@@ -1644,6 +2035,7 @@
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
           localStorage.setItem('hirame_target_fps', state.fps.toString());
           localStorage.setItem('hirame_accessibility_settings', JSON.stringify(state));
+          localStorage.setItem('hirame_spawn_alert_color', state.spawnAlertColor || '#f472b6');
           // ゲーム本体や他タブに即時通知
           try {
             const channel = new BroadcastChannel('hirame_settings_channel');
@@ -1662,10 +2054,15 @@
             if (typeof parsed.fps === 'number') state.fps = parsed.fps;
             if (typeof parsed.colorMode === 'string') state.colorMode = parsed.colorMode;
             if (typeof parsed.intensity === 'number') state.intensity = parsed.intensity;
+            if (typeof parsed.spawnAlertColor === 'string') state.spawnAlertColor = parsed.spawnAlertColor;
           }
           const savedFps = localStorage.getItem('hirame_target_fps');
           if (savedFps) {
             state.fps = parseInt(savedFps, 10) || 60;
+          }
+          const savedSpawnColor = localStorage.getItem('hirame_spawn_alert_color');
+          if (savedSpawnColor) {
+            state.spawnAlertColor = savedSpawnColor;
           }
         } catch (err) {
           console.warn('[Accessibility Settings] localStorage load failed:', err);
@@ -1674,13 +2071,51 @@
 
       // ─── 6. イベント処理 (全操作でSE再生＆即時反映) ───
       function initEventHandlers() {
-        // モード選択ボタン
+        // モード選択ボタン (カード内)
         document.querySelectorAll('#modeButtonGroup .btn-choice').forEach(btn => {
           btn.addEventListener('click', () => {
             playTapSound();
             const mode = btn.dataset.mode;
             if (mode) {
               state.colorMode = mode;
+              applySettings();
+              saveSettings();
+            }
+          });
+        });
+
+        // 下部常駐固定バーの横並び4ボタン (スクロール不要で常にワンタップ切り替え)
+        document.querySelectorAll('.btn-quick-mode').forEach(btn => {
+          btn.addEventListener('click', () => {
+            playTapSound();
+            const mode = btn.dataset.mode;
+            if (mode) {
+              state.colorMode = mode;
+              applySettings();
+              saveSettings();
+            }
+          });
+        });
+
+        // 魚図鑑切り替えボタン (◀ 前の魚 / 次の魚 ▶)
+        document.getElementById('btnPrevFish')?.addEventListener('click', () => {
+          playTapSound();
+          fishCatalogIndex = (fishCatalogIndex === 0 ? 1 : 0);
+          renderPreviewCharacters();
+        });
+        document.getElementById('btnNextFish')?.addEventListener('click', () => {
+          playTapSound();
+          fishCatalogIndex = (fishCatalogIndex === 0 ? 1 : 0);
+          renderPreviewCharacters();
+        });
+
+        // 「◯◯出現！」文字色選択チップ
+        document.querySelectorAll('#spawnColorChips .spawn-chip').forEach(chip => {
+          chip.addEventListener('click', () => {
+            playTapSound();
+            const col = chip.dataset.color;
+            if (col) {
+              state.spawnAlertColor = col;
               applySettings();
               saveSettings();
             }
@@ -1750,6 +2185,7 @@
           state.fps = 60;
           state.colorMode = 'off';
           state.intensity = 100;
+          state.spawnAlertColor = '#f472b6';
           applySettings();
           saveSettings();
           showSaveToast('🔄 すべての設定を初期値（デフォルト）に戻しました');
