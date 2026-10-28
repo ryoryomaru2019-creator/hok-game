@@ -2013,5 +2013,128 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ===== 視覚アクセシビリティ (色覚サポート & FPS設定) リアルタイム同期システム =====
+  const COLOR_MATRICES = {
+    off: [
+      1, 0, 0, 0, 0,
+      0, 1, 0, 0, 0,
+      0, 0, 1, 0, 0,
+      0, 0, 0, 1, 0
+    ],
+    protanopia: [
+      0.56667, 0.43333, 0.00000, 0, 0,
+      0.55833, 0.44167, 0.00000, 0, 0,
+      0.00000, 0.24167, 0.75833, 0, 0,
+      0,       0,       0,       1, 0
+    ],
+    deuteranopia: [
+      0.62500, 0.37500, 0.00000, 0, 0,
+      0.70000, 0.30000, 0.00000, 0, 0,
+      0.00000, 0.30000, 0.70000, 0, 0,
+      0,       0,       0,       1, 0
+    ],
+    tritanopia: [
+      0.95000, 0.05000, 0.00000, 0, 0,
+      0.00000, 0.43333, 0.56667, 0, 0,
+      0.00000, 0.47500, 0.52500, 0, 0,
+      0,       0,       0,       1, 0
+    ]
+  };
+
+  function applyAccessibilitySettingsToGame(settings) {
+    if (!settings) return;
+    const mode = settings.colorMode || 'off';
+    const intensity = (typeof settings.intensity === 'number') ? settings.intensity : 100;
+    const fps = settings.fps || 60;
+
+    // 1. FPS設定の同期
+    targetFps = fps;
+    const fps30Btn = document.getElementById('fps30Btn');
+    const fps60Btn = document.getElementById('fps60Btn');
+    if (fps30Btn && fps60Btn) {
+      fps30Btn.classList.toggle('active', fps === 30);
+      fps60Btn.classList.toggle('active', fps === 60);
+    }
+
+    // 2. 色覚フィルターSVGの生成/更新
+    let svg = document.getElementById('gameAccessibilitySvgFilter');
+    if (!svg) {
+      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.id = 'gameAccessibilitySvgFilter';
+      svg.style.position = 'absolute';
+      svg.style.width = '0';
+      svg.style.height = '0';
+      svg.style.overflow = 'hidden';
+      svg.innerHTML = `
+        <defs>
+          <filter id="gameColorBlindFilter" color-interpolation-filters="sRGB">
+            <feColorMatrix id="gameColorMatrixEl" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0" />
+          </filter>
+        </defs>
+      `;
+      document.body.appendChild(svg);
+    }
+
+    const matrixEl = document.getElementById('gameColorMatrixEl');
+    const targetElement = document.getElementById('gameCanvas') || document.getElementById('app');
+
+    if (!matrixEl || !targetElement) return;
+
+    if (mode === 'off' || intensity === 0) {
+      matrixEl.setAttribute('values', COLOR_MATRICES.off.join(' '));
+      targetElement.style.filter = 'none';
+      return;
+    }
+
+    const targetMat = COLOR_MATRICES[mode] || COLOR_MATRICES.off;
+    const identity = COLOR_MATRICES.off;
+    const factor = Math.max(0, Math.min(1, intensity / 100));
+
+    const interpolated = identity.map((v, idx) => {
+      return (v + (targetMat[idx] - v) * factor).toFixed(4);
+    });
+
+    matrixEl.setAttribute('values', interpolated.join(' '));
+    targetElement.style.filter = 'url(#gameColorBlindFilter)';
+  }
+
+  // 起動時反映
+  try {
+    const raw = localStorage.getItem('hirame_accessibility_settings') || localStorage.getItem('game_accessibility_settings');
+    if (raw) {
+      applyAccessibilitySettingsToGame(JSON.parse(raw));
+    }
+  } catch (e) { }
+
+  // BroadcastChannel による他タブ・設定画面からのリアルタイム同期
+  try {
+    const channel = new BroadcastChannel('hirame_settings_channel');
+    channel.onmessage = (event) => {
+      if (event.data?.type === 'UPDATE_ACCESSIBILITY' && event.data.settings) {
+        applyAccessibilitySettingsToGame(event.data.settings);
+      }
+    };
+  } catch (e) { }
+
+  // storage イベント (別タブでの更新時)
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'hirame_accessibility_settings' || e.key === 'game_accessibility_settings') {
+      try {
+        const parsed = JSON.parse(e.newValue);
+        applyAccessibilitySettingsToGame(parsed);
+      } catch (err) { }
+    }
+  });
+
+  // ウィンドウフォーカス時 (設定画面から戻ってきた時) にも同期
+  window.addEventListener('focus', () => {
+    try {
+      const raw = localStorage.getItem('hirame_accessibility_settings') || localStorage.getItem('game_accessibility_settings');
+      if (raw) {
+        applyAccessibilitySettingsToGame(JSON.parse(raw));
+      }
+    } catch (e) { }
+  });
+
   requestAnimationFrame(gameLoop);
 });
