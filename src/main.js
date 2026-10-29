@@ -37,10 +37,11 @@ window.addEventListener('DOMContentLoaded', () => {
   const renderer = new GameRenderer(canvas);
   const game = new Game(canvas, renderer);
 
-  // リサイズ処理 (画面伸縮時にも上下UIと魚が絶対に被らないセーフエリアを動的に算出)
+  // リサイズ処理 (iOS Safari・各種スマホ画面伸縮時にも上下UIと魚が絶対に被らないセーフエリアを動的に算出)
   function resize() {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    // iOS Safari / モバイルブラウザでの実際のビューポート寸法を精密に取得
+    const w = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+    const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     renderer.resize(w, h);
     
     // ヘッダー下地パネル、Now playing pill、およびボトムドック下地パネルの位置・高さを正確に取得
@@ -52,18 +53,34 @@ window.addEventListener('DOMContentLoaded', () => {
     if (nowPlayingPillEl && nowPlayingPillEl.offsetParent !== null) {
       const rect = nowPlayingPillEl.getBoundingClientRect();
       safeTop = Math.max(safeTop, rect.bottom + 8);
-    } else if (hudEl) {
+    } else if (hudEl && hudEl.offsetParent !== null) {
       safeTop = Math.max(safeTop, hudEl.offsetHeight + 35);
+    } else {
+      safeTop = Math.max(90, h * 0.16);
     }
+    // 上限クランプ（画面高さの28%を超えない）
+    safeTop = Math.min(safeTop, h * 0.28);
     
-    let safeBottom = h * 0.75;
+    let safeBottom = h * 0.70;
     if (bottomDockEl && bottomDockEl.offsetParent !== null) {
       const rect = bottomDockEl.getBoundingClientRect();
-      safeBottom = Math.min(h - 110, rect.top - 10);
+      if (rect.top > 0) {
+        // ボトムドックの上端より12px上を魚の安全下限とし、かつ画面高さの72%を超えない
+        safeBottom = Math.min(h * 0.72, rect.top - 12);
+      } else {
+        safeBottom = h * 0.70;
+      }
     } else if (bottomDockEl) {
-      const dockHeight = bottomDockEl.offsetHeight || 105;
-      safeBottom = Math.max(safeTop + 120, h - dockHeight - 12);
+      const dockHeight = bottomDockEl.offsetHeight || 140;
+      safeBottom = Math.min(h * 0.72, h - dockHeight - 12);
     }
+
+    // 逆転・近接時の絶対安全保証ガード
+    if (safeBottom <= safeTop + 130) {
+      safeTop = h * 0.16;
+      safeBottom = h * 0.70;
+    }
+
     game.setSafeBounds(safeTop, safeBottom);
     updateBucketPositions();
   }
@@ -85,6 +102,22 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addEventListener('resize', resize);
+  window.addEventListener('orientationchange', () => {
+    setTimeout(resize, 150);
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', resize);
+    window.visualViewport.addEventListener('scroll', resize);
+  }
+
+  // iOS Safari でのページ全体のバウンススクロール・座標ズレ防止
+  document.addEventListener('touchmove', (e) => {
+    if (e.target.closest('.modal-content, .ranking-list, .scrollable, input, textarea')) {
+      return;
+    }
+    e.preventDefault();
+  }, { passive: false });
+
   resize();
 
   // DOM要素取得
@@ -1272,6 +1305,11 @@ window.addEventListener('DOMContentLoaded', () => {
     // モードに応じたバケツ動的描画
     renderBucketsUI(mode);
 
+    // DOM表示直後にレイアウト寸法を再計算し、ボトムドックとヘッダーに被らない安全領域を即時確定！
+    requestAnimationFrame(() => {
+      resize();
+    });
+
     // 餌撒きボタンの表示切替
     if (mode === MODES.KAREI) {
       dom.feedKareiBtn.classList.remove('hidden');
@@ -1306,6 +1344,7 @@ window.addEventListener('DOMContentLoaded', () => {
   dom.quickRetryBtn.addEventListener('click', () => {
     sound.playTap();
     game.restart();
+    requestAnimationFrame(resize);
   });
 
   // メニュー（タイトル）に戻る
@@ -1777,6 +1816,7 @@ window.addEventListener('DOMContentLoaded', () => {
     sound.playTap();
     stopResultLore();
     dom.resultModal.classList.add('hidden');
+    requestAnimationFrame(resize);
     game.startCountdown();
   });
 

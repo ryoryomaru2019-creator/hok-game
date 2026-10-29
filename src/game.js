@@ -1369,12 +1369,12 @@ export class Game {
     const total = fishesToSpawn.length;
     if (total === 0) return;
 
-    // Y軸を上下全体（0.08〜0.92）に均等スライス＋ランダムジッターで配置（中央密集を完全に防止！）
+    // Y軸を上下全体（0.12〜0.88）に均等スライス＋ランダムジッターで配置（画面内に確実に散らばって出現）
     for (let i = 0; i < total; i++) {
       const type = fishesToSpawn[i];
       const baseRatio = (i + 0.5) / total;
-      const jitter = (Math.random() - 0.5) * (0.8 / total);
-      const initialYRatio = Math.max(0.08, Math.min(0.92, baseRatio + jitter));
+      const jitter = (Math.random() - 0.5) * (0.6 / total);
+      const initialYRatio = Math.max(0.12, Math.min(0.88, baseRatio + jitter));
       this.fishes.push(new Fish(type, bounds, activeCfg, this.mode, {
         isInitial: true,
         initialYRatio

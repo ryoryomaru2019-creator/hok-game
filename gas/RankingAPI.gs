@@ -235,3 +235,4 @@ function formatDateRelative(playedTime, now) {
   if (diffDays <= 7) return diffDays + '日前';
   return new Date(playedTime).toLocaleDateString('ja-JP');
 }
+

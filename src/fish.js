@@ -692,9 +692,9 @@ export class Fish {
 
       // 水深：初期スライス比率があればそれを使用、なければ海面から海底まで均等に分散
       if (options.initialYRatio !== undefined) {
-        this.depth = Math.max(0.08, Math.min(0.92, options.initialYRatio));
+        this.depth = Math.max(0.12, Math.min(0.88, options.initialYRatio));
       } else {
-        this.depth = 0.08 + Math.random() * 0.84;
+        this.depth = 0.12 + Math.random() * 0.76;
       }
       this.targetDepth = this.depth;
       this.y = this.calculateYFromDepth(bounds);
@@ -902,8 +902,13 @@ export class Fish {
   }
 
   calculateYFromDepth(bounds) {
-    const seaTop = bounds.safeTop !== undefined ? bounds.safeTop : (bounds.height * 0.14);
-    const seabed = bounds.safeBottom !== undefined ? bounds.safeBottom : (bounds.height * 0.72);
+    const rawTop = bounds.safeTop !== undefined ? bounds.safeTop : (bounds.height * 0.14);
+    const rawBottom = bounds.safeBottom !== undefined ? bounds.safeBottom : (bounds.height * 0.72);
+
+    // iOS Safariおよび全端末での安全域サニタイズ（ボトムドック・ヘッダー被り・画面外完全防止）
+    const seaTop = Math.max(20, Math.min(rawTop, bounds.height * 0.28));
+    const seabed = Math.max(seaTop + 120, Math.min(rawBottom, bounds.height * 0.73));
+
     // 上下UIと被らない安全域の中で、上下いっぱいに広く泳ぐ
     const minY = seaTop + this.height * 0.5 + 8;
     const maxY = seabed - this.height * 0.5 - 8;
@@ -1298,9 +1303,10 @@ export class Fish {
     // 上下UIの背面に絶対に入り込まないためのクランプ＆バウンス
     if (this.state !== 'leaving' && this.state !== 'squid_ink_escape') {
       const seaTop = bounds.safeTop !== undefined ? bounds.safeTop : 105;
-      const seabed = bounds.safeBottom !== undefined ? bounds.safeBottom : (bounds.height * 0.72);
-      const minY = seaTop + this.height * 0.6 + 32;
-      const maxY = seabed - this.height * 0.6 - 15;
+      const rawSeabed = bounds.safeBottom !== undefined ? bounds.safeBottom : (bounds.height * 0.72);
+      const seabed = Math.min(rawSeabed, bounds.height * 0.73);
+      const minY = seaTop + this.height * 0.5 + 10;
+      const maxY = seabed - this.height * 0.5 - 10;
       if (minY < maxY) {
         if (this.y < minY) {
           this.y = minY;
