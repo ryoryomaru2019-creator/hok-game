@@ -3,7 +3,7 @@ import { buildRankingPayload } from './app.js';
 import { sound } from './audio.js';
 import { t, getLocalizedTitle, getCurrentLang, getDefaultAnonymousName, translations } from './i18n.js';
 import confetti from 'canvas-confetti';
-import { submitScoreToOnline, migrateLocalScoresToOnline } from './ranking_api.js';
+import { submitScoreToOnline, migrateLocalScoresToOnline, getDeletedRankingIds, addDeletedRankingIds } from './ranking_api.js';
 
 export const DEFAULT_PLAYER_TITLES = [
   { minScore: 15000, title: "魚神" },
@@ -2359,8 +2359,15 @@ export class Game {
       if (bData) blockedUsers = JSON.parse(bData);
     } catch (e) {}
 
-    // 期間 ＆ モードごとのフィルタリング ＆ ブロック除外
+    const deletedIds = getDeletedRankingIds();
+
+    // 期間 ＆ モードごとのフィルタリング ＆ ブロック除外 ＆ 削除済み除外
     const filtered = list.filter(item => {
+      // ユーザーが明示的に削除したIDは絶対に除外
+      if (item.id && deletedIds.has(item.id)) {
+        return false;
+      }
+
       const uid = item.internal_user_id || item.tag;
       if (blockedUsers.includes(uid) || (item.internal_user_id && blockedUsers.includes(item.internal_user_id)) || (item.tag && blockedUsers.includes(item.tag))) {
         return false; // ランキングに反映させない（ブロック指定）
@@ -2425,6 +2432,7 @@ export class Game {
   deleteLeaderboardEntries(ids) {
     if (!ids || ids.length === 0) return 0;
     try {
+      addDeletedRankingIds(ids);
       const data = localStorage.getItem('hirame_leaderboard');
       if (data) {
         let list = JSON.parse(data);
@@ -2448,13 +2456,18 @@ export class Game {
       if (data) {
         let list = JSON.parse(data);
         const prevLen = list.length;
+        const removedIds = [];
         list = list.filter(item => {
           const isSelf = Boolean(
             (identity.internal_user_id && item.internal_user_id === identity.internal_user_id) ||
             (identity.player_name && item.name && item.name === identity.player_name)
           );
+          if (isSelf && item.id) removedIds.push(item.id);
           return !isSelf;
         });
+        if (removedIds.length > 0) {
+          addDeletedRankingIds(removedIds);
+        }
         localStorage.setItem('hirame_leaderboard', JSON.stringify(list));
         return prevLen - list.length;
       }

@@ -5,8 +5,32 @@
 export const STORAGE_KEYS = {
   API_URL: 'hirame_ranking_api_url',
   CACHE_PREFIX: 'hirame_online_cache_',
-  LAST_SYNC: 'hirame_ranking_last_sync'
+  LAST_SYNC: 'hirame_ranking_last_sync',
+  DELETED_IDS: 'hirame_deleted_ranking_ids'
 };
+
+/**
+ * 削除済みIDリストを取得
+ */
+export function getDeletedRankingIds() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.DELETED_IDS);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch (e) {}
+  return new Set();
+}
+
+/**
+ * 削除済みIDをローカルに永久記録（復活防止）
+ */
+export function addDeletedRankingIds(ids) {
+  if (!ids || ids.length === 0) return;
+  try {
+    const set = getDeletedRankingIds();
+    ids.forEach(id => { if (id) set.add(id); });
+    localStorage.setItem(STORAGE_KEYS.DELETED_IDS, JSON.stringify(Array.from(set)));
+  } catch (e) {}
+}
 
 // デフォルトのオンラインランキングAPI URL（管理画面でいつでも変更・設定可能）
 export const DEFAULT_ONLINE_RANKING_API_URL = 'https://script.google.com/macros/s/AKfycbzER9ZtozR_YyLvtStJ_KXhkyJxqiXsJjRLDZYieXfGbK-ZKefpQQqQTT_mUMe44mHHtg/exec';
@@ -78,6 +102,7 @@ export async function testOnlineRankingConnection(apiUrl = getOnlineRankingApiUr
 export function mergeOnlineEntriesToLocal(onlineEntries) {
   if (!Array.isArray(onlineEntries) || onlineEntries.length === 0) return;
   try {
+    const deletedIds = getDeletedRankingIds();
     let localList = [];
     const raw = localStorage.getItem('hirame_leaderboard');
     if (raw) {
@@ -98,6 +123,11 @@ export function mergeOnlineEntriesToLocal(onlineEntries) {
     for (const onlineItem of onlineEntries) {
       if (!onlineItem || typeof onlineItem.score !== 'number' || onlineItem.score <= 0) continue;
       
+      // ユーザーが明示的に削除したIDなら絶対に復活させない！
+      if (onlineItem.id && deletedIds.has(onlineItem.id)) {
+        continue;
+      }
+
       const k = (onlineItem.internal_user_id || onlineItem.name || '') + '_' + onlineItem.score;
       if (onlineItem.id && localMapById.has(onlineItem.id)) {
         continue;
@@ -272,13 +302,14 @@ export async function fetchOnlineLeaderboard(period = 'yearly', mode = 'all', fa
     const data = await res.json();
 
     if (data && data.status === 'ok' && Array.isArray(data.rankings)) {
-      // 重複排除: 同一ID、または同一ユーザーの同一スコアを除去
+      const deletedIds = getDeletedRankingIds();
+      // 重複排除 & ユーザー削除済みIDの除外
       const uniqueList = [];
       const seenIds = new Set();
       const seenScoresByUser = new Set();
       for (const item of data.rankings) {
         if (!item) continue;
-        if (item.id && seenIds.has(item.id)) continue;
+        if (item.id && (deletedIds.has(item.id) || seenIds.has(item.id))) continue;
         const userKey = (item.internal_user_id || item.name || '') + '_' + item.score;
         if (seenScoresByUser.has(userKey)) continue;
         if (item.id) seenIds.add(item.id);
@@ -321,6 +352,17 @@ export async function fetchOnlineLeaderboard(period = 'yearly', mode = 'all', fa
  * オンラインスコアの削除リクエスト
  */
 export async function deleteScoreFromOnline(id, internalUserId) {
+  if (id) {
+    addDeletedRankingIds([id]);
+    // キャッシュをパージ
+    try {
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith(STORAGE_KEYS.CACHE_PREFIX)) {
+          localStorage.removeItem(k);
+        }
+      });
+    } catch (e) {}
+  }
   const apiUrl = getOnlineRankingApiUrl();
   if (!apiUrl || !id) return false;
 
