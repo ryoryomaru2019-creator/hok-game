@@ -9,7 +9,7 @@ export const STORAGE_KEYS = {
 };
 
 // デフォルトのオンラインランキングAPI URL（管理画面でいつでも変更・設定可能）
-export const DEFAULT_ONLINE_RANKING_API_URL = '';
+export const DEFAULT_ONLINE_RANKING_API_URL = 'https://script.google.com/macros/s/AKfycbzER9ZtozR_YyLvtStJ_KXhkyJxqiXsJjRLDZYieXfGbK-ZKefpQQqQTT_mUMe44mHHtg/exec';
 
 /**
  * 設定されたオンラインAPIのURLを取得
@@ -198,15 +198,29 @@ export async function fetchOnlineLeaderboard(period = 'yearly', mode = 'all', fa
     const data = await res.json();
 
     if (data && data.status === 'ok' && Array.isArray(data.rankings)) {
+      // 重複排除: 同一ID、または同一ユーザーの同一スコアを除去
+      const uniqueList = [];
+      const seenIds = new Set();
+      const seenScoresByUser = new Set();
+      for (const item of data.rankings) {
+        if (!item) continue;
+        if (item.id && seenIds.has(item.id)) continue;
+        const userKey = (item.internal_user_id || item.name || '') + '_' + item.score;
+        if (seenScoresByUser.has(userKey)) continue;
+        if (item.id) seenIds.add(item.id);
+        seenScoresByUser.add(userKey);
+        uniqueList.push(item);
+      }
+
       // キャッシュ更新
       try {
         const cacheKey = `${STORAGE_KEYS.CACHE_PREFIX}${period}_${mode}`;
         localStorage.setItem(cacheKey, JSON.stringify({
           timestamp: Date.now(),
-          rankings: data.rankings
+          rankings: uniqueList
         }));
       } catch (e) {}
-      return data.rankings;
+      return uniqueList;
     }
   } catch (err) {
     console.debug('[RankingAPI] Fetch online rankings failed, using fallback/cache:', err);
@@ -260,3 +274,4 @@ export async function deleteScoreFromOnline(id, internalUserId) {
     }
   }
 }
+

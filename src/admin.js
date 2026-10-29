@@ -11,7 +11,7 @@ import { trackEvent } from './analytics.js';
 import { getOnlineRankingApiUrl, setOnlineRankingApiUrl, testOnlineRankingConnection, migrateLocalScoresToOnline } from './ranking_api.js';
 
 const DEFAULT_CONFIG = {
-  onlineRankingApiUrl: '',
+  onlineRankingApiUrl: 'https://script.google.com/macros/s/AKfycbzER9ZtozR_YyLvtStJ_KXhkyJxqiXsJjRLDZYieXfGbK-ZKefpQQqQTT_mUMe44mHHtg/exec',
   targetFishCount: 40,
   minTargetThreshold: 2,
   refillTargetCount: 6,

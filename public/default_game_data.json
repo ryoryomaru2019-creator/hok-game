@@ -15302,5 +15302,6 @@
       "fleeSpeedMultiplier": 2.2,
       "silhouetteDepthThreshold": 0.55
     }
-  }
+  },
+  "onlineRankingApiUrl": "https://script.google.com/macros/s/AKfycbzER9ZtozR_YyLvtStJ_KXhkyJxqiXsJjRLDZYieXfGbK-ZKefpQQqQTT_mUMe44mHHtg/exec"
 }
