@@ -301,13 +301,18 @@
     <!-- モーダル：ランキング一覧 -->
     <div id="leaderboardModal" class="modal-overlay interactive hidden">
       <div class="modal-content glass-panel">
-        <h2 style="font-size: 20px; margin-bottom: 8px;" data-i18n="ranking">世界ランキング</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+          <h2 style="font-size: 18px; margin: 0; display:flex; align-items:center; gap:6px;">
+            <span>🏆</span> <span data-i18n="ranking">世界ランキング</span>
+          </h2>
+          <button type="button" id="refreshMainRankingBtn" class="icon-btn-sm" title="世界ランキングを手動で最新化" style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); border-radius:8px; color:#fff; width:34px; height:34px; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; transition:transform 0.2s;">🔄</button>
+        </div>
         <!-- 期間切替タブ -->
         <div class="ranking-tab-bar" id="mainRankingTabs">
-          <button type="button" class="ranking-tab-btn active" data-period="yearly" data-i18n="periodYearly">👑 年間ランキング</button>
-          <button type="button" class="ranking-tab-btn" data-period="monthly" data-i18n="periodMonthly">📅 マンスリー</button>
-          <button type="button" class="ranking-tab-btn" data-period="weekly" data-i18n="periodWeekly">📆 ウィークリー</button>
-          <button type="button" class="ranking-tab-btn" data-period="daily" data-i18n="periodDaily">⏰ デイリー</button>
+          <button type="button" class="ranking-tab-btn active" data-period="yearly" data-i18n="periodYearlyShort">👑 年間</button>
+          <button type="button" class="ranking-tab-btn" data-period="monthly" data-i18n="periodMonthlyShort">📅 マンスリー</button>
+          <button type="button" class="ranking-tab-btn" data-period="weekly" data-i18n="periodWeeklyShort">📆 ウィークリー</button>
+          <button type="button" class="ranking-tab-btn" data-period="daily" data-i18n="periodDailyShort">⏰ デイリー</button>
         </div>
         <!-- モード切替タブ -->
         <div class="ranking-mode-tab-bar" id="mainRankingModeTabs">

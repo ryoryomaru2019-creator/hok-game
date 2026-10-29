@@ -122,6 +122,7 @@ window.addEventListener('DOMContentLoaded', () => {
     playerNameInput: document.getElementById('playerNameInput'),
     toModeSelectBtn: document.getElementById('toModeSelectBtn'),
     openLeaderboardBtn: document.getElementById('openLeaderboardBtn'),
+    refreshMainRankingBtn: document.getElementById('refreshMainRankingBtn'),
     openSettingsBtn: document.getElementById('openSettingsBtn'),
     openMusicModalBtn: document.getElementById('openMusicModalBtn'),
     closeLeaderboardBtn: document.getElementById('closeLeaderboardBtn'),
@@ -1054,6 +1055,24 @@ window.addEventListener('DOMContentLoaded', () => {
     dom.leaderboardModal.classList.add('hidden');
   });
 
+  // タイトル画面ランキングの強制手動更新ボタン (🔄)
+  dom.refreshMainRankingBtn?.addEventListener('click', () => {
+    sound.playTap();
+    dom.refreshMainRankingBtn.classList.add('icon-spin');
+    if (getOnlineRankingApiUrl()) {
+      fetchOnlineLeaderboard(currentLeaderboardPeriod, currentLeaderboardMode).then(() => {
+        renderLeaderboard();
+      }).catch(() => {
+        renderLeaderboard();
+      }).finally(() => {
+        setTimeout(() => dom.refreshMainRankingBtn?.classList.remove('icon-spin'), 600);
+      });
+    } else {
+      renderLeaderboard();
+      setTimeout(() => dom.refreshMainRankingBtn?.classList.remove('icon-spin'), 400);
+    }
+  });
+
   function updateMainDeleteButton() {
     if (!dom.btnDeleteSelectedMainRanking) return;
     const checked = dom.leaderboardItems.querySelectorAll('.main-self-chk:checked');
@@ -1087,19 +1106,24 @@ window.addEventListener('DOMContentLoaded', () => {
 
         const comboText = (item.maxCombo !== undefined && item.maxCombo !== null) ? item.maxCombo : 0;
         return `
-          <div class="leaderboard-item ${isTop3 ? 'top3' : ''} ${isSelf ? 'is-self' : ''}">
-            <div style="display:flex; align-items:center; gap:8px;">
+          <div class="leaderboard-item ${isTop3 ? 'top3' : ''} ${isSelf ? 'is-self' : ''}" style="display:flex; align-items:center; padding:6px 8px; gap:6px;">
+            <div style="display:flex; align-items:center; gap:4px; flex-shrink:0; min-width:32px;">
               ${chkHtml}
-              <span class="rank-badge">${medal}</span>
+              <span class="rank-badge" style="font-size:13px; font-weight:800; min-width:18px; text-align:center;">${medal}</span>
             </div>
-            <span style="font-weight:700; flex:1; margin-left:6px;">
-              ${escapeHtml(localizedName)}${isSelf ? ` 👤(${t('you')})` : ''}
-              <span style="font-size:11px;color:#94a3b8;">#${item.tag || '---'}</span>
-            </span>
-            <span style="font-weight:800;color:#38bdf8;white-space:nowrap;text-align:right;">
-              ${item.score} pt
-              <span style="font-size:11px;color:#facc15;font-weight:700;margin-left:4px;">(${comboText} combo)</span>
-            </span>
+            <div style="flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; overflow:hidden;">
+              <div style="display:flex; align-items:center; gap:4px; overflow:hidden;">
+                <span style="font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#f8fafc;">
+                  ${escapeHtml(localizedName)}
+                </span>
+                ${isSelf ? `<span style="font-size:10px; color:#38bdf8; font-weight:800; flex-shrink:0;">👤(${t('you')})</span>` : ''}
+              </div>
+              <span style="font-size:10px; color:#94a3b8; font-family:monospace; line-height:1.2;">#${item.tag || '---'}</span>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:center; flex-shrink:0; text-align:right;">
+              <span style="font-size:12px; font-weight:800; color:#38bdf8; line-height:1.2;">${item.score} pt</span>
+              <span style="font-size:9.5px; color:#facc15; font-weight:700; line-height:1.2;">${comboText} combo</span>
+            </div>
           </div>
         `;
       }).join('');
@@ -1832,16 +1856,24 @@ window.addEventListener('DOMContentLoaded', () => {
 
         const comboText = (item.maxCombo !== undefined && item.maxCombo !== null) ? item.maxCombo : 0;
         return `
-          <div class="result-ranking-row ${isSelf ? 'current-user' : ''}">
-            <div style="display:flex; align-items:center; gap:6px;">
+          <div class="result-ranking-row ${isSelf ? 'current-user' : ''}" style="display:flex; align-items:center; padding:5px 8px; gap:6px;">
+            <div style="display:flex; align-items:center; gap:4px; flex-shrink:0; min-width:30px;">
               ${chkHtml}
-              <span class="rank-medal">${medal}</span>
+              <span class="rank-medal" style="font-size:13px; min-width:18px; text-align:center;">${medal}</span>
             </div>
-            <span class="rank-name" style="flex:1;">${escapeHtml(localizedName)}${isSelf ? ` 👤(${t('you')})` : ''}</span>
-            <span class="rank-score" style="white-space:nowrap;text-align:right;">
-              ${item.score} pt
-              <span style="font-size:10px;color:#facc15;font-weight:700;margin-left:3px;">(${comboText} combo)</span>
-            </span>
+            <div style="flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; overflow:hidden;">
+              <div style="display:flex; align-items:center; gap:4px; overflow:hidden;">
+                <span class="rank-name" style="font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#f8fafc;">
+                  ${escapeHtml(localizedName)}
+                </span>
+                ${isSelf ? `<span style="font-size:10px; color:#38bdf8; font-weight:800; flex-shrink:0;">👤(${t('you')})</span>` : ''}
+              </div>
+              <span style="font-size:10px; color:#94a3b8; font-family:monospace; line-height:1.1;">#${item.tag || '---'}</span>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:flex-end; justify-content:center; flex-shrink:0; text-align:right;">
+              <span class="rank-score" style="font-size:12px; font-weight:800; color:#38bdf8; line-height:1.2;">${item.score} pt</span>
+              <span style="font-size:9.5px; color:#facc15; font-weight:700; line-height:1.2;">${comboText} combo</span>
+            </div>
           </div>
         `;
       }).join('');

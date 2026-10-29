@@ -735,23 +735,23 @@ canvas#gameCanvas {
 /* ランキング期間切替タブバー */
 .ranking-tab-bar {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   background: rgba(15, 23, 42, 0.75);
-  padding: 4px;
-  border-radius: 12px;
+  padding: 3px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  margin: 8px 0 10px 0;
+  margin: 6px 0 8px 0;
   width: 100%;
 }
 
 .ranking-tab-btn {
   flex: 1;
-  padding: 6px 4px;
-  border-radius: 8px;
+  padding: 5px 1px;
+  border-radius: 6px;
   border: none;
   background: transparent;
   color: #94a3b8;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.2s;
@@ -778,30 +778,46 @@ canvas#gameCanvas {
   width: 100%;
   max-height: 240px;
   overflow-y: auto;
-  margin: 14px 0;
+  margin: 10px 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .leaderboard-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  border-radius: 10px;
+  padding: 6px 10px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
-  font-size: 13px;
+  font-size: 12px;
+  transition: background 0.15s;
 }
 
 .leaderboard-item.top3 {
-  background: rgba(250, 204, 21, 0.15);
-  border: 1px solid rgba(250, 204, 21, 0.4);
+  background: rgba(250, 204, 21, 0.12);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+}
+
+.leaderboard-item.is-self {
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  background: rgba(56, 189, 248, 0.1);
 }
 
 .rank-badge {
   font-weight: 900;
-  width: 24px;
+  width: 20px;
+  text-align: center;
+}
+
+@keyframes spin-sync {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.icon-spin {
+  animation: spin-sync 0.8s linear infinite;
 }
 
 /* 多言語ピッカー */
@@ -1483,17 +1499,17 @@ canvas#gameCanvas {
 /* ランキングモード切替タブ */
 .ranking-mode-tab-bar {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   margin: 6px 0;
   background: rgba(0, 0, 0, 0.25);
   border-radius: 8px;
-  padding: 3px;
+  padding: 2px;
 }
 
 .ranking-mode-tab-btn {
   flex: 1;
-  padding: 5px 2px;
-  font-size: 11px;
+  padding: 4px 1px;
+  font-size: 10px;
   font-weight: 700;
   background: transparent;
   color: #94a3b8;
