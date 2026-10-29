@@ -3,7 +3,7 @@
 // ============================================================================
 
 const USER_SALT = 'hok_user_salt_';
-const USER_HASH = 'ddc34ce20d39f45ffa8bb27c6a47694ff4f6f68c1e47e48784e54558d401c6c8';
+const USER_HASH = 'cbbfbe97582f4d2d8094172652dc604f0e17eaf4d8a6128a0e275f3b967f821c';
 
 const PASS_SALT = 'hok_secure_salt_892348_';
 const PASS_HASH = '894db9677c54a2b39ec00365f32dababf0977153c5b662c5ab1c1c9018074b58';

@@ -84,6 +84,9 @@
           <button type="button" class="sub-tab-btn active" data-subtab="params">
             <span>🎛️</span> パラメーター設定
           </button>
+          <button type="button" class="sub-tab-btn" data-subtab="textConfig" style="border-left: 2px solid #38bdf8;">
+            <span>📢</span> 演出テキスト (多言語)
+          </button>
           <button type="button" class="sub-tab-btn" data-subtab="bgm">
             <span>🎵</span> 音量・BGM設定 ＆ プレイリスト
           </button>
@@ -727,103 +730,19 @@
               </div>
             </div>
 
-            <!-- 6. 出現＆餌演出テキスト設定 (多言語対応: 日本語 / 英語 / 韓国語 / 中国語) -->
-            <div class="settings-block common-settings-block" style="margin-top: 14px; border: 1px solid rgba(56, 189, 248, 0.4); background: rgba(30, 41, 59, 0.75);">
-              <div class="block-header-row">
-                <div class="block-title">
-                  <span>📢 出現＆餌演出テキスト設定 (多言語対応: ja / en / ko / zh)</span>
+            <!-- 演出テキスト多言語設定へのリンク案内カード -->
+            <div class="settings-block common-settings-block" style="margin-top: 14px; border: 1.5px dashed rgba(56, 189, 248, 0.5); background: rgba(15, 23, 42, 0.7); padding: 14px 16px; border-radius: 10px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:20px;">📢</span>
+                  <div>
+                    <strong style="color:#38bdf8; font-size:14px; display:block;">「◯◯出現！」＆「餌追加」演出テキスト設定 (多言語対応)</strong>
+                    <span style="font-size:11px; color:#94a3b8;">英語・韓国語・中国語・日本語の各演出メッセージや名無しユーザー名は専用タブで一括管理できます。</span>
+                  </div>
                 </div>
-              </div>
-
-              <!-- 言語選択タブ (日本語 / 英語 / 韓国語 / 中国語) -->
-              <div class="form-group" style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 16px;">
-                <div class="label-row">
-                  <label style="font-weight: 800; color: #38bdf8;">🌐 編集対象の言語</label>
-                  <span id="textTargetLangBadge" class="val-pill" style="background: #38bdf8; color: #000; font-weight:800;">🇯🇵 日本語 (ja)</span>
-                </div>
-                <div class="speed-preset-buttons" id="textLangButtonGroup" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
-                  <button type="button" class="btn-text-lang btn-micro active" data-lang="ja">🇯🇵 日本語 (ja)</button>
-                  <button type="button" class="btn-text-lang btn-micro" data-lang="en">🇺🇸 English (en)</button>
-                  <button type="button" class="btn-text-lang btn-micro" data-lang="ko">🇰🇷 한국어 (ko)</button>
-                  <button type="button" class="btn-text-lang btn-micro" data-lang="zh">🇨🇳 中文 (zh)</button>
-                </div>
-                <span class="desc-text" style="margin-top: 6px;">※ゲームプレイ中の言語環境（日本語・英語・韓国語・中国語）に応じて、自動的に対応する言語の演出テキストが表示されます。</span>
-              </div>
-
-              <!-- 項目1: 「◯◯出現！」演出テキスト -->
-              <div class="form-group" style="border-left: 3px solid #f472b6; padding-left: 10px; margin-bottom: 14px;">
-                <div class="label-row">
-                  <label for="txtSpawnAlert">✨ 「◯◯出現！」演出メッセージ</label>
-                  <span id="previewSpawnAlert" class="val-pill" style="background: #f472b6; color: #fff;">✨ ぶーちゃん出現！</span>
-                </div>
-                <input type="text" id="txtSpawnAlert" class="admin-input" style="width: 100%; max-width: 400px;" value="✨ {name}出現！" placeholder="{name}出現！">
-                <span class="desc-text"><code>{name}</code> がキャラクター名（ぶーちゃん、Boo-chan、부짱等）に自動置換されます。</span>
-              </div>
-
-              <!-- 項目2: 餌追加演出 - ポイント達成時 -->
-              <div class="form-group" style="border-left: 3px solid #4ade80; padding-left: 10px; margin-bottom: 14px;">
-                <div class="label-row">
-                  <label for="txtBaitRewardPoint">🪱 餌追加: ポイント(pt)達成時</label>
-                  <span id="previewBaitRewardPoint" class="val-pill" style="background: #4ade80; color: #000;">🪱 餌+1 (1000pt達成!)</span>
-                </div>
-                <input type="text" id="txtBaitRewardPoint" class="admin-input" style="width: 100%; max-width: 400px;" value="🪱 餌+{count} ({pt}pt達成!)">
-                <span class="desc-text"><code>{count}</code> が追加個数、<code>{pt}</code> が達成ポイント数に置換されます。</span>
-              </div>
-
-              <!-- 項目3: 餌追加演出 - ポイント達成時 (ランダム) -->
-              <div class="form-group" style="border-left: 3px solid #4ade80; padding-left: 10px; margin-bottom: 14px;">
-                <div class="label-row">
-                  <label for="txtBaitRewardPointRandom">🪱 餌追加: ポイント達成時 (99:ランダム設定時)</label>
-                  <span id="previewBaitRewardPointRandom" class="val-pill" style="background: #4ade80; color: #000;">🪱 餌+1 (ptボーナス!)</span>
-                </div>
-                <input type="text" id="txtBaitRewardPointRandom" class="admin-input" style="width: 100%; max-width: 400px;" value="🪱 餌+1 (ptボーナス!)">
-                <span class="desc-text">ポイント条件が「99 (ランダム)」に設定されている際に表示されるメッセージです。</span>
-              </div>
-
-              <!-- 項目4: 餌追加演出 - ターゲット獲得数達成時 -->
-              <div class="form-group" style="border-left: 3px solid #38bdf8; padding-left: 10px; margin-bottom: 14px;">
-                <div class="label-row">
-                  <label for="txtBaitRewardTargetCount">🪱 餌追加: ターゲット捕獲数達成時</label>
-                  <span id="previewBaitRewardTargetCount" class="val-pill" style="background: #38bdf8; color: #000;">🪱 餌+1 (15匹獲得!)</span>
-                </div>
-                <input type="text" id="txtBaitRewardTargetCount" class="admin-input" style="width: 100%; max-width: 400px;" value="🪱 餌+{count} ({targetCount}匹獲得!)">
-                <span class="desc-text"><code>{count}</code> が追加個数、<code>{targetCount}</code> が達成匹数に置換されます。</span>
-              </div>
-
-              <!-- 項目5: 餌追加演出 - ターゲット獲得数達成時 (ランダム) -->
-              <div class="form-group" style="border-left: 3px solid #38bdf8; padding-left: 10px; margin-bottom: 14px;">
-                <div class="label-row">
-                  <label for="txtBaitRewardTargetCountRandom">🪱 餌追加: ターゲット捕獲時 (99:ランダム設定時)</label>
-                  <span id="previewBaitRewardTargetCountRandom" class="val-pill" style="background: #38bdf8; color: #000;">🪱 餌+1 (捕獲ボーナス!)</span>
-                </div>
-                <input type="text" id="txtBaitRewardTargetCountRandom" class="admin-input" style="width: 100%; max-width: 400px;" value="🪱 餌+1 (捕獲ボーナス!)">
-                <span class="desc-text">ターゲット獲得数条件が「99 (ランダム)」に設定されている際に表示されるメッセージです。</span>
-              </div>
-
-              <!-- 項目6: 餌追加演出 - コンボ達成時 -->
-              <div class="form-group" style="border-left: 3px solid #facc15; padding-left: 10px; margin-bottom: 14px;">
-                <div class="label-row">
-                  <label for="txtBaitRewardCombo">★ 餌追加: コンボ数達成時</label>
-                  <span id="previewBaitRewardCombo" class="val-pill" style="background: #facc15; color: #000;">★ 10 COMBO!! (餌+1) ★</span>
-                </div>
-                <input type="text" id="txtBaitRewardCombo" class="admin-input" style="width: 100%; max-width: 400px;" value="★ {combo} COMBO!! (餌+1) ★">
-                <span class="desc-text"><code>{combo}</code> が達成コンボ数に置換されます。</span>
-              </div>
-
-              <!-- 項目7: 名無しユーザーのデフォルト登録名 -->
-              <div class="form-group" style="border-left: 3px solid #a855f7; padding-left: 10px; margin-bottom: 16px;">
-                <div class="label-row">
-                  <label for="txtAnonymousName">👤 名無しユーザーのデフォルト登録名</label>
-                  <span id="previewAnonymousName" class="val-pill" style="background: #a855f7; color: #fff;">名無し</span>
-                </div>
-                <input type="text" id="txtAnonymousName" class="admin-input" style="width: 100%; max-width: 400px;" value="名無し" maxlength="12">
-                <span class="desc-text">プレイヤーが名前未入力の際、ランキング登録やプロフィールで自動的に付与される名前です。（例: ja=名無し, en=Unnamed, ko=이름 없음, zh=未命名）</span>
-              </div>
-
-              <!-- リセットボタン -->
-              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px;">
-                <button type="button" id="btnResetCurrentLangText" class="btn-micro" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">🔄 この言語の文言を初期値に戻す</button>
-                <button type="button" id="btnResetAllLangText" class="btn-micro" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5;">🔄 全言語の文言をすべて初期値に戻す</button>
+                <button type="button" class="btn-jump-to-text-config btn-micro" style="background:#0284c7; color:#fff; font-weight:800; padding:8px 14px; border-radius:6px; cursor:pointer;">
+                  👉 演出テキスト (多言語) タブを開く
+                </button>
               </div>
             </div>
 
@@ -1253,6 +1172,107 @@
           </div>
         </div>
       </div><!-- /#subPanelParams -->
+
+      <!-- ===== 演出テキスト (多言語) 編集パネル ===== -->
+      <div id="subPanelTextConfig" class="sub-editor-panel hidden">
+        <div class="panel-section-title">
+          <h2>📢 出現＆餌演出テキスト設定 (多言語対応: ja / en / ko / zh)</h2>
+          <div class="panel-section-actions">
+            <span class="status-indicator">🌐 リアルタイム多言語連動中</span>
+          </div>
+        </div>
+
+        <!-- 言語選択タブ (日本語 / 英語 / 韓国語 / 中国語) -->
+        <div class="settings-block" style="background: rgba(15, 23, 42, 0.75); padding: 16px; border-radius: 12px; border: 1.5px solid rgba(56, 189, 248, 0.4); margin-bottom: 20px;">
+          <div class="label-row" style="margin-bottom: 8px;">
+            <label style="font-weight: 800; color: #38bdf8; font-size: 15px;">🌐 編集対象の言語を選択</label>
+            <span id="textTargetLangBadge" class="val-pill" style="background: #38bdf8; color: #000; font-weight:800; font-size: 13px;">🇯🇵 日本語 (ja)</span>
+          </div>
+          <div class="speed-preset-buttons" id="textLangButtonGroup" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+            <button type="button" class="btn-text-lang btn-micro active" data-lang="ja" style="padding: 8px 14px; font-size: 13px;">🇯🇵 日本語 (ja)</button>
+            <button type="button" class="btn-text-lang btn-micro" data-lang="en" style="padding: 8px 14px; font-size: 13px;">🇺🇸 English (en)</button>
+            <button type="button" class="btn-text-lang btn-micro" data-lang="ko" style="padding: 8px 14px; font-size: 13px;">🇰🇷 한국어 (ko)</button>
+            <button type="button" class="btn-text-lang btn-micro" data-lang="zh" style="padding: 8px 14px; font-size: 13px;">🇨🇳 中文 (zh)</button>
+          </div>
+          <span class="desc-text" style="margin-top: 10px; display:block;">※ゲームプレイ中の言語環境（日本語・英語・韓国語・中国語）に応じて、自動的に対応する言語の演出テキストが表示されます。</span>
+        </div>
+
+        <!-- 項目1: 「◯◯出現！」演出テキスト -->
+        <div class="settings-block" style="border-left: 4px solid #f472b6; margin-bottom: 16px;">
+          <div class="label-row">
+            <label for="txtSpawnAlert" style="font-size: 14px; font-weight: 800; color: #f472b6;">✨ 「◯◯出現！」演出メッセージ</label>
+            <span id="previewSpawnAlert" class="val-pill" style="background: #f472b6; color: #fff; font-weight:700;">✨ ぶーちゃん出現！</span>
+          </div>
+          <input type="text" id="txtSpawnAlert" class="admin-input" style="width: 100%; max-width: 500px; margin-top: 6px;" value="✨ {name}出現！" placeholder="{name}出現！">
+          <span class="desc-text" style="margin-top: 6px; display:block;"><code>{name}</code> がキャラクター名（ぶーちゃん、Boo-chan、부짱、嘟嘟猪等）に自動置換されます。</span>
+        </div>
+
+        <!-- 項目2: 餌追加演出 - ポイント達成時 -->
+        <div class="settings-block" style="border-left: 4px solid #4ade80; margin-bottom: 16px;">
+          <div class="label-row">
+            <label for="txtBaitRewardPoint" style="font-size: 14px; font-weight: 800; color: #4ade80;">🪱 餌追加: ポイント(pt)達成時</label>
+            <span id="previewBaitRewardPoint" class="val-pill" style="background: #4ade80; color: #000; font-weight:700;">🪱 餌+1 (1000pt達成!)</span>
+          </div>
+          <input type="text" id="txtBaitRewardPoint" class="admin-input" style="width: 100%; max-width: 500px; margin-top: 6px;" value="🪱 餌+{count} ({pt}pt達成!)">
+          <span class="desc-text" style="margin-top: 6px; display:block;"><code>{count}</code> が追加個数、<code>{pt}</code> が達成ポイント数に置換されます。</span>
+        </div>
+
+        <!-- 項目3: 餌追加演出 - ポイント達成時 (ランダム) -->
+        <div class="settings-block" style="border-left: 4px solid #4ade80; margin-bottom: 16px;">
+          <div class="label-row">
+            <label for="txtBaitRewardPointRandom" style="font-size: 14px; font-weight: 800; color: #4ade80;">🪱 餌追加: ポイント達成時 (99:ランダム設定時)</label>
+            <span id="previewBaitRewardPointRandom" class="val-pill" style="background: #4ade80; color: #000; font-weight:700;">🪱 餌+1 (ptボーナス!)</span>
+          </div>
+          <input type="text" id="txtBaitRewardPointRandom" class="admin-input" style="width: 100%; max-width: 500px; margin-top: 6px;" value="🪱 餌+1 (ptボーナス!)">
+          <span class="desc-text" style="margin-top: 6px; display:block;">ポイント条件が「99 (ランダム)」に設定されている際に表示されるメッセージです。</span>
+        </div>
+
+        <!-- 項目4: 餌追加演出 - ターゲット獲得数達成時 -->
+        <div class="settings-block" style="border-left: 4px solid #38bdf8; margin-bottom: 16px;">
+          <div class="label-row">
+            <label for="txtBaitRewardTargetCount" style="font-size: 14px; font-weight: 800; color: #38bdf8;">🪱 餌追加: ターゲット捕獲数達成時</label>
+            <span id="previewBaitRewardTargetCount" class="val-pill" style="background: #38bdf8; color: #000; font-weight:700;">🪱 餌+1 (15匹獲得!)</span>
+          </div>
+          <input type="text" id="txtBaitRewardTargetCount" class="admin-input" style="width: 100%; max-width: 500px; margin-top: 6px;" value="🪱 餌+{count} ({targetCount}匹獲得!)">
+          <span class="desc-text" style="margin-top: 6px; display:block;"><code>{count}</code> が追加個数、<code>{targetCount}</code> が達成匹数に置換されます。</span>
+        </div>
+
+        <!-- 項目5: 餌追加演出 - ターゲット獲得数達成時 (ランダム) -->
+        <div class="settings-block" style="border-left: 4px solid #38bdf8; margin-bottom: 16px;">
+          <div class="label-row">
+            <label for="txtBaitRewardTargetCountRandom" style="font-size: 14px; font-weight: 800; color: #38bdf8;">🪱 餌追加: ターゲット捕獲時 (99:ランダム設定時)</label>
+            <span id="previewBaitRewardTargetCountRandom" class="val-pill" style="background: #38bdf8; color: #000; font-weight:700;">🪱 餌+1 (捕獲ボーナス!)</span>
+          </div>
+          <input type="text" id="txtBaitRewardTargetCountRandom" class="admin-input" style="width: 100%; max-width: 500px; margin-top: 6px;" value="🪱 餌+1 (捕獲ボーナス!)">
+          <span class="desc-text" style="margin-top: 6px; display:block;">ターゲット獲得数条件が「99 (ランダム)」に設定されている際に表示されるメッセージです。</span>
+        </div>
+
+        <!-- 項目6: 餌追加演出 - コンボ達成時 -->
+        <div class="settings-block" style="border-left: 4px solid #facc15; margin-bottom: 16px;">
+          <div class="label-row">
+            <label for="txtBaitRewardCombo" style="font-size: 14px; font-weight: 800; color: #facc15;">★ 餌追加: コンボ数達成時</label>
+            <span id="previewBaitRewardCombo" class="val-pill" style="background: #facc15; color: #000; font-weight:700;">★ 10 COMBO!! (餌+1) ★</span>
+          </div>
+          <input type="text" id="txtBaitRewardCombo" class="admin-input" style="width: 100%; max-width: 500px; margin-top: 6px;" value="★ {combo} COMBO!! (餌+1) ★">
+          <span class="desc-text" style="margin-top: 6px; display:block;"><code>{combo}</code> が達成コンボ数に置換されます。</span>
+        </div>
+
+        <!-- 項目7: 名無しユーザーのデフォルト登録名 -->
+        <div class="settings-block" style="border-left: 4px solid #a855f7; margin-bottom: 20px;">
+          <div class="label-row">
+            <label for="txtAnonymousName" style="font-size: 14px; font-weight: 800; color: #a855f7;">👤 名無しユーザーのデフォルト登録名</label>
+            <span id="previewAnonymousName" class="val-pill" style="background: #a855f7; color: #fff; font-weight:700;">名無し</span>
+          </div>
+          <input type="text" id="txtAnonymousName" class="admin-input" style="width: 100%; max-width: 500px; margin-top: 6px;" value="名無し" maxlength="12">
+          <span class="desc-text" style="margin-top: 6px; display:block;">プレイヤーが名前未入力の際、ランキング登録やプロフィールで自動的に付与される名前です。（例: ja=名無し, en=Unnamed, ko=이름 없음, zh=未命名）</span>
+        </div>
+
+        <!-- リセットボタン -->
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top: 14px;">
+          <button type="button" id="btnResetCurrentLangText" class="btn-micro" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 14px;">🔄 この言語の文言を初期値に戻す</button>
+          <button type="button" id="btnResetAllLangText" class="btn-micro" style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; padding: 8px 14px;">🔄 全言語の文言をすべて初期値に戻す</button>
+        </div>
+      </div>
 
             <!-- 2. 音量・BGM設定 ＆ プレイリスト編集パネル -->
             <div id="subPanelBgm" class="sub-editor-panel hidden">
@@ -3480,7 +3500,7 @@
           <label for="adminLoginUser">ログインID</label>
           <div class="input-wrap">
             <span class="field-icon">👤</span>
-            <input type="text" id="adminLoginUser" class="login-input" placeholder="admin" autocomplete="username" required autofocus>
+            <input type="text" id="adminLoginUser" class="login-input" placeholder="ログインIDを入力" autocomplete="username" required autofocus>
           </div>
         </div>
 

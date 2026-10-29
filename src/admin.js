@@ -354,6 +354,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const subPanels = {
     params: document.getElementById('subPanelParams'),
+    textConfig: document.getElementById('subPanelTextConfig'),
     bgm: document.getElementById('subPanelBgm'),
     titles: document.getElementById('subPanelTitles'),
     xshare: document.getElementById('subPanelXShare'),
@@ -397,6 +398,16 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       if (target === 'ambient' && typeof window.renderAmbientManager === 'function') {
         window.renderAmbientManager();
+      }
+    });
+  });
+
+  // パラメーター設定内の案内ボタンから「演出テキスト」タブへジャンプ
+  document.querySelectorAll('.btn-jump-to-text-config').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetBtn = document.querySelector('.sub-tab-btn[data-subtab="textConfig"]');
+      if (targetBtn) {
+        targetBtn.click();
       }
     });
   });
