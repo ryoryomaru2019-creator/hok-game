@@ -42,7 +42,7 @@ export const translations = {
     periodWeeklyShort: "📆 ウィークリー",
     periodDailyShort: "⏰ デイリー",
     you: "あなた",
-    anonymousAngler: "名無し釣り人",
+    anonymousAngler: "名無し",
     countUnit: "匹",
     resultCatchSuccess: "水揚げ正解",
     testScoreSection: "📡 内部ID認識＆スコア送信テスト",
@@ -184,7 +184,7 @@ export const translations = {
     periodWeeklyShort: "📆 Weekly",
     periodDailyShort: "⏰ Daily",
     you: "You",
-    anonymousAngler: "Anonymous Angler",
+    anonymousAngler: "Unnamed",
     countUnit: "Fish",
     resultCatchSuccess: "Correct Catches",
     testScoreSection: "📡 ID Status & Score Submit Test",
@@ -320,7 +320,7 @@ export const translations = {
     periodWeeklyShort: "📆 주간",
     periodDailyShort: "⏰ 일일",
     you: "나",
-    anonymousAngler: "이름없는 낚시꾼",
+    anonymousAngler: "이름 없음",
     countUnit: "마리",
     resultCatchSuccess: "정답 포획수",
     testScoreSection: "📡 내부ID 상태 및 점수 전송 테스트",
@@ -456,7 +456,7 @@ export const translations = {
     periodWeeklyShort: "📆 周榜",
     periodDailyShort: "⏰ 日榜",
     you: "你",
-    anonymousAngler: "无名钓手",
+    anonymousAngler: "未命名",
     countUnit: "条",
     resultCatchSuccess: "正确捕获",
     testScoreSection: "📡 内部ID状态与分数提交测试",
@@ -616,8 +616,21 @@ const MOCK_NAME_I18N = {
   "深海の主": { en: "Deep Sea Lord", ko: "심해의 군주", zh: "深海霸主" }
 };
 
+export function getDefaultAnonymousName(lang = currentLang) {
+  try {
+    const raw = localStorage.getItem('hirame_dev_config');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.textConfig?.anonymousName?.[lang]) {
+        return parsed.textConfig.anonymousName[lang];
+      }
+    }
+  } catch (e) {}
+  return translations[lang]?.anonymousAngler || translations.ja?.anonymousAngler || '名無し';
+}
+
 export function getLocalizedPlayerName(name) {
-  if (!name) return t('anonymousAngler');
+  if (!name) return getDefaultAnonymousName();
   if (MOCK_NAME_I18N[name] && MOCK_NAME_I18N[name][currentLang]) {
     return MOCK_NAME_I18N[name][currentLang];
   }

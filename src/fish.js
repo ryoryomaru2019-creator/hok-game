@@ -216,6 +216,56 @@ export const DEFAULT_SILHOUETTE_CONFIG = {
   shrinkScale: 0.7         // 縮小率 (0.7 = 70%)
 };
 
+export const DEFAULT_TEXT_CONFIG = {
+  // 1. 出現演出メッセージ（{name}がキャラ名に置換されます）
+  spawnAlert: {
+    ja: '✨ {name}出現！',
+    en: '✨ {name} Appeared!',
+    ko: '✨ {name} 출현!',
+    zh: '✨ {name} 出现！'
+  },
+  // 2. 餌追加演出: ポイント達成時 ({count}, {pt})
+  baitRewardPoint: {
+    ja: '🪱 餌+{count} ({pt}pt達成!)',
+    en: '🪱 Bait+{count} ({pt}pt Bonus!)',
+    ko: '🪱 미끼+{count} ({pt}pt 달성!)',
+    zh: '🪱 鱼饵+{count} (达成{pt}pt!)'
+  },
+  baitRewardPointRandom: {
+    ja: '🪱 餌+1 (ptボーナス!)',
+    en: '🪱 Bait+1 (Score Bonus!)',
+    ko: '🪱 미끼+1 (점수 보너스!)',
+    zh: '🪱 鱼饵+1 (分数奖励!)'
+  },
+  // 3. 餌追加演出: ターゲット獲得数達成時 ({count}, {targetCount})
+  baitRewardTargetCount: {
+    ja: '🪱 餌+{count} ({targetCount}匹獲得!)',
+    en: '🪱 Bait+{count} ({targetCount} Catches!)',
+    ko: '🪱 미끼+{count} ({targetCount}마리 획득!)',
+    zh: '🪱 鱼饵+{count} (捕获{targetCount}条!)'
+  },
+  baitRewardTargetCountRandom: {
+    ja: '🪱 餌+1 (捕獲ボーナス!)',
+    en: '🪱 Bait+1 (Catch Bonus!)',
+    ko: '🪱 미끼+1 (포획 보너스!)',
+    zh: '🪱 鱼饵+1 (捕获奖励!)'
+  },
+  // 4. 餌追加演出: コンボ達成時 ({combo})
+  baitRewardCombo: {
+    ja: '★ {combo} COMBO!! (餌+1) ★',
+    en: '★ {combo} COMBO!! (Bait+1) ★',
+    ko: '★ {combo} COMBO!! (미끼+1) ★',
+    zh: '★ {combo} COMBO!! (鱼饵+1) ★'
+  },
+  // 5. 名無しユーザーのデフォルト登録名
+  anonymousName: {
+    ja: '名無し',
+    en: 'Unnamed',
+    ko: '이름 없음',
+    zh: '未命名'
+  }
+};
+
 export const DEFAULT_CHARACTER_SETTINGS = {
   karei: {
     name: 'カレイ',

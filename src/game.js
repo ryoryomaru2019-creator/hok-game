@@ -1,7 +1,7 @@
-import { FISH_TYPES, DEFAULT_CHARACTER_SETTINGS, DEFAULT_AMBIENT_CONFIG, DEFAULT_BUCKETS, DEFAULT_SILHOUETTE_CONFIG, DEFAULT_START_CONFIG, DEFAULT_BAIT_CONFIG, Fish, AmbientFish, Bait, getSpeciesCategory, isTargetForMode } from './fish.js';
+import { FISH_TYPES, DEFAULT_CHARACTER_SETTINGS, DEFAULT_AMBIENT_CONFIG, DEFAULT_BUCKETS, DEFAULT_SILHOUETTE_CONFIG, DEFAULT_START_CONFIG, DEFAULT_BAIT_CONFIG, DEFAULT_TEXT_CONFIG, Fish, AmbientFish, Bait, getSpeciesCategory, isTargetForMode } from './fish.js';
 import { buildRankingPayload } from './app.js';
 import { sound } from './audio.js';
-import { t, getLocalizedTitle, getCurrentLang, translations } from './i18n.js';
+import { t, getLocalizedTitle, getCurrentLang, getDefaultAnonymousName, translations } from './i18n.js';
 import confetti from 'canvas-confetti';
 
 export const DEFAULT_PLAYER_TITLES = [
@@ -696,7 +696,7 @@ export class Game {
     this.activeBucket = 'bucketA';
 
     // プレイヤープロファイル (1000万人規模Base62 ID)
-    this.playerName = localStorage.getItem('hirame_player_name') || '釣り吉';
+    this.playerName = localStorage.getItem('hirame_player_name') || getDefaultAnonymousName();
     this.playerTag = this.getOrCreatePlayerTag();
 
     // セーフエリア（HUD下部・ボトムドック上部）
@@ -861,6 +861,10 @@ export class Game {
             ...JSON.parse(JSON.stringify(DEFAULT_BAIT_CONFIG)),
             ...(parsed.baitConfig || {})
           },
+          textConfig: {
+            ...JSON.parse(JSON.stringify(DEFAULT_TEXT_CONFIG)),
+            ...(parsed.textConfig || {})
+          },
           ...parsed,
           titleScreen: mergedTitle,
           modeSelectScreen: mergedModeSelect,
@@ -897,6 +901,7 @@ export class Game {
       chaosFeverConfig: JSON.parse(JSON.stringify(DEFAULT_CHAOS_FEVER_CONFIG)),
       startConfig: JSON.parse(JSON.stringify(DEFAULT_START_CONFIG)),
       baitConfig: JSON.parse(JSON.stringify(DEFAULT_BAIT_CONFIG)),
+      textConfig: JSON.parse(JSON.stringify(DEFAULT_TEXT_CONFIG)),
       characters: JSON.parse(JSON.stringify(DEFAULT_CHARACTER_SETTINGS))
     };
   }
@@ -987,6 +992,53 @@ export class Game {
 
   getRandomBaitComboInterval() {
     return Math.floor(Math.random() * 8) + 6; // 6 ~ 14 コンボ
+  }
+
+  getTextConfig() {
+    return this.devConfig?.textConfig || DEFAULT_TEXT_CONFIG;
+  }
+
+  getLocalizedSpawnAlert(charId, charCfg) {
+    const lang = getCurrentLang() || 'ja';
+    const cfg = this.getTextConfig();
+    const template = cfg?.spawnAlert?.[lang] || DEFAULT_TEXT_CONFIG.spawnAlert[lang] || '✨ {name}出現！';
+
+    // キャラ名の多言語取得
+    let charName = '';
+    const lore = DEFAULT_CHARACTER_LORE.find(l => l.id === charId);
+    if (lore?.nameByLang?.[lang]) {
+      charName = lore.nameByLang[lang];
+    } else if (charCfg?.name) {
+      charName = charCfg.name;
+    } else {
+      charName = charId === 'boo_chan' ? 'ぶーちゃん' : charId;
+    }
+
+    return template.replace(/\{name\}/g, charName);
+  }
+
+  getLocalizedBaitRewardText(type, params = {}) {
+    const lang = getCurrentLang() || 'ja';
+    const cfg = this.getTextConfig();
+    let template = '';
+
+    if (type === 'point') {
+      template = cfg?.baitRewardPoint?.[lang] || DEFAULT_TEXT_CONFIG.baitRewardPoint[lang] || '🪱 餌+{count} ({pt}pt達成!)';
+      return template.replace(/\{count\}/g, params.count ?? 1).replace(/\{pt\}/g, params.pt ?? 1000);
+    } else if (type === 'pointRandom') {
+      template = cfg?.baitRewardPointRandom?.[lang] || DEFAULT_TEXT_CONFIG.baitRewardPointRandom[lang] || '🪱 餌+1 (ptボーナス!)';
+      return template;
+    } else if (type === 'targetCount') {
+      template = cfg?.baitRewardTargetCount?.[lang] || DEFAULT_TEXT_CONFIG.baitRewardTargetCount[lang] || '🪱 餌+{count} ({targetCount}匹獲得!)';
+      return template.replace(/\{count\}/g, params.count ?? 1).replace(/\{targetCount\}/g, params.targetCount ?? 15);
+    } else if (type === 'targetCountRandom') {
+      template = cfg?.baitRewardTargetCountRandom?.[lang] || DEFAULT_TEXT_CONFIG.baitRewardTargetCountRandom[lang] || '🪱 餌+1 (捕獲ボーナス!)';
+      return template;
+    } else if (type === 'combo') {
+      template = cfg?.baitRewardCombo?.[lang] || DEFAULT_TEXT_CONFIG.baitRewardCombo[lang] || '★ {combo} COMBO!! (餌+1) ★';
+      return template.replace(/\{combo\}/g, params.combo ?? 10);
+    }
+    return '';
   }
 
   setDevConfig(newConfig) {
@@ -1657,7 +1709,8 @@ export class Game {
         const showAlert = (sc.showAlert !== undefined) ? !!sc.showAlert : (charCfg.showSpawnAlert !== undefined ? !!charCfg.showSpawnAlert : true);
         if (showAlert) {
           const alertColor = (typeof localStorage !== 'undefined' && localStorage.getItem('hirame_spawn_alert_color')) || '#f472b6';
-          this.renderer.addFloatingText(`✨ ${charName} 出現！`, spawnedFish.x, Math.max(90, spawnedFish.y), alertColor, 26);
+          const alertText = this.getLocalizedSpawnAlert(charId, charCfg);
+          this.renderer.addFloatingText(alertText, spawnedFish.x, Math.max(90, spawnedFish.y), alertColor, 26);
           try { sound.playCatch(); } catch (e) {}
         }
       }
@@ -2024,7 +2077,8 @@ export class Game {
       }
       if (this.score >= this.nextBaitScoreTarget) {
         this.baitStock++;
-        this.renderer.addFloatingText(`🪱 餌+1 (ptボーナス!)`, this.canvas.width * 0.5, this.canvas.height * 0.32, '#4ade80', 30);
+        const text = this.getLocalizedBaitRewardText('pointRandom');
+        this.renderer.addFloatingText(text, this.canvas.width * 0.5, this.canvas.height * 0.32, '#4ade80', 30);
         this.nextBaitScoreTarget = this.score + this.getRandomBaitPointInterval();
       }
     } else if (ptThresh > 0) {
@@ -2033,7 +2087,8 @@ export class Game {
         const added = currentStep - (this.lastBaitScoreStep || 0);
         this.baitStock += added;
         this.lastBaitScoreStep = currentStep;
-        this.renderer.addFloatingText(`🪱 餌+${added} (${ptThresh}pt達成!)`, this.canvas.width * 0.5, this.canvas.height * 0.32, '#4ade80', 30);
+        const text = this.getLocalizedBaitRewardText('point', { count: added, pt: ptThresh });
+        this.renderer.addFloatingText(text, this.canvas.width * 0.5, this.canvas.height * 0.32, '#4ade80', 30);
       }
     }
 
@@ -2044,7 +2099,8 @@ export class Game {
       }
       if (this.targetCatchCount >= this.nextBaitTargetCountTarget) {
         this.baitStock++;
-        this.renderer.addFloatingText(`🪱 餌+1 (捕獲ボーナス!)`, this.canvas.width * 0.5, this.canvas.height * 0.38, '#38bdf8', 30);
+        const text = this.getLocalizedBaitRewardText('targetCountRandom');
+        this.renderer.addFloatingText(text, this.canvas.width * 0.5, this.canvas.height * 0.38, '#38bdf8', 30);
         this.nextBaitTargetCountTarget = this.targetCatchCount + this.getRandomBaitTargetCountInterval();
       }
     } else if (targetThresh > 0) {
@@ -2053,7 +2109,8 @@ export class Game {
         const added = currentTargetStep - (this.lastBaitTargetCountStep || 0);
         this.baitStock += added;
         this.lastBaitTargetCountStep = currentTargetStep;
-        this.renderer.addFloatingText(`🪱 餌+${added} (${targetThresh}匹獲得!)`, this.canvas.width * 0.5, this.canvas.height * 0.38, '#38bdf8', 30);
+        const text = this.getLocalizedBaitRewardText('targetCount', { count: added, targetCount: targetThresh });
+        this.renderer.addFloatingText(text, this.canvas.width * 0.5, this.canvas.height * 0.38, '#38bdf8', 30);
       }
     }
 
@@ -2065,7 +2122,8 @@ export class Game {
       if (this.combo > 0 && this.combo >= this.nextBaitComboTarget) {
         sound.playCombo();
         this.baitStock++;
-        this.renderer.addFloatingText(`★ ${this.combo} COMBO!! (餌+1) ★`, this.canvas.width * 0.5, this.canvas.height * 0.44, '#facc15', 34);
+        const text = this.getLocalizedBaitRewardText('combo', { combo: this.combo });
+        this.renderer.addFloatingText(text, this.canvas.width * 0.5, this.canvas.height * 0.44, '#facc15', 34);
         confetti({
           particleCount: 25,
           spread: 60,
@@ -2078,7 +2136,8 @@ export class Game {
         this.lastBaitComboTriggered = this.combo;
         sound.playCombo();
         this.baitStock++;
-        this.renderer.addFloatingText(`★ ${this.combo} COMBO!! (餌+1) ★`, this.canvas.width * 0.5, this.canvas.height * 0.44, '#facc15', 34);
+        const text = this.getLocalizedBaitRewardText('combo', { combo: this.combo });
+        this.renderer.addFloatingText(text, this.canvas.width * 0.5, this.canvas.height * 0.44, '#facc15', 34);
         confetti({
           particleCount: 25,
           spread: 60,

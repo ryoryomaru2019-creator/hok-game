@@ -1,7 +1,7 @@
 // Admin Tool Logic: Judgment Simulator & Vector Character Studio
 import { StudioApp } from './studio/studioApp.js';
 import { GameRenderer, getFishEyeOffset } from './renderer.js';
-import { FISH_TYPES, DEFAULT_CHARACTER_SETTINGS, DEFAULT_AMBIENT_CONFIG, DEFAULT_AMBIENT_TRIGGER, DEFAULT_AMBIENT_PRESETS, DEFAULT_SPAWN_CONDITION, DEFAULT_BUCKETS, DEFAULT_START_CONFIG, DEFAULT_BAIT_CONFIG, DEFAULT_SILHOUETTE_CONFIG } from './fish.js';
+import { FISH_TYPES, DEFAULT_CHARACTER_SETTINGS, DEFAULT_AMBIENT_CONFIG, DEFAULT_AMBIENT_TRIGGER, DEFAULT_AMBIENT_PRESETS, DEFAULT_SPAWN_CONDITION, DEFAULT_BUCKETS, DEFAULT_START_CONFIG, DEFAULT_BAIT_CONFIG, DEFAULT_SILHOUETTE_CONFIG, DEFAULT_TEXT_CONFIG } from './fish.js';
 import { sound } from './audio.js';
 import { DEFAULT_PLAYER_TITLES, DEFAULT_X_SHARE_TEMPLATE, DEFAULT_X_SHARE_TEMPLATES, DEFAULT_TITLE_SCREEN, DEFAULT_MODE_SELECT_SCREEN, DEFAULT_BGM_BANNER_CONFIG, DEFAULT_CHARACTER_LORE, DEFAULT_CHAOS_FEVER_CONFIG, normalizeCharacterLore, applyTextCustomStyles } from './game.js';
 import { t } from './i18n.js';
@@ -28,6 +28,7 @@ const DEFAULT_CONFIG = {
   dispersionRate: 0.5,
   startConfig: JSON.parse(JSON.stringify(DEFAULT_START_CONFIG)),
   baitConfig: JSON.parse(JSON.stringify(DEFAULT_BAIT_CONFIG)),
+  textConfig: JSON.parse(JSON.stringify(DEFAULT_TEXT_CONFIG)),
   silhouetteConfig: JSON.parse(JSON.stringify(DEFAULT_SILHOUETTE_CONFIG)),
   playerTitles: DEFAULT_PLAYER_TITLES,
   xShareTemplate: DEFAULT_X_SHARE_TEMPLATE,
@@ -2924,6 +2925,176 @@ window.addEventListener('DOMContentLoaded', () => {
 
   initBaitSettingsUI();
 
+  // -------------------------------------------------------------
+  // 6. 出現＆餌演出テキスト設定UI (多言語: ja, en, ko, zh)
+  // -------------------------------------------------------------
+  const textTargetLangBadge = document.getElementById('textTargetLangBadge');
+  const textLangButtons = document.querySelectorAll('.btn-text-lang');
+
+  const txtSpawnAlert = document.getElementById('txtSpawnAlert');
+  const previewSpawnAlert = document.getElementById('previewSpawnAlert');
+
+  const txtBaitRewardPoint = document.getElementById('txtBaitRewardPoint');
+  const previewBaitRewardPoint = document.getElementById('previewBaitRewardPoint');
+
+  const txtBaitRewardPointRandom = document.getElementById('txtBaitRewardPointRandom');
+  const previewBaitRewardPointRandom = document.getElementById('previewBaitRewardPointRandom');
+
+  const txtBaitRewardTargetCount = document.getElementById('txtBaitRewardTargetCount');
+  const previewBaitRewardTargetCount = document.getElementById('previewBaitRewardTargetCount');
+
+  const txtBaitRewardTargetCountRandom = document.getElementById('txtBaitRewardTargetCountRandom');
+  const previewBaitRewardTargetCountRandom = document.getElementById('previewBaitRewardTargetCountRandom');
+
+  const txtBaitRewardCombo = document.getElementById('txtBaitRewardCombo');
+  const previewBaitRewardCombo = document.getElementById('previewBaitRewardCombo');
+
+  const txtAnonymousName = document.getElementById('txtAnonymousName');
+  const previewAnonymousName = document.getElementById('previewAnonymousName');
+
+  const btnResetCurrentLangText = document.getElementById('btnResetCurrentLangText');
+  const btnResetAllLangText = document.getElementById('btnResetAllLangText');
+
+  let currentEditingLang = 'ja'; // 'ja' | 'en' | 'ko' | 'zh'
+
+  const LANG_LABELS = {
+    ja: '🇯🇵 日本語 (ja)',
+    en: '🇺🇸 English (en)',
+    ko: '🇰🇷 한국어 (ko)',
+    zh: '🇨🇳 中文 (zh)'
+  };
+
+  const SAMPLE_CHAR_NAMES = {
+    ja: 'ぶーちゃん',
+    en: 'Boo-chan',
+    ko: '부짱',
+    zh: '嘟嘟猪'
+  };
+
+  function ensureTextConfig() {
+    if (!currentConfig.textConfig) {
+      currentConfig.textConfig = JSON.parse(JSON.stringify(DEFAULT_TEXT_CONFIG));
+    }
+    const tc = currentConfig.textConfig;
+    ['spawnAlert', 'baitRewardPoint', 'baitRewardPointRandom', 'baitRewardTargetCount', 'baitRewardTargetCountRandom', 'baitRewardCombo', 'anonymousName'].forEach(k => {
+      if (!tc[k]) tc[k] = {};
+      ['ja', 'en', 'ko', 'zh'].forEach(l => {
+        if (tc[k][l] === undefined) {
+          tc[k][l] = DEFAULT_TEXT_CONFIG[k]?.[l] || '';
+        }
+      });
+    });
+    return tc;
+  }
+
+  function updateTextSettingsUI() {
+    const tc = ensureTextConfig();
+    const lang = currentEditingLang;
+
+    if (textTargetLangBadge) {
+      textTargetLangBadge.innerText = LANG_LABELS[lang] || lang;
+    }
+    textLangButtons.forEach(b => {
+      b.classList.toggle('active', b.dataset.lang === lang);
+    });
+
+    const sampleName = SAMPLE_CHAR_NAMES[lang] || 'Boo-chan';
+
+    // 1. 出現メッセージ
+    if (txtSpawnAlert && previewSpawnAlert) {
+      const val = tc.spawnAlert[lang] || '';
+      txtSpawnAlert.value = val;
+      previewSpawnAlert.innerText = val.replace(/\{name\}/g, sampleName);
+    }
+
+    // 2. 餌: pt達成時
+    if (txtBaitRewardPoint && previewBaitRewardPoint) {
+      const val = tc.baitRewardPoint[lang] || '';
+      txtBaitRewardPoint.value = val;
+      previewBaitRewardPoint.innerText = val.replace(/\{count\}/g, '1').replace(/\{pt\}/g, '1000');
+    }
+
+    // 3. 餌: ptランダム
+    if (txtBaitRewardPointRandom && previewBaitRewardPointRandom) {
+      const val = tc.baitRewardPointRandom[lang] || '';
+      txtBaitRewardPointRandom.value = val;
+      previewBaitRewardPointRandom.innerText = val;
+    }
+
+    // 4. 餌: ターゲット捕獲数達成時
+    if (txtBaitRewardTargetCount && previewBaitRewardTargetCount) {
+      const val = tc.baitRewardTargetCount[lang] || '';
+      txtBaitRewardTargetCount.value = val;
+      previewBaitRewardTargetCount.innerText = val.replace(/\{count\}/g, '1').replace(/\{targetCount\}/g, '15');
+    }
+
+    // 5. 餌: ターゲット捕獲数ランダム
+    if (txtBaitRewardTargetCountRandom && previewBaitRewardTargetCountRandom) {
+      const val = tc.baitRewardTargetCountRandom[lang] || '';
+      txtBaitRewardTargetCountRandom.value = val;
+      previewBaitRewardTargetCountRandom.innerText = val;
+    }
+
+    // 6. 餌: コンボ達成時
+    if (txtBaitRewardCombo && previewBaitRewardCombo) {
+      const val = tc.baitRewardCombo[lang] || '';
+      txtBaitRewardCombo.value = val;
+      previewBaitRewardCombo.innerText = val.replace(/\{combo\}/g, '10');
+    }
+
+    // 7. 名無しユーザー名
+    if (txtAnonymousName && previewAnonymousName) {
+      const val = tc.anonymousName[lang] || '';
+      txtAnonymousName.value = val;
+      previewAnonymousName.innerText = val;
+    }
+  }
+
+  function saveTextConfigField(key, val) {
+    const tc = ensureTextConfig();
+    tc[key][currentEditingLang] = val;
+    updateTextSettingsUI();
+    saveCurrentConfigToStorage();
+  }
+
+  textLangButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentEditingLang = btn.dataset.lang || 'ja';
+      updateTextSettingsUI();
+      try { sound.init(); sound.playTap(); } catch (e) { }
+    });
+  });
+
+  txtSpawnAlert?.addEventListener('input', (e) => saveTextConfigField('spawnAlert', e.target.value));
+  txtBaitRewardPoint?.addEventListener('input', (e) => saveTextConfigField('baitRewardPoint', e.target.value));
+  txtBaitRewardPointRandom?.addEventListener('input', (e) => saveTextConfigField('baitRewardPointRandom', e.target.value));
+  txtBaitRewardTargetCount?.addEventListener('input', (e) => saveTextConfigField('baitRewardTargetCount', e.target.value));
+  txtBaitRewardTargetCountRandom?.addEventListener('input', (e) => saveTextConfigField('baitRewardTargetCountRandom', e.target.value));
+  txtBaitRewardCombo?.addEventListener('input', (e) => saveTextConfigField('baitRewardCombo', e.target.value));
+  txtAnonymousName?.addEventListener('input', (e) => saveTextConfigField('anonymousName', e.target.value));
+
+  btnResetCurrentLangText?.addEventListener('click', () => {
+    const tc = ensureTextConfig();
+    const l = currentEditingLang;
+    ['spawnAlert', 'baitRewardPoint', 'baitRewardPointRandom', 'baitRewardTargetCount', 'baitRewardTargetCountRandom', 'baitRewardCombo', 'anonymousName'].forEach(k => {
+      tc[k][l] = DEFAULT_TEXT_CONFIG[k][l];
+    });
+    updateTextSettingsUI();
+    saveCurrentConfigToStorage();
+    try { sound.init(); sound.playTap(); } catch (e) { }
+  });
+
+  btnResetAllLangText?.addEventListener('click', () => {
+    if (confirm('全言語（日本語・英語・韓国語・中国語）の演出テキスト設定をすべてデフォルトの初期値にリセットしますか？')) {
+      currentConfig.textConfig = JSON.parse(JSON.stringify(DEFAULT_TEXT_CONFIG));
+      updateTextSettingsUI();
+      saveCurrentConfigToStorage();
+      try { sound.init(); sound.playTap(); } catch (e) { }
+    }
+  });
+
+  updateTextSettingsUI();
+
   // シルエット演出設定UIの初期化とイベントリスナー
   function initSilhouetteSettingsUI() {
     const charSilhouetteChance = document.getElementById('charSilhouetteChance');
@@ -3227,6 +3398,7 @@ window.addEventListener('DOMContentLoaded', () => {
         },
         startConfig: JSON.parse(JSON.stringify(DEFAULT_START_CONFIG)),
         baitConfig: JSON.parse(JSON.stringify(DEFAULT_BAIT_CONFIG)),
+  textConfig: JSON.parse(JSON.stringify(DEFAULT_TEXT_CONFIG)),
         playerTitles: JSON.parse(JSON.stringify(DEFAULT_PLAYER_TITLES)),
         xShareTemplate: DEFAULT_X_SHARE_TEMPLATE,
         characters: { ...DEFAULT_CHARACTER_SETTINGS },

@@ -1,4 +1,4 @@
-import { t } from './i18n.js';
+import { t, getDefaultAnonymousName } from './i18n.js';
 
 /**
  * ランキング用内部ユーザーID自動静止システム (app.js)
@@ -159,7 +159,7 @@ export function updateLastSeenAt() {
  */
 export function buildRankingPayload(score, extra = {}) {
   const identity = loadOrCreateUserIdentity();
-  const currentName = localStorage.getItem(STORAGE_KEYS.PLAYER_NAME) || identity.player_name || '名無し釣り人';
+  const currentName = localStorage.getItem(STORAGE_KEYS.PLAYER_NAME) || identity.player_name || getDefaultAnonymousName();
 
   return {
     internal_user_id: identity.internal_user_id,
