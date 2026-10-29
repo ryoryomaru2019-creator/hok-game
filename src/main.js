@@ -20,10 +20,16 @@ import {
 window.addEventListener('DOMContentLoaded', () => {
   initI18n();
 
-  // 既存プレイヤーのローカル得点をオンライン世界ランキングへ自動同期（完全バックグラウンド）
+  // 既存プレイヤーのローカル得点をオンライン世界ランキングへ自動同期＆最新世界ランキングを即時フェッチ
   try {
     migrateLocalScoresToOnline().catch(err => {
       console.warn('[RankingAPI] Auto migration error:', err);
+    }).finally(() => {
+      // 起動直後にオンライン世界ランキングを取得してローカルと統合
+      fetchOnlineLeaderboard('yearly', 'all').then(() => {
+        renderLeaderboard();
+        renderResultRanking();
+      }).catch(() => {});
     });
   } catch (e) {}
 
@@ -1036,6 +1042,12 @@ window.addEventListener('DOMContentLoaded', () => {
     sound.playTap();
     renderLeaderboard();
     dom.leaderboardModal.classList.remove('hidden');
+    // 開いた瞬間に最新のオンライン世界ランキングを取得して更新
+    if (getOnlineRankingApiUrl()) {
+      fetchOnlineLeaderboard(currentLeaderboardPeriod, currentLeaderboardMode).then(() => {
+        renderLeaderboard();
+      }).catch(() => {});
+    }
   });
   dom.closeLeaderboardBtn.addEventListener('click', () => {
     sound.playTap();
@@ -1098,11 +1110,12 @@ window.addEventListener('DOMContentLoaded', () => {
       updateMainDeleteButton();
     }
 
-    // オンライン世界ランキングAPIが設定されている場合、非同期で最新データを取得・反映
+    // オンライン世界ランキングAPIが設定されている場合、非同期で最新データを取得・ローカルにマージして反映
     if (overrideList === null && getOnlineRankingApiUrl()) {
       fetchOnlineLeaderboard(period, mode, list).then(onlineList => {
-        if (onlineList && onlineList.length > 0 && currentLeaderboardPeriod === period && currentLeaderboardMode === mode) {
-          renderLeaderboard(period, mode, onlineList);
+        if (currentLeaderboardPeriod === period && currentLeaderboardMode === mode) {
+          const merged = game.getLeaderboard(period, mode);
+          renderLeaderboard(period, mode, merged);
         }
       }).catch(() => {});
     }
@@ -1839,11 +1852,12 @@ window.addEventListener('DOMContentLoaded', () => {
       updateResultDeleteButton();
     }
 
-    // オンライン世界ランキングAPIが設定されている場合、非同期で最新データを取得・反映
+    // オンライン世界ランキングAPIが設定されている場合、非同期で最新データを取得・ローカルにマージして反映
     if (overrideList === null && getOnlineRankingApiUrl()) {
       fetchOnlineLeaderboard(period, mode, list).then(onlineList => {
-        if (onlineList && onlineList.length > 0 && currentResultRankingPeriod === period && currentResultRankingMode === mode) {
-          renderResultRanking(period, mode, onlineList);
+        if (currentResultRankingPeriod === period && currentResultRankingMode === mode) {
+          const merged = game.getLeaderboard(period, mode);
+          renderResultRanking(period, mode, merged);
         }
       }).catch(() => {});
     }
@@ -1918,7 +1932,12 @@ window.addEventListener('DOMContentLoaded', () => {
   dom.refreshResultRankingBtn?.addEventListener('click', () => {
     sound.playTap();
     renderResultRanking();
-    appendLog(dom.rankingIdentityLog, '🔄 ランキング一覧を再読み込みしました');
+    if (getOnlineRankingApiUrl()) {
+      fetchOnlineLeaderboard(currentResultRankingPeriod, currentResultRankingMode).then(() => {
+        renderResultRanking();
+      }).catch(() => {});
+    }
+    appendLog(dom.rankingIdentityLog, '🔄 ランキング一覧を最新化しました');
 
     const now = performance.now();
     if (now - lastRefreshClickTime > 4000) {
@@ -2051,6 +2070,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
       dom.resultModal.classList.remove('hidden');
       trackEvent('game_over', { score: game.score, combo: game.maxCombo, mode: game.mode });
+
+      // オンラインから最新世界ランキングを取得してリザルトランキングを最新化
+      if (getOnlineRankingApiUrl()) {
+        fetchOnlineLeaderboard(currentResultRankingPeriod, currentResultRankingMode).then(() => {
+          renderResultRanking();
+        }).catch(() => {});
+      }
     }
   }
 

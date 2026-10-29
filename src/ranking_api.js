@@ -72,6 +72,71 @@ export async function testOnlineRankingConnection(apiUrl = getOnlineRankingApiUr
 }
 
 /**
+ * オンラインから取得したランキングデータをローカルストレージ (hirame_leaderboard) にマージ保存
+ * @param {Array} onlineEntries 
+ */
+export function mergeOnlineEntriesToLocal(onlineEntries) {
+  if (!Array.isArray(onlineEntries) || onlineEntries.length === 0) return;
+  try {
+    let localList = [];
+    const raw = localStorage.getItem('hirame_leaderboard');
+    if (raw) {
+      try { localList = JSON.parse(raw); } catch (e) {}
+    }
+    if (!Array.isArray(localList)) localList = [];
+
+    // 既存のマップ（IDキーおよび user_score キー）を作成
+    const localMapById = new Map();
+    const localMapByKey = new Map();
+    for (const item of localList) {
+      if (item.id) localMapById.set(item.id, item);
+      const k = (item.internal_user_id || item.name || '') + '_' + item.score;
+      localMapByKey.set(k, item);
+    }
+
+    let changed = false;
+    for (const onlineItem of onlineEntries) {
+      if (!onlineItem || typeof onlineItem.score !== 'number' || onlineItem.score <= 0) continue;
+      
+      const k = (onlineItem.internal_user_id || onlineItem.name || '') + '_' + onlineItem.score;
+      if (onlineItem.id && localMapById.has(onlineItem.id)) {
+        continue;
+      }
+      if (localMapByKey.has(k)) {
+        continue;
+      }
+
+      // 新規レコードを追加
+      const newEntry = {
+        id: onlineItem.id || ('lb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)),
+        internal_user_id: onlineItem.internal_user_id || '',
+        name: onlineItem.name || '名無し',
+        tag: onlineItem.tag || '---',
+        score: Number(onlineItem.score),
+        mode: onlineItem.mode || 'karei',
+        maxCombo: Number(onlineItem.maxCombo || 0),
+        title: onlineItem.title || '見習い',
+        played_at: onlineItem.played_at || new Date().toISOString(),
+        date: onlineItem.date || 'たった今',
+        synced: true
+      };
+      localList.push(newEntry);
+      localMapById.set(newEntry.id, newEntry);
+      localMapByKey.set(k, newEntry);
+      changed = true;
+    }
+
+    if (changed) {
+      localList.sort((a, b) => b.score - a.score);
+      localStorage.setItem('hirame_leaderboard', JSON.stringify(localList));
+      console.log(`[RankingAPI] 🌐 オンラインランキング ${onlineEntries.length}件 をローカルに統合保存しました！`);
+    }
+  } catch (err) {
+    console.warn('[RankingAPI] mergeOnlineEntriesToLocal failed', err);
+  }
+}
+
+/**
  * 既存ローカルスコアをオンラインへ自動マイグレーション（1回のみ自動実行）
  * - 既に遊んでくれたプレイヤーの端末内スコア（mock_以外）をGASへ一括送信
  */
@@ -164,7 +229,12 @@ export async function submitScoreToOnline(entry) {
       mode: 'cors'
     });
     const data = await res.json();
-    return data && data.status === 'ok';
+    if (data && data.status === 'ok') {
+      // 送信直後に最新世界ランキングをバックグラウンド取得してローカルにマージ
+      fetchOnlineLeaderboard('yearly', 'all').catch(() => {});
+      return true;
+    }
+    return false;
   } catch (err) {
     // 2. GETフォールバック
     try {
@@ -172,7 +242,11 @@ export async function submitScoreToOnline(entry) {
       const encoded = encodeURIComponent(JSON.stringify(payload));
       const res = await fetch(`${apiUrl}${sep}action=submit&data=${encoded}`, { method: 'GET', mode: 'cors' });
       const data = await res.json();
-      return data && data.status === 'ok';
+      if (data && data.status === 'ok') {
+        fetchOnlineLeaderboard('yearly', 'all').catch(() => {});
+        return true;
+      }
+      return false;
     } catch (e) {
       console.warn('[RankingAPI] Online score submit failed, saved locally only.', e);
       return false;
@@ -211,6 +285,9 @@ export async function fetchOnlineLeaderboard(period = 'yearly', mode = 'all', fa
         seenScoresByUser.add(userKey);
         uniqueList.push(item);
       }
+
+      // オンラインの最新レコードをローカルストレージ (hirame_leaderboard) にもマージ統合！
+      mergeOnlineEntriesToLocal(uniqueList);
 
       // キャッシュ更新
       try {
