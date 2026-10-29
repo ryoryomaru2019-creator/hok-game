@@ -89,7 +89,7 @@ export function isTargetForMode(type, mode, devConfig = null) {
   }
   if (mode === 'hirai') {
     return type === FISH_TYPES.KAREI || type === FISH_TYPES.KANJI_KAREI_1 || type === FISH_TYPES.KANJI_KAREI_2 ||
-           type === FISH_TYPES.HIRAME || type === FISH_TYPES.KANJI_HIRAME;
+      type === FISH_TYPES.HIRAME || type === FISH_TYPES.KANJI_HIRAME;
   }
   return false;
 }
@@ -578,13 +578,13 @@ export class Fish {
     this.devConfig = devConfig;
     this.options = options;
     this.id = Math.random().toString(36).substring(2, 9);
-    
+
     // 個別キャラクター設定の取得 (モード別の個別設定があれば優先)
     const modeChars = (devConfig?.gameBalanceUnified === false && devConfig?.modeConfigs?.[gameMode]?.characters)
       ? devConfig.modeConfigs[gameMode].characters
       : devConfig?.characters;
     const charCfg = modeChars?.[type] || {};
-    
+
     // 役割 ('target' or 'disturber')
     this.role = isTargetForMode(type, gameMode, devConfig) ? 'target' : 'disturber';
 
@@ -1227,8 +1227,8 @@ export class Fish {
       // PC・スマホの画面サイズ・描画範囲に合わせた正確な「キャラ出現」判定
       // 魚の体全体が画面内にしっかり入った瞬間に進入完了
       const halfW = this.width * 0.5;
-      const isFullyOnScreen = (this.heading === 1 && this.x >= halfW) || 
-                              (this.heading === -1 && this.x <= bounds.width - halfW);
+      const isFullyOnScreen = (this.heading === 1 && this.x >= halfW) ||
+        (this.heading === -1 && this.x <= bounds.width - halfW);
 
       if (isFullyOnScreen) {
         this.state = 'swimming';
@@ -1437,7 +1437,7 @@ export class Fish {
       targetY = recentTapPos.y;
     } else {
       // 周囲の未捕獲ターゲット（カレイ・ヒラメ・漢字キャラ）を探して重なるように移動
-      const targets = otherFishes.filter(f => 
+      const targets = otherFishes.filter(f =>
         !f.isCaptured && f.state !== 'squid_ink_escape' &&
         (f.targetCategory === 'hirame' || f.targetCategory === 'karei')
       );
@@ -1487,7 +1487,7 @@ export class Fish {
     this.vx = this.heading * glideSpeed;
 
     // X軸が近いターゲット魚を探し、そのY座標（水深）に合わせてゆっくり覆いかぶさる
-    const targets = otherFishes.filter(f => 
+    const targets = otherFishes.filter(f =>
       !f.isCaptured &&
       (f.targetCategory === 'hirame' || f.targetCategory === 'karei') &&
       Math.abs(f.x - this.x) < 220
