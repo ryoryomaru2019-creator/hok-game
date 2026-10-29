@@ -541,17 +541,21 @@ window.addEventListener('DOMContentLoaded', () => {
       chars[k].role = 'disturber';
       chars[k].pointValue = -5;
     }
-    // スペシャルキャラ「ぶーちゃん」は全モードで捕獲対象ターゲット
+    // スペシャルキャラ「ぶーちゃん」は全モードで捕獲対象ターゲット ＆ 唯一デフォルトで「◯◯出現！」ON
     if (chars.boo_chan) {
       chars.boo_chan.role = 'target';
       chars.boo_chan.pointValue = 10;
       chars.boo_chan.spawnCondition = {
         enabled: true,
+        condScoreEnabled: false,
+        condTargetTapsEnabled: true,
+        condTimeEnabled: false,
         timeSec: 0,
         origin: 'silhouette',
         triggerAction: 'tap_target',
         targetCharacters: [],
         tapCount: 10,
+        showAlert: true, // ぶーちゃんのみ全モード共通でデフォルト「◯◯出現！」ON
         isCombo: false,
         probability: 100,
         repeatCount: 0
@@ -1734,7 +1738,7 @@ window.addEventListener('DOMContentLoaded', () => {
       chkCharCondMatchAny.checked = !!sc.matchAny;
     }
     if (chkCharCondShowAlert) {
-      chkCharCondShowAlert.checked = (sc.showAlert !== false);
+      chkCharCondShowAlert.checked = (sc.showAlert === true || (sc.showAlert === undefined && activeCharId === 'boo_chan'));
     }
 
     const condScore = !!sc.condScoreEnabled;
@@ -2596,11 +2600,148 @@ window.addEventListener('DOMContentLoaded', () => {
   const baitDisappearDelaySecVal = document.getElementById('baitDisappearDelaySecVal');
   const baitDisappearPresetButtons = document.querySelectorAll('.btn-bait-disappear-preset');
 
+  // 餌の追加条件 (pt / ターゲット獲得数 / コンボ数) & 対象派閥モード
+  const baitTargetScopeBadge = document.getElementById('baitTargetScopeBadge');
+  const baitScopeButtons = document.querySelectorAll('.btn-bait-scope');
+
+  const baitPointThreshold = document.getElementById('baitPointThreshold');
+  const baitPointThresholdVal = document.getElementById('baitPointThresholdVal');
+  const baitPointPresetButtons = document.querySelectorAll('.btn-bait-point-preset');
+
+  const baitTargetCountThreshold = document.getElementById('baitTargetCountThreshold');
+  const baitTargetCountThresholdVal = document.getElementById('baitTargetCountThresholdVal');
+  const baitTargetPresetButtons = document.querySelectorAll('.btn-bait-target-preset');
+
+  const baitComboThreshold = document.getElementById('baitComboThreshold');
+  const baitComboThresholdVal = document.getElementById('baitComboThresholdVal');
+  const baitComboPresetButtons = document.querySelectorAll('.btn-bait-combo-preset');
+
+  let currentBaitScope = 'all'; // 'all' | 'karei' | 'hirame' | 'hirai'
+
+  function getBaitConfigForScope(scope = currentBaitScope) {
+    if (!currentConfig.baitConfig) {
+      currentConfig.baitConfig = JSON.parse(JSON.stringify(DEFAULT_BAIT_CONFIG));
+    }
+    const bCfg = currentConfig.baitConfig;
+    if (!bCfg.modeConfigs) {
+      bCfg.modeConfigs = {
+        karei: { pointThreshold: 1000, targetCountThreshold: 15, comboThreshold: 10 },
+        hirame: { pointThreshold: 1000, targetCountThreshold: 15, comboThreshold: 10 },
+        hirai: { pointThreshold: 1000, targetCountThreshold: 15, comboThreshold: 10 }
+      };
+    }
+    if (scope === 'all') {
+      return bCfg;
+    }
+    if (!bCfg.modeConfigs[scope]) {
+      bCfg.modeConfigs[scope] = {
+        pointThreshold: bCfg.pointThreshold !== undefined ? bCfg.pointThreshold : 1000,
+        targetCountThreshold: bCfg.targetCountThreshold !== undefined ? bCfg.targetCountThreshold : 15,
+        comboThreshold: bCfg.comboThreshold !== undefined ? bCfg.comboThreshold : 10
+      };
+    }
+    return bCfg.modeConfigs[scope];
+  }
+
+  function formatBaitThresholdVal(val, unit) {
+    const num = parseInt(val, 10);
+    if (num === 0) return '0 (なし)';
+    if (num === 99) return '99 (ランダム)';
+    return `${num} ${unit}`;
+  }
+
+  function updateBaitConditionUI() {
+    const cfg = getBaitConfigForScope(currentBaitScope);
+    const pVal = cfg.pointThreshold !== undefined ? Number(cfg.pointThreshold) : 1000;
+    const tVal = cfg.targetCountThreshold !== undefined ? Number(cfg.targetCountThreshold) : 15;
+    const cVal = cfg.comboThreshold !== undefined ? Number(cfg.comboThreshold) : 10;
+
+    // 1. ポイント
+    if (baitPointThreshold && baitPointThresholdVal) {
+      baitPointThreshold.value = pVal;
+      baitPointThresholdVal.innerText = formatBaitThresholdVal(pVal, 'pt');
+      baitPointPresetButtons.forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.val, 10) === pVal);
+      });
+    }
+
+    // 2. ターゲット獲得数
+    if (baitTargetCountThreshold && baitTargetCountThresholdVal) {
+      baitTargetCountThreshold.value = tVal;
+      baitTargetCountThresholdVal.innerText = formatBaitThresholdVal(tVal, '匹');
+      baitTargetPresetButtons.forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.val, 10) === tVal);
+      });
+    }
+
+    // 3. コンボ数
+    if (baitComboThreshold && baitComboThresholdVal) {
+      baitComboThreshold.value = cVal;
+      baitComboThresholdVal.innerText = formatBaitThresholdVal(cVal, 'コンボ');
+      baitComboPresetButtons.forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.val, 10) === cVal);
+      });
+    }
+
+    // モードスコープバッジ & ボタン
+    const scopeNames = {
+      all: '全て共通',
+      karei: 'カレイ派',
+      hirame: 'ヒラメ派',
+      hirai: 'ヒライ派'
+    };
+    if (baitTargetScopeBadge) {
+      baitTargetScopeBadge.innerText = scopeNames[currentBaitScope] || '全て共通';
+      baitTargetScopeBadge.style.background = currentBaitScope === 'all' ? '#eab308' : '#38bdf8';
+    }
+    baitScopeButtons.forEach(b => {
+      b.classList.toggle('active', b.dataset.scope === currentBaitScope);
+    });
+  }
+
+  function setBaitConditionVal(field, val) {
+    if (!currentConfig.baitConfig) {
+      currentConfig.baitConfig = JSON.parse(JSON.stringify(DEFAULT_BAIT_CONFIG));
+    }
+    const bCfg = currentConfig.baitConfig;
+    if (!bCfg.modeConfigs) {
+      bCfg.modeConfigs = {
+        karei: { pointThreshold: 1000, targetCountThreshold: 15, comboThreshold: 10 },
+        hirame: { pointThreshold: 1000, targetCountThreshold: 15, comboThreshold: 10 },
+        hirai: { pointThreshold: 1000, targetCountThreshold: 15, comboThreshold: 10 }
+      };
+    }
+
+    const num = Math.max(0, parseInt(val, 10) || 0);
+
+    if (currentBaitScope === 'all') {
+      bCfg[field] = num;
+      bCfg.targetScope = 'all';
+      // 全モードにも一括反映
+      ['karei', 'hirame', 'hirai'].forEach(m => {
+        if (!bCfg.modeConfigs[m]) bCfg.modeConfigs[m] = {};
+        bCfg.modeConfigs[m][field] = num;
+      });
+    } else {
+      bCfg.targetScope = 'custom';
+      if (!bCfg.modeConfigs[currentBaitScope]) bCfg.modeConfigs[currentBaitScope] = {};
+      bCfg.modeConfigs[currentBaitScope][field] = num;
+    }
+
+    updateBaitConditionUI();
+    saveCurrentConfigToStorage();
+  }
+
   function initBaitSettingsUI() {
     if (!currentConfig.baitConfig) {
       currentConfig.baitConfig = JSON.parse(JSON.stringify(DEFAULT_BAIT_CONFIG));
     }
     const bCfg = currentConfig.baitConfig;
+
+    if (bCfg.targetScope) {
+      currentBaitScope = bCfg.targetScope;
+    }
+    updateBaitConditionUI();
 
     if (baitSpeedMultiplier && baitSpeedMultiplierVal) {
       const spd = bCfg.speedMultiplier !== undefined ? Number(bCfg.speedMultiplier) : 1.8;
@@ -2638,6 +2779,48 @@ window.addEventListener('DOMContentLoaded', () => {
       });
     }
   }
+
+  // 餌追加条件のイベントリスナー
+  baitScopeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentBaitScope = btn.dataset.scope || 'all';
+      if (!currentConfig.baitConfig) currentConfig.baitConfig = {};
+      currentConfig.baitConfig.targetScope = currentBaitScope;
+      updateBaitConditionUI();
+      saveCurrentConfigToStorage();
+      try { sound.init(); sound.playTap(); } catch (e) { }
+    });
+  });
+
+  baitPointThreshold?.addEventListener('input', (e) => {
+    setBaitConditionVal('pointThreshold', e.target.value);
+  });
+  baitPointPresetButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      setBaitConditionVal('pointThreshold', btn.dataset.val);
+      try { sound.init(); sound.playTap(); } catch (e) { }
+    });
+  });
+
+  baitTargetCountThreshold?.addEventListener('input', (e) => {
+    setBaitConditionVal('targetCountThreshold', e.target.value);
+  });
+  baitTargetPresetButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      setBaitConditionVal('targetCountThreshold', btn.dataset.val);
+      try { sound.init(); sound.playTap(); } catch (e) { }
+    });
+  });
+
+  baitComboThreshold?.addEventListener('input', (e) => {
+    setBaitConditionVal('comboThreshold', e.target.value);
+  });
+  baitComboPresetButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      setBaitConditionVal('comboThreshold', btn.dataset.val);
+      try { sound.init(); sound.playTap(); } catch (e) { }
+    });
+  });
 
   baitSpeedMultiplier?.addEventListener('input', (e) => {
     if (!currentConfig.baitConfig) currentConfig.baitConfig = {};
@@ -4333,7 +4516,7 @@ window.addEventListener('DOMContentLoaded', () => {
     html += '<td class="matrix-param-cell-label">📢 「◯◯出現！」表示<span class="matrix-param-desc">出現時ポップアップ文字のON/OFF</span></td>';
     for (const c of allChars) {
       const cfg = charsDict[c.id];
-      const isShowAlert = cfg.spawnCondition?.showAlert !== false;
+      const isShowAlert = (cfg.spawnCondition?.showAlert === true) || (cfg.spawnCondition?.showAlert === undefined && c.id === 'boo_chan');
       const isLocked = isCharLocked(c.id);
       html += `
         <td class="${isLocked ? 'is-locked' : ''}">

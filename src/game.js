@@ -678,7 +678,13 @@ export class Game {
 
     // 餌システム
     this.baitStock = 1;
-    this.lastBaitScoreThreshold = 0;
+    this.targetCatchCount = 0;
+    this.lastBaitScoreStep = 0;
+    this.lastBaitTargetCountStep = 0;
+    this.lastBaitComboTriggered = 0;
+    this.nextBaitScoreTarget = 0;
+    this.nextBaitTargetCountTarget = 0;
+    this.nextBaitComboTarget = 0;
     this.baits = [];
 
     // 生物リスト
@@ -944,6 +950,45 @@ export class Game {
     };
   }
 
+  getBaitConfigForCurrentMode() {
+    const rawBaitCfg = this.devConfig?.baitConfig || DEFAULT_BAIT_CONFIG;
+    const mode = this.mode || 'karei';
+
+    const base = {
+      ...DEFAULT_BAIT_CONFIG,
+      ...rawBaitCfg
+    };
+
+    if (base.targetScope === 'all') {
+      return {
+        ...base,
+        pointThreshold: base.pointThreshold !== undefined ? Number(base.pointThreshold) : 1000,
+        targetCountThreshold: base.targetCountThreshold !== undefined ? Number(base.targetCountThreshold) : 15,
+        comboThreshold: base.comboThreshold !== undefined ? Number(base.comboThreshold) : 10
+      };
+    }
+
+    const modeCustom = base.modeConfigs?.[mode] || {};
+    return {
+      ...base,
+      pointThreshold: modeCustom.pointThreshold !== undefined ? Number(modeCustom.pointThreshold) : (base.pointThreshold ?? 1000),
+      targetCountThreshold: modeCustom.targetCountThreshold !== undefined ? Number(modeCustom.targetCountThreshold) : (base.targetCountThreshold ?? 15),
+      comboThreshold: modeCustom.comboThreshold !== undefined ? Number(modeCustom.comboThreshold) : (base.comboThreshold ?? 10)
+    };
+  }
+
+  getRandomBaitPointInterval() {
+    return Math.floor(Math.random() * 800) + 400; // 400 ~ 1200 pt
+  }
+
+  getRandomBaitTargetCountInterval() {
+    return Math.floor(Math.random() * 10) + 8; // 8 ~ 18 匹
+  }
+
+  getRandomBaitComboInterval() {
+    return Math.floor(Math.random() * 8) + 6; // 6 ~ 14 コンボ
+  }
+
   setDevConfig(newConfig) {
     this.devConfig = { ...this.devConfig, ...newConfig };
     localStorage.setItem('hirame_dev_config', JSON.stringify(this.devConfig));
@@ -1057,7 +1102,13 @@ export class Game {
     this.timeLeft = limit;
     this.totalTimeLimit = limit;
     this.baitStock = 1;
-    this.lastBaitScoreThreshold = 0;
+    this.targetCatchCount = 0;
+    this.lastBaitScoreStep = 0;
+    this.lastBaitTargetCountStep = 0;
+    this.lastBaitComboTriggered = 0;
+    this.nextBaitScoreTarget = this.getRandomBaitPointInterval();
+    this.nextBaitTargetCountTarget = this.getRandomBaitTargetCountInterval();
+    this.nextBaitComboTarget = this.getRandomBaitComboInterval();
     this.baits = [];
     this.fishes = [];
 
@@ -1957,23 +2008,92 @@ export class Game {
     const scoreColor = gainedScore >= 0 ? '#38bdf8' : '#ef4444';
     this.renderer.addFloatingText(`${scoreText} (${t('targetCorrect')})`, fish.x, fish.y, scoreColor, 28);
 
-    // 10連続正解でコンボ発生演出
-    if (this.combo > 0 && this.combo % 10 === 0) {
-      sound.playCombo();
-      this.baitStock++;
-      this.renderer.addFloatingText(`★ ${this.combo} COMBO!! ★`, this.canvas.width * 0.5, this.canvas.height * 0.4, '#facc15', 36);
-      confetti({
-        particleCount: 25,
-        spread: 60,
-        origin: { x: fish.x / this.canvas.width, y: fish.y / this.canvas.height }
-      });
+    // ターゲット獲得数を加算
+    this.targetCatchCount = (this.targetCatchCount || 0) + 1;
+
+    // 餌の追加条件を判定 (pt / ターゲット獲得数 / コンボ数)
+    const baitCfg = this.getBaitConfigForCurrentMode();
+    const ptThresh = Number(baitCfg.pointThreshold ?? 1000);
+    const targetThresh = Number(baitCfg.targetCountThreshold ?? 15);
+    const comboThresh = Number(baitCfg.comboThreshold ?? 10);
+
+    // 1. pt条件判定 (0: なし, 99: ランダム, その他: 一定ptごと)
+    if (ptThresh === 99) {
+      if (!this.nextBaitScoreTarget) {
+        this.nextBaitScoreTarget = this.score + this.getRandomBaitPointInterval();
+      }
+      if (this.score >= this.nextBaitScoreTarget) {
+        this.baitStock++;
+        this.renderer.addFloatingText(`🪱 餌+1 (ptボーナス!)`, this.canvas.width * 0.5, this.canvas.height * 0.32, '#4ade80', 30);
+        this.nextBaitScoreTarget = this.score + this.getRandomBaitPointInterval();
+      }
+    } else if (ptThresh > 0) {
+      const currentStep = Math.floor(this.score / ptThresh);
+      if (currentStep > (this.lastBaitScoreStep || 0)) {
+        const added = currentStep - (this.lastBaitScoreStep || 0);
+        this.baitStock += added;
+        this.lastBaitScoreStep = currentStep;
+        this.renderer.addFloatingText(`🪱 餌+${added} (${ptThresh}pt達成!)`, this.canvas.width * 0.5, this.canvas.height * 0.32, '#4ade80', 30);
+      }
     }
 
-    // 500ポイント獲得ごとに餌ストック+1
-    if (Math.floor(this.score / 500) > this.lastBaitScoreThreshold) {
-      this.lastBaitScoreThreshold = Math.floor(this.score / 500);
-      this.baitStock++;
-      this.renderer.addFloatingText(t('baitGet'), this.canvas.width * 0.5, this.canvas.height * 0.3, '#4ade80', 32);
+    // 2. ターゲット獲得数条件判定 (0: なし, 99: ランダム, その他: 一定匹数ごと)
+    if (targetThresh === 99) {
+      if (!this.nextBaitTargetCountTarget) {
+        this.nextBaitTargetCountTarget = this.targetCatchCount + this.getRandomBaitTargetCountInterval();
+      }
+      if (this.targetCatchCount >= this.nextBaitTargetCountTarget) {
+        this.baitStock++;
+        this.renderer.addFloatingText(`🪱 餌+1 (捕獲ボーナス!)`, this.canvas.width * 0.5, this.canvas.height * 0.38, '#38bdf8', 30);
+        this.nextBaitTargetCountTarget = this.targetCatchCount + this.getRandomBaitTargetCountInterval();
+      }
+    } else if (targetThresh > 0) {
+      const currentTargetStep = Math.floor(this.targetCatchCount / targetThresh);
+      if (currentTargetStep > (this.lastBaitTargetCountStep || 0)) {
+        const added = currentTargetStep - (this.lastBaitTargetCountStep || 0);
+        this.baitStock += added;
+        this.lastBaitTargetCountStep = currentTargetStep;
+        this.renderer.addFloatingText(`🪱 餌+${added} (${targetThresh}匹獲得!)`, this.canvas.width * 0.5, this.canvas.height * 0.38, '#38bdf8', 30);
+      }
+    }
+
+    // 3. コンボ数条件判定 (0: なし, 99: ランダム, その他: 一定コンボごと)
+    if (comboThresh === 99) {
+      if (!this.nextBaitComboTarget) {
+        this.nextBaitComboTarget = this.getRandomBaitComboInterval();
+      }
+      if (this.combo > 0 && this.combo >= this.nextBaitComboTarget) {
+        sound.playCombo();
+        this.baitStock++;
+        this.renderer.addFloatingText(`★ ${this.combo} COMBO!! (餌+1) ★`, this.canvas.width * 0.5, this.canvas.height * 0.44, '#facc15', 34);
+        confetti({
+          particleCount: 25,
+          spread: 60,
+          origin: { x: fish.x / this.canvas.width, y: fish.y / this.canvas.height }
+        });
+        this.nextBaitComboTarget = this.combo + this.getRandomBaitComboInterval();
+      }
+    } else if (comboThresh > 0) {
+      if (this.combo > 0 && this.combo % comboThresh === 0 && this.combo !== this.lastBaitComboTriggered) {
+        this.lastBaitComboTriggered = this.combo;
+        sound.playCombo();
+        this.baitStock++;
+        this.renderer.addFloatingText(`★ ${this.combo} COMBO!! (餌+1) ★`, this.canvas.width * 0.5, this.canvas.height * 0.44, '#facc15', 34);
+        confetti({
+          particleCount: 25,
+          spread: 60,
+          origin: { x: fish.x / this.canvas.width, y: fish.y / this.canvas.height }
+        });
+      }
+    } else if (this.combo > 0 && this.combo % 10 === 0) {
+      // コンボ条件が 0 (なし) でも、10コンボごとの通常お祝い演出（餌は増やさない）を表示
+      sound.playCombo();
+      this.renderer.addFloatingText(`★ ${this.combo} COMBO!! ★`, this.canvas.width * 0.5, this.canvas.height * 0.44, '#facc15', 34);
+      confetti({
+        particleCount: 20,
+        spread: 50,
+        origin: { x: fish.x / this.canvas.width, y: fish.y / this.canvas.height }
+      });
     }
 
     fish.capture(targetBucket || { x: this.canvas.width * 0.5, y: this.canvas.height + 40 });
@@ -1982,6 +2102,8 @@ export class Game {
   handleTargetMistake(fish) {
     this.mistakeCount++;
     this.combo = 0;
+    this.lastBaitComboTriggered = 0;
+    this.nextBaitComboTarget = this.getRandomBaitComboInterval();
     const activeCfg = this.getActiveDevConfig();
     const charCfg = activeCfg?.characters?.[fish.type];
     let pointVal = charCfg?.pointValue !== undefined ? charCfg.pointValue : (fish.pointValue !== undefined ? fish.pointValue : -5);
@@ -2001,8 +2123,7 @@ export class Game {
     this.baitStock--;
     sound.playSplash();
 
-    const activeCfg = this.getActiveDevConfig();
-    const baitCfg = activeCfg?.baitConfig || {};
+    const baitCfg = this.getBaitConfigForCurrentMode();
 
     // 餌をばらまく
     const count = 4;

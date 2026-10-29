@@ -107,7 +107,7 @@ export const DEFAULT_SPAWN_CONDITION = {
   tapCount: 10,                 // 0: 無操作, 1~100: 回数, 101: ランダム
   tapCountEnabled: true,        // 後方互換用
   matchAny: false,              // かたほうでも達成 (いずれか達成)
-  showAlert: true,              // ◯◯出現！ ポップアップ文字演出 (ON/OFF)
+  showAlert: false,             // ◯◯出現！ ポップアップ文字演出 (デフォルトOFF、ぶーちゃんのみデフォルトON)
   isCombo: false,               // コンボ達成条件 (false: 延べタップ数, true: 連続タップ成功のみ)
   probability: 100,             // 1~100%
   repeatCount: 0                // 0: 無限 (条件達成するたび発生), 1~99: 発動回数制限, 100: 回数ランダム
@@ -195,7 +195,18 @@ export const DEFAULT_BAIT_CONFIG = {
   speedMultiplier: 1.8,    // 餌に向かう基準スピード（x倍）
   speedRandomRange: 0.3,   // 餌スピードのランダム変動幅（±倍率）
   eatingStaySec: 3.0,      // 餌にとどまる時間（秒）
-  disappearDelaySec: 8.0   // 餌の自然消滅時間（秒）
+  disappearDelaySec: 8.0,  // 餌の自然消滅時間（秒）
+
+  // 餌の追加条件 (0: なし, 99: ランダム)
+  targetScope: 'all',      // 'all' (全て共通) | 'karei' (カレイ派) | 'hirame' (ヒラメ派) | 'hirai' (ヒライ派)
+  pointThreshold: 1000,    // 1. pt (0: なし, 99: ランダム, デフォルト: 1000)
+  targetCountThreshold: 15,// 2. ターゲット獲得数 (0: なし, 99: ランダム, デフォルト: 15)
+  comboThreshold: 10,      // 3. コンボ数 (0: なし, 99: ランダム, デフォルト: 10)
+  modeConfigs: {
+    karei: { pointThreshold: 1000, targetCountThreshold: 15, comboThreshold: 10 },
+    hirame: { pointThreshold: 1000, targetCountThreshold: 15, comboThreshold: 10 },
+    hirai: { pointThreshold: 1000, targetCountThreshold: 15, comboThreshold: 10 }
+  }
 };
 
 export const DEFAULT_SILHOUETTE_CONFIG = {
@@ -256,11 +267,15 @@ export const DEFAULT_CHARACTER_SETTINGS = {
     scoreThreshold: 0,
     spawnCondition: {
       enabled: true,
+      condScoreEnabled: false,
+      condTargetTapsEnabled: true,
+      condTimeEnabled: false,
       timeSec: 0,
       origin: 'silhouette',
       triggerAction: 'tap_target',
       targetCharacters: [],
       tapCount: 10,
+      showAlert: true, // ぶーちゃんのみデフォルトで「◯◯出現！」ON
       isCombo: false,
       probability: 100,
       repeatCount: 0

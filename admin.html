@@ -555,12 +555,100 @@
               </div>
             </div>
 
-            <!-- 5. 餌のモーション設定 (ターゲットのみ・全モード共通) -->
-            <div class="settings-block common-settings-block" style="margin-top: 14px; border: 1px solid rgba(234, 179, 8, 0.35); background: rgba(30, 41, 59, 0.7);">
+            <!-- 5. 餌設定 (追加条件 ＆ モーション設定) -->
+            <div class="settings-block common-settings-block" style="margin-top: 14px; border: 1px solid rgba(234, 179, 8, 0.4); background: rgba(30, 41, 59, 0.75);">
               <div class="block-header-row">
                 <div class="block-title">
-                  <span>🪱 餌のモーション設定 (ターゲットのみ・全モード共通)</span>
+                  <span>🪱 餌設定 (追加条件 ＆ 派閥モード選択)</span>
                 </div>
+              </div>
+
+              <!-- モード選択 (カレイ派 / ヒラメ派 / ヒライ派 / 全て共通) -->
+              <div class="form-group" style="background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 16px;">
+                <div class="label-row">
+                  <label style="font-weight: 800; color: #facc15;">🎯 餌設定の対象モード</label>
+                  <span id="baitTargetScopeBadge" class="val-pill" style="background: #eab308; color: #000; font-weight:800;">全て共通</span>
+                </div>
+                <div class="speed-preset-buttons" id="baitScopeButtonGroup" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                  <button type="button" class="btn-bait-scope btn-micro active" data-scope="all">🌐 全て共通</button>
+                  <button type="button" class="btn-bait-scope btn-micro" data-scope="karei">🐟 カレイ派</button>
+                  <button type="button" class="btn-bait-scope btn-micro" data-scope="hirame">🐠 ヒラメ派</button>
+                  <button type="button" class="btn-bait-scope btn-micro" data-scope="hirai">🔄 ヒライ派</button>
+                </div>
+                <span class="desc-text" style="margin-top: 6px;">※「全て共通」を選択すると全モードに同一条件が一括適用されます。各派閥を選ぶと、そのモード専用の追加条件を個別に設定できます。</span>
+              </div>
+
+              <!-- 餌の追加条件タイトル -->
+              <div style="font-size: 13px; font-weight: 800; color: #38bdf8; margin-bottom: 8px; display:flex; align-items:center; gap:6px;">
+                <span>🎁 餌の追加条件 (それぞれの条件ごとに餌が＋1ずつ追加)</span>
+              </div>
+              <p class="desc-text" style="margin-bottom: 14px;">※設定値「0」はなし（無効）、「99」はランダム間隔での追加となります。</p>
+
+              <!-- 条件1: 獲得ポイント数 (pt) -->
+              <div class="form-group" style="border-left: 3px solid #38bdf8; padding-left: 10px; margin-bottom: 14px;">
+                <div class="label-row">
+                  <label for="baitPointThreshold">１，獲得ポイント数 (pt)</label>
+                  <span id="baitPointThresholdVal" class="val-pill">1000 pt</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="number" id="baitPointThreshold" min="0" max="10000" step="50" value="1000" class="admin-input" style="width: 140px;">
+                  <span style="font-size: 12px; color: #94a3b8;">pt 獲得ごと</span>
+                </div>
+                <div class="speed-preset-buttons" style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                  <button type="button" class="btn-bait-point-preset btn-micro" data-val="0">0 (なし)</button>
+                  <button type="button" class="btn-bait-point-preset btn-micro" data-val="500">500 pt</button>
+                  <button type="button" class="btn-bait-point-preset btn-micro active" data-val="1000">1000 pt (デフォルト)</button>
+                  <button type="button" class="btn-bait-point-preset btn-micro" data-val="2000">2000 pt</button>
+                  <button type="button" class="btn-bait-point-preset btn-micro" data-val="99">99 (ランダム)</button>
+                </div>
+                <span class="desc-text">指定したポイントを獲得するごとに餌が1つ追加されます。</span>
+              </div>
+
+              <!-- 条件2: ターゲット獲得数 (匹) -->
+              <div class="form-group" style="border-left: 3px solid #34d399; padding-left: 10px; margin-bottom: 14px;">
+                <div class="label-row">
+                  <label for="baitTargetCountThreshold">２，ターゲット獲得数 (匹)</label>
+                  <span id="baitTargetCountThresholdVal" class="val-pill">15 匹</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="number" id="baitTargetCountThreshold" min="0" max="200" step="1" value="15" class="admin-input" style="width: 140px;">
+                  <span style="font-size: 12px; color: #94a3b8;">匹 獲得ごと</span>
+                </div>
+                <div class="speed-preset-buttons" style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                  <button type="button" class="btn-bait-target-preset btn-micro" data-val="0">0 (なし)</button>
+                  <button type="button" class="btn-bait-target-preset btn-micro" data-val="10">10 匹</button>
+                  <button type="button" class="btn-bait-target-preset btn-micro active" data-val="15">15 匹 (デフォルト)</button>
+                  <button type="button" class="btn-bait-target-preset btn-micro" data-val="20">20 匹</button>
+                  <button type="button" class="btn-bait-target-preset btn-micro" data-val="99">99 (ランダム)</button>
+                </div>
+                <span class="desc-text">ターゲット魚を規定匹数タップして捕獲するごとに餌が1つ追加されます。</span>
+              </div>
+
+              <!-- 条件3: コンボ数 (コンボ) -->
+              <div class="form-group" style="border-left: 3px solid #f472b6; padding-left: 10px; margin-bottom: 16px;">
+                <div class="label-row">
+                  <label for="baitComboThreshold">３，コンボ数 (連続正解)</label>
+                  <span id="baitComboThresholdVal" class="val-pill">10 コンボ</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="number" id="baitComboThreshold" min="0" max="100" step="1" value="10" class="admin-input" style="width: 140px;">
+                  <span style="font-size: 12px; color: #94a3b8;">コンボごと</span>
+                </div>
+                <div class="speed-preset-buttons" style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+                  <button type="button" class="btn-bait-combo-preset btn-micro" data-val="0">0 (なし)</button>
+                  <button type="button" class="btn-bait-combo-preset btn-micro" data-val="5">5 コンボ</button>
+                  <button type="button" class="btn-bait-combo-preset btn-micro active" data-val="10">10 コンボ (デフォルト)</button>
+                  <button type="button" class="btn-bait-combo-preset btn-micro" data-val="15">15 コンボ</button>
+                  <button type="button" class="btn-bait-combo-preset btn-micro" data-val="99">99 (ランダム)</button>
+                </div>
+                <span class="desc-text">連続正解コンボが規定数に達するごとに餌が1つ追加されます。</span>
+              </div>
+
+              <hr style="border: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 16px 0;">
+
+              <!-- 既存モーション設定タイトル -->
+              <div style="font-size: 13px; font-weight: 800; color: #cbd5e1; margin-bottom: 12px;">
+                <span>🏊 餌に対する魚のモーション設定</span>
               </div>
 
               <!-- 餌に向かうスピード（x倍） -->
