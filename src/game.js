@@ -3,6 +3,7 @@ import { buildRankingPayload } from './app.js';
 import { sound } from './audio.js';
 import { t, getLocalizedTitle, getCurrentLang, getDefaultAnonymousName, translations } from './i18n.js';
 import confetti from 'canvas-confetti';
+import { submitScoreToOnline, migrateLocalScoresToOnline } from './ranking_api.js';
 
 export const DEFAULT_PLAYER_TITLES = [
   { minScore: 15000, title: "魚神" },
@@ -1119,6 +1120,12 @@ export class Game {
     this.countdownNumber = 3;
     sound.init();
     sound.stopTrackAudition(false);
+
+    // 既存未同期スコアがあればバックグラウンドで自動同期
+    try {
+      migrateLocalScoresToOnline().catch(() => {});
+    } catch (e) {}
+
     // カウントダウン中にフェードインで最初から再生開始
     sound.startBGMWithFadeIn(null, 2.5);
     sound.playCount(3);
@@ -2306,6 +2313,14 @@ export class Game {
 
     trimmedList.sort((a, b) => b.score - a.score);
     localStorage.setItem('hirame_leaderboard', JSON.stringify(trimmedList));
+
+    // オンライン世界ランキングAPIへ非同期で自動送信（完全バックグラウンド）
+    try {
+      submitScoreToOnline(entry).catch(err => {
+        console.warn('[Ranking] Online submit background error:', err);
+      });
+    } catch (e) {}
+
     return trimmedList;
   }
 

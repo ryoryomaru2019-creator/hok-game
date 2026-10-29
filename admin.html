@@ -2325,6 +2325,9 @@
                 <button type="button" class="inner-tab-btn active" data-innertab="paneRankingTable">
                   <span class="tab-icon">🏆</span> ランキング一覧 ＆ ユーザー審査
                 </button>
+                <button type="button" class="inner-tab-btn" data-innertab="paneRankingOnline">
+                  <span class="tab-icon">🌐</span> 世界ランキング連携 (GAS)
+                </button>
                 <button type="button" class="inner-tab-btn" data-innertab="paneRankingBlocked">
                   <span class="tab-icon">🚫</span> ブロック管理 ＆ セキュリティ仕様
                 </button>
@@ -2436,6 +2439,94 @@
                   </div>
                 </div>
               </div><!-- /#paneRankingBlocked -->
+
+              <!-- タブ3: オンライン世界ランキング (GAS) 連携設定 -->
+              <div id="paneRankingOnline" class="inner-tab-pane hidden">
+                <div class="glass-card">
+                  <div class="card-header">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <h2>🌐 オンライン世界ランキングAPI連携 (GAS)</h2>
+                      <span class="badge-live" style="background:#0284c7;">SERVERLESS ARCHITECTURE</span>
+                    </div>
+                  </div>
+
+                  <div style="display:flex; flex-direction:column; gap:20px; padding:6px 0;">
+                    <!-- 1. API URL設定カード -->
+                    <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(56,189,248,0.3); border-radius:12px; padding:18px;">
+                      <h3 style="color:#38bdf8; font-size:15px; margin:0 0 8px 0; display:flex; align-items:center; gap:6px;">
+                        <span>🔗</span> Google Apps Script (GAS) ウェブアプリURL
+                      </h3>
+                      <p class="desc-text" style="margin-bottom:12px;">Googleスプレッドシートの「ウェブアプリのデプロイ」で発行されたURLを登録します。全ユーザーのスコアがこのスプレッドシートへ自動保存・集計されます。</p>
+
+                      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <input type="url" id="adminOnlineRankingApiUrl" class="admin-text-input" placeholder="https://script.google.com/macros/s/AKfycb.../exec" style="flex:1; min-width:280px; font-family:monospace; font-size:13px;">
+                        <button type="button" id="btnSaveRankingApiUrl" class="btn-action-pill" style="background:#0284c7; color:#fff;">
+                          <span>💾</span> URL保存
+                        </button>
+                        <button type="button" id="btnTestRankingApiUrl" class="btn-action-pill" style="background:rgba(56,189,248,0.15); color:#38bdf8; border:1px solid #38bdf8;">
+                          <span>⚡</span> 接続テスト
+                        </button>
+                      </div>
+
+                      <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+                        <span id="statusRankingApiPing" class="status-indicator" style="font-size:12px; color:#94a3b8;">
+                          ⚪ 未テスト（URLを入力して「接続テスト」を押してください）
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- 2. 既存ローカル得点の一括移行（マイグレーション）コントロール -->
+                    <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(168,85,247,0.3); border-radius:12px; padding:18px;">
+                      <h3 style="color:#c084fc; font-size:15px; margin:0 0 8px 0; display:flex; align-items:center; gap:6px;">
+                        <span>🚀</span> 既存プレイヤー得点のオンライン移行（マイグレーション）
+                      </h3>
+                      <p class="desc-text" style="margin-bottom:12px;">すでにWEB公開後に遊んでくれたプレイヤーの端末内スコアは、次回アクセス時・ゲーム開始時に<strong>自動的かつサイレントにオンラインへ送信・合流</strong>されます。管理コンソールを開いているこの端末のスコアも今すぐ同期できます。</p>
+
+                      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <button type="button" id="btnMigrateLocalScoresNow" class="btn-action-pill" style="background:#9333ea; color:#fff;">
+                          <span>📤</span> 未同期スコアを今すぐオンラインへ一括送信
+                        </button>
+                        <span id="lblUnsyncedScoreCount" style="font-size:13px; color:#cbd5e1; font-weight:700;">
+                          未同期スコア確認中...
+                        </span>
+                      </div>
+                      <div id="msgMigrationResult" style="margin-top:10px; font-size:12px; min-height:18px;"></div>
+                    </div>
+
+                    <!-- 3. 最短3ステップ！Googleスプレッドシート＆GAS設置ガイド -->
+                    <div style="background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:18px;">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <h3 style="color:#facc15; font-size:15px; margin:0; display:flex; align-items:center; gap:6px;">
+                          <span>📖</span> 最短3ステップ！Googleスプレッドシート＆GASの設置手順
+                        </h3>
+                        <button type="button" id="btnCopyGasScript" class="btn-micro" style="background:rgba(250,204,21,0.15); color:#facc15; border:1px solid #facc15;">
+                          <span>📋</span> GASスクリプトコードをコピー
+                        </button>
+                      </div>
+
+                      <ol style="padding-left:22px; margin:0; line-height:1.8; font-size:13px; color:#cbd5e1;">
+                        <li>
+                          <a href="https://sheets.new" target="_blank" rel="noopener" style="color:#38bdf8; text-decoration:underline; font-weight:700;">Google スプレッドシート</a> を新規作成し、タイトルを「<code>HoK！世界ランキングデータベース</code>」などにします（シート名は空のままでOK、自動作成されます）。
+                        </li>
+                        <li>
+                          上部メニューの「<strong>拡張機能</strong>」→「<strong>Apps Script</strong>」を開き、エディタ内の既存コードをすべて消して、右上の「📋 GASスクリプトコードをコピー」ボタンでコピーしたコードをそのまま貼り付けます。
+                        </li>
+                        <li>
+                          右上の「<strong>デプロイ</strong>」ボタン →「<strong>新しいデプロイ</strong>」を選択：
+                          <div style="margin:6px 0; padding:10px 14px; background:rgba(0,0,0,0.3); border-radius:8px; border-left:3px solid #38bdf8; font-size:12px;">
+                            ・<strong>種類の選択（歯車アイコン）:</strong> 「ウェブアプリ」を選択<br>
+                            ・<strong>次のユーザーとして実行:</strong> 「自分（your-email@...）」<br>
+                            ・<strong>アクセスできるユーザー:</strong> <strong style="color:#f43f5e; font-size:13px;">「全員 (Anyone)」</strong> ※必須（ゲームプレイヤーが匿名でスコア送信できるようにするため）
+                          </div>
+                        </li>
+                        <li>
+                          「デプロイ」を押し、表示された<strong>「ウェブアプリのURL」</strong>をコピーして、上記の「Google Apps Script ウェブアプリURL」欄に貼り付けて「URL保存」を押せば完了です！
+                        </li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+              </div><!-- /#paneRankingOnline -->
             </div>
 
             <!-- 7. 📖 キャラ図鑑 編集パネル -->

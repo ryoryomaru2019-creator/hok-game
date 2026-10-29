@@ -8,8 +8,10 @@ import { t } from './i18n.js';
 import confetti from 'canvas-confetti';
 import { verifyCredentials, isAuthenticated, setAuthenticated, logout, recordLoginLog, getLoginLogs, clearLoginLogs } from './auth.js';
 import { trackEvent } from './analytics.js';
+import { getOnlineRankingApiUrl, setOnlineRankingApiUrl, testOnlineRankingConnection, migrateLocalScoresToOnline } from './ranking_api.js';
 
 const DEFAULT_CONFIG = {
+  onlineRankingApiUrl: '',
   targetFishCount: 40,
   minTargetThreshold: 2,
   refillTargetCount: 6,
@@ -8281,6 +8283,129 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // ランキング管理モデレーション初期化
   initRankingModeration();
+
+
+  // ===== 🌐 オンライン世界ランキング (GAS) 連携機能 =====
+  function initOnlineRankingGASIntegration() {
+    const inputUrl = document.getElementById('adminOnlineRankingApiUrl');
+    const btnSave = document.getElementById('btnSaveRankingApiUrl');
+    const btnTest = document.getElementById('btnTestRankingApiUrl');
+    const statusPing = document.getElementById('statusRankingApiPing');
+    const btnMigrate = document.getElementById('btnMigrateLocalScoresNow');
+    const lblUnsynced = document.getElementById('lblUnsyncedScoreCount');
+    const msgMigration = document.getElementById('msgMigrationResult');
+    const btnCopyGas = document.getElementById('btnCopyGasScript');
+
+    if (!inputUrl) return;
+
+    // 現在保存されているURLを復元
+    const currentUrl = getOnlineRankingApiUrl();
+    if (currentUrl) {
+      inputUrl.value = currentUrl;
+    }
+
+    // 未同期スコア件数の表示更新
+    function updateUnsyncedCount() {
+      if (!lblUnsynced) return;
+      try {
+        const raw = localStorage.getItem('hirame_leaderboard');
+        if (!raw) {
+          lblUnsynced.innerText = '未同期スコア: 0 件';
+          return;
+        }
+        const list = JSON.parse(raw);
+        if (!Array.isArray(list)) {
+          lblUnsynced.innerText = '未同期スコア: 0 件';
+          return;
+        }
+        const count = list.filter(item => {
+          const isMock = String(item.id || '').startsWith('mock_');
+          const isDeleted = !!item.deleted;
+          const isSynced = item.synced === true;
+          return !isMock && !isDeleted && !isSynced && typeof item.score === 'number' && item.score > 0;
+        }).length;
+        lblUnsynced.innerHTML = '未同期スコア: <strong style="color:#c084fc;">' + count + '</strong> 件';
+      } catch (e) {
+        lblUnsynced.innerText = '未同期スコア: 0 件';
+      }
+    }
+    updateUnsyncedCount();
+
+    // 1. URL保存
+    btnSave?.addEventListener('click', () => {
+      try { sound.init(); sound.playTap(); } catch (e) {}
+      const val = (inputUrl.value || '').trim();
+      setOnlineRankingApiUrl(val);
+      if (currentConfig) {
+        currentConfig.onlineRankingApiUrl = val;
+        saveCurrentConfigToStorage();
+      }
+      if (statusPing) {
+        statusPing.innerHTML = '<span style="color:#22c55e; font-weight:700;">✅ URLを保存しました！</span>';
+      }
+    });
+
+    // 2. 接続テスト (ping)
+    btnTest?.addEventListener('click', async () => {
+      try { sound.init(); sound.playTap(); } catch (e) {}
+      const val = (inputUrl.value || '').trim();
+      if (!val) {
+        if (statusPing) statusPing.innerHTML = '<span style="color:#f43f5e; font-weight:700;">❌ URLが入力されていません</span>';
+        return;
+      }
+      if (statusPing) statusPing.innerHTML = '<span style="color:#38bdf8;">🔄 接続テスト中...</span>';
+      const startT = Date.now();
+      const res = await testOnlineRankingConnection(val);
+      const elapsed = Date.now() - startT;
+      if (res.success) {
+        try { sound.playSuccess?.(1) || sound.playTap?.(); } catch (e) {}
+        if (statusPing) {
+          statusPing.innerHTML = '<span style="color:#22c55e; font-weight:700;">✅ 接続成功！ (' + elapsed + 'ms)</span> - ' + (res.data?.message || 'OK');
+        }
+      } else {
+        if (statusPing) {
+          statusPing.innerHTML = '<span style="color:#f43f5e; font-weight:700;">❌ 接続失敗:</span> ' + (res.message || '通信エラー');
+        }
+      }
+    });
+
+    // 3. 既存ローカルスコアの即時マイグレーション実行
+    btnMigrate?.addEventListener('click', async () => {
+      try { sound.init(); sound.playTap(); } catch (e) {}
+      const val = (inputUrl.value || '').trim();
+      if (!val) {
+        if (msgMigration) msgMigration.innerHTML = '<span style="color:#f43f5e;">先にオンラインランキングURLを登録してください。</span>';
+        return;
+      }
+      if (btnMigrate) btnMigrate.disabled = true;
+      if (msgMigration) msgMigration.innerHTML = '<span style="color:#c084fc;">📤 送信中... しばらくお待ちください</span>';
+      
+      const success = await migrateLocalScoresToOnline();
+      if (btnMigrate) btnMigrate.disabled = false;
+      updateUnsyncedCount();
+      if (success) {
+        try { sound.playSuccess?.(2) || sound.playTap?.(); } catch (e) {}
+        if (msgMigration) msgMigration.innerHTML = '<span style="color:#22c55e; font-weight:700;">🎉 未同期スコアを正常にオンライン世界ランキングへ一括送信しました！</span>';
+      } else {
+        if (msgMigration) msgMigration.innerHTML = '<span style="color:#94a3b8;">未同期の実スコアがないか、送信処理が完了しています。</span>';
+      }
+    });
+
+    // 4. GASスクリプトコードをコピー
+    btnCopyGas?.addEventListener('click', () => {
+      try { sound.init(); sound.playTap(); } catch (e) {}
+      const gasCode = "/**\n * ============================================================================\n * HoK！ ~華麗にヒラメいた！~ オンライン世界ランキング API (Google Apps Script)\n * ============================================================================\n * \n * 【セットアップ手順】\n * 1. Google ドライブで新規「Google スプレッドシート」を作成します。\n *    （名前例: HoK_World_Rankings）\n * 2. メニュー「拡張機能」 > 「Apps Script」を開きます。\n * 3. 既存のコードを全て消去し、このスクリプトの内容をすべて貼り付けて保存（Ctrl+S）します。\n * 4. 画面右上の「デプロイ」 > 「新しいデプロイ」をクリックします。\n * 5. 歯車アイコン「種類の選択」で「ウェブアプリ」を選択します。\n *    - 説明: HoK Ranking API\n *    - 次のユーザーとして実行: 自分 (アクセス権限を持つユーザー)\n *    - アクセスできるユーザー: 全員 (Anyone)  ← ★必ず「全員」に設定してください\n * 6. 「デプロイ」をクリックし、初回のみ「アクセスを承認」を完了します。\n * 7. 発行された「ウェブアプリの URL」をコピーし、管理コンソールまたはゲーム設定に設定します。\n */\n\nconst SHEET_NAME = 'Rankings';\n\n// 初期化（シートがなければ自動作成してヘッダーを設定）\nfunction getOrCreateSheet() {\n  const ss = SpreadsheetApp.getActiveSpreadsheet();\n  let sheet = ss.getSheetByName(SHEET_NAME);\n  if (!sheet) {\n    sheet = ss.insertSheet(SHEET_NAME);\n    const headers = [\n      'ID', 'InternalUserID', 'PlayerName', 'PlayerTag',\n      'Score', 'Mode', 'MaxCombo', 'Title',\n      'PlayedAt', 'CreatedAt', 'Deleted'\n    ];\n    sheet.appendRow(headers);\n    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#0f172a').setFontColor('#38bdf8');\n    sheet.setFrozenRows(1);\n  }\n  return sheet;\n}\n\n// レスポンス返却用ヘルパー\nfunction makeJsonResponse(data) {\n  return ContentService.createTextOutput(JSON.stringify(data))\n    .setMimeType(ContentService.MimeType.JSON);\n}\n\n// GETリクエスト処理（ランキング取得 / 接続テスト / フォールバック送信）\nfunction doGet(e) {\n  try {\n    const params = e ? e.parameter : {};\n    const action = params.action || 'get';\n\n    // 1. 接続確認 ping\n    if (action === 'ping') {\n      return makeJsonResponse({ status: 'ok', message: 'HoK Ranking API is online!', timestamp: Date.now() });\n    }\n\n    // 2. GET経由でのスコア登録（CORSフォールバック用）\n    if (action === 'submit') {\n      const payload = params.data ? JSON.parse(decodeURIComponent(params.data)) : params;\n      return handleScoreSubmission(payload);\n    }\n\n    // 3. GET経由での特定ID削除\n    if (action === 'delete') {\n      return handleScoreDeletion(params.id, params.internal_user_id);\n    }\n\n    // 4. ランキング取得 (action === 'get')\n    const mode = params.mode || 'all';      // 'all' | 'karei' | 'hirame' | 'hirai'\n    const period = params.period || 'yearly';// 'yearly' | 'monthly' | 'weekly' | 'daily'\n    const limit = Math.min(100, Math.max(10, parseInt(params.limit, 10) || 50));\n\n    const rankings = queryRankings(mode, period, limit);\n    return makeJsonResponse({\n      status: 'ok',\n      mode: mode,\n      period: period,\n      count: rankings.length,\n      rankings: rankings,\n      timestamp: Date.now()\n    });\n  } catch (err) {\n    return makeJsonResponse({ status: 'error', message: err.toString() });\n  }\n}\n\n// POSTリクエスト処理（スコア送信・マイグレーション・削除）\nfunction doPost(e) {\n  try {\n    let body = {};\n    if (e && e.postData && e.postData.contents) {\n      body = JSON.parse(e.postData.contents);\n    }\n    const action = body.action || 'submit';\n\n    if (action === 'delete') {\n      return handleScoreDeletion(body.id, body.internal_user_id);\n    }\n\n    return handleScoreSubmission(body);\n  } catch (err) {\n    return makeJsonResponse({ status: 'error', message: err.toString() });\n  }\n}\n\n// スコア登録処理（単一レコードまたはマイグレーション用配列対応）\nfunction handleScoreSubmission(payload) {\n  const sheet = getOrCreateSheet();\n  const entries = Array.isArray(payload.entries) ? payload.entries : (payload.score !== undefined ? [payload] : []);\n  const now = new Date();\n  const nowIso = now.toISOString();\n\n  let addedCount = 0;\n  for (let i = 0; i < entries.length; i++) {\n    const it = entries[i];\n    if (!it || typeof it.score !== 'number' || it.score < 0) continue;\n\n    // 不正スコアの簡易ガード（999,999点超え等は除外）\n    if (it.score > 999999) continue;\n\n    const id = it.id || ('lb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));\n    const internalUserId = String(it.internal_user_id || '').slice(0, 60);\n    const playerName = String(it.name || it.player_name || '名無し').slice(0, 16);\n    const playerTag = String(it.tag || '').slice(0, 10);\n    const score = Number(it.score);\n    const mode = String(it.mode || 'karei').toLowerCase();\n    const maxCombo = Number(it.maxCombo || 0);\n    const title = String(it.title || '見習い').slice(0, 30);\n    const playedAt = String(it.played_at || nowIso);\n\n    sheet.appendRow([\n      id, internalUserId, playerName, playerTag,\n      score, mode, maxCombo, title,\n      playedAt, nowIso, false // Deleted: false\n    ]);\n    addedCount++;\n  }\n\n  return makeJsonResponse({\n    status: 'ok',\n    addedCount: addedCount,\n    timestamp: Date.now()\n  });\n}\n\n// スコア削除処理（本人確認: IDとinternal_user_idが一致するもののみ論理削除）\nfunction handleScoreDeletion(id, internalUserId) {\n  if (!id) return makeJsonResponse({ status: 'error', message: 'Missing record id' });\n  const sheet = getOrCreateSheet();\n  const data = sheet.getDataRange().getValues();\n\n  let deleted = false;\n  for (let i = 1; i < data.length; i++) {\n    const rowId = String(data[i][0]);\n    const rowUser = String(data[i][1]);\n    if (rowId === id) {\n      // ユーザーIDが指定されている場合は検証\n      if (!internalUserId || rowUser === internalUserId) {\n        sheet.getRange(i + 1, 11).setValue(true); // Deleted = true\n        deleted = true;\n      }\n    }\n  }\n\n  return makeJsonResponse({ status: deleted ? 'ok' : 'not_found', deleted: deleted });\n}\n\n// ランキング抽出＆集計（1プレイヤー最大保持件数制御 ＆ ソート）\nfunction queryRankings(mode, period, limit) {\n  const sheet = getOrCreateSheet();\n  const rows = sheet.getDataRange().getValues();\n  if (rows.length <= 1) return [];\n\n  const now = Date.now();\n  const MS_DAY = 24 * 60 * 60 * 1000;\n  let periodMs = 365 * MS_DAY;\n  if (period === 'daily') periodMs = 1 * MS_DAY;\n  else if (period === 'weekly') periodMs = 7 * MS_DAY;\n  else if (period === 'monthly') periodMs = 30 * MS_DAY;\n\n  const validEntries = [];\n  for (let i = 1; i < rows.length; i++) {\n    const r = rows[i];\n    const isDeleted = !!r[10];\n    if (isDeleted) continue;\n\n    const rowMode = String(r[5] || '').toLowerCase();\n    if (mode !== 'all' && rowMode !== mode) continue;\n\n    const playedAtStr = r[8] || r[9];\n    const playedTime = new Date(playedAtStr).getTime();\n    if (isNaN(playedTime) || (now - playedTime > periodMs)) continue;\n\n    validEntries.push({\n      id: String(r[0]),\n      internal_user_id: String(r[1]),\n      name: String(r[2]),\n      tag: String(r[3]),\n      score: Number(r[4]) || 0,\n      mode: rowMode,\n      maxCombo: Number(r[6]) || 0,\n      title: String(r[7]),\n      played_at: String(playedAtStr),\n      date: formatDateRelative(playedTime, now)\n    });\n  }\n\n  // 同一プレイヤー（internal_user_id）ごとにハイスコア順にグループ化し、ベストスコアを優先\n  const playerMap = {};\n  for (let i = 0; i < validEntries.length; i++) {\n    const e = validEntries[i];\n    const key = e.internal_user_id || e.name;\n    if (!playerMap[key]) playerMap[key] = [];\n    playerMap[key].push(e);\n  }\n\n  const result = [];\n  Object.keys(playerMap).forEach(key => {\n    const list = playerMap[key];\n    list.sort((a, b) => b.score - a.score || b.maxCombo - a.maxCombo);\n    // 1人あたり最大3件までランキングに掲載\n    result.push(...list.slice(0, 3));\n  });\n\n  result.sort((a, b) => b.score - a.score || b.maxCombo - a.maxCombo);\n  return result.slice(0, limit);\n}\n\nfunction formatDateRelative(playedTime, now) {\n  const diffHours = (now - playedTime) / (1000 * 60 * 60);\n  if (diffHours < 1) return 'たった今';\n  if (diffHours < 24) return Math.floor(diffHours) + '時間前';\n  const diffDays = Math.floor(diffHours / 24);\n  if (diffDays === 1) return '昨日';\n  if (diffDays <= 7) return diffDays + '日前';\n  return new Date(playedTime).toLocaleDateString('ja-JP');\n}\n";
+      navigator.clipboard.writeText(gasCode).then(() => {
+        const oldHtml = btnCopyGas.innerHTML;
+        btnCopyGas.innerHTML = '<span>✅</span> コピー完了！';
+        setTimeout(() => { btnCopyGas.innerHTML = oldHtml; }, 2500);
+      }).catch(err => {
+        prompt('下記コードを全選択してコピーしてください:', gasCode);
+      });
+    });
+  }
+
+  initOnlineRankingGASIntegration();
 
   // ===== 📖 キャラ図鑑 編集マネージャー =====
   function initLoreEditor() {

@@ -10,9 +10,22 @@ import {
   renderIdentityStatus,
   appendLog
 } from './app.js';
+import {
+  fetchOnlineLeaderboard,
+  migrateLocalScoresToOnline,
+  deleteScoreFromOnline,
+  getOnlineRankingApiUrl
+} from './ranking_api.js';
 
 window.addEventListener('DOMContentLoaded', () => {
   initI18n();
+
+  // 既存プレイヤーのローカル得点をオンライン世界ランキングへ自動同期（完全バックグラウンド）
+  try {
+    migrateLocalScoresToOnline().catch(err => {
+      console.warn('[RankingAPI] Auto migration error:', err);
+    });
+  } catch (e) {}
 
   const canvas = document.getElementById('gameCanvas');
   const renderer = new GameRenderer(canvas);
@@ -1040,8 +1053,8 @@ window.addEventListener('DOMContentLoaded', () => {
       : defaultText;
   }
 
-  function renderLeaderboard(period = currentLeaderboardPeriod, mode = currentLeaderboardMode) {
-    const list = game.getLeaderboard(period, mode);
+  function renderLeaderboard(period = currentLeaderboardPeriod, mode = currentLeaderboardMode, overrideList = null) {
+    const list = overrideList !== null ? overrideList : game.getLeaderboard(period, mode);
     const identity = loadOrCreateUserIdentity();
     if (list.length === 0) {
       dom.leaderboardItems.innerHTML = `
@@ -1050,41 +1063,49 @@ window.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
       updateMainDeleteButton();
-      return;
+    } else {
+      dom.leaderboardItems.innerHTML = list.map((item, idx) => {
+        const isTop3 = idx < 3;
+        const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `${idx + 1}`));
+        const isSelf = Boolean((item.internal_user_id && item.internal_user_id === identity.internal_user_id) || (item.name && item.name === identity.player_name));
+        const localizedName = isSelf ? (item.name || t('anonymousAngler')) : getLocalizedPlayerName(item.name);
+        const chkHtml = isSelf
+          ? `<label class="self-ranking-label" title="自分の記録を選択して削除"><input type="checkbox" class="self-ranking-chk main-self-chk" data-id="${item.id}"></label>`
+          : `<span class="self-ranking-spacer"></span>`;
+
+        const comboText = (item.maxCombo !== undefined && item.maxCombo !== null) ? item.maxCombo : 0;
+        return `
+          <div class="leaderboard-item ${isTop3 ? 'top3' : ''} ${isSelf ? 'is-self' : ''}">
+            <div style="display:flex; align-items:center; gap:8px;">
+              ${chkHtml}
+              <span class="rank-badge">${medal}</span>
+            </div>
+            <span style="font-weight:700; flex:1; margin-left:6px;">
+              ${escapeHtml(localizedName)}${isSelf ? ` 👤(${t('you')})` : ''}
+              <span style="font-size:11px;color:#94a3b8;">#${item.tag || '---'}</span>
+            </span>
+            <span style="font-weight:800;color:#38bdf8;white-space:nowrap;text-align:right;">
+              ${item.score} pt
+              <span style="font-size:11px;color:#facc15;font-weight:700;margin-left:4px;">(${comboText} combo)</span>
+            </span>
+          </div>
+        `;
+      }).join('');
+
+      dom.leaderboardItems.querySelectorAll('.main-self-chk').forEach(chk => {
+        chk.addEventListener('change', updateMainDeleteButton);
+      });
+      updateMainDeleteButton();
     }
 
-    dom.leaderboardItems.innerHTML = list.map((item, idx) => {
-      const isTop3 = idx < 3;
-      const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `${idx + 1}`));
-      const isSelf = Boolean((item.internal_user_id && item.internal_user_id === identity.internal_user_id) || (item.name && item.name === identity.player_name));
-      const localizedName = isSelf ? (item.name || t('anonymousAngler')) : getLocalizedPlayerName(item.name);
-      const chkHtml = isSelf
-        ? `<label class="self-ranking-label" title="自分の記録を選択して削除"><input type="checkbox" class="self-ranking-chk main-self-chk" data-id="${item.id}"></label>`
-        : `<span class="self-ranking-spacer"></span>`;
-
-      const comboText = (item.maxCombo !== undefined && item.maxCombo !== null) ? item.maxCombo : 0;
-      return `
-        <div class="leaderboard-item ${isTop3 ? 'top3' : ''} ${isSelf ? 'is-self' : ''}">
-          <div style="display:flex; align-items:center; gap:8px;">
-            ${chkHtml}
-            <span class="rank-badge">${medal}</span>
-          </div>
-          <span style="font-weight:700; flex:1; margin-left:6px;">
-            ${escapeHtml(localizedName)}${isSelf ? ` 👤(${t('you')})` : ''}
-            <span style="font-size:11px;color:#94a3b8;">#${item.tag || '---'}</span>
-          </span>
-          <span style="font-weight:800;color:#38bdf8;white-space:nowrap;text-align:right;">
-            ${item.score} pt
-            <span style="font-size:11px;color:#facc15;font-weight:700;margin-left:4px;">(${comboText} combo)</span>
-          </span>
-        </div>
-      `;
-    }).join('');
-
-    dom.leaderboardItems.querySelectorAll('.main-self-chk').forEach(chk => {
-      chk.addEventListener('change', updateMainDeleteButton);
-    });
-    updateMainDeleteButton();
+    // オンライン世界ランキングAPIが設定されている場合、非同期で最新データを取得・反映
+    if (overrideList === null && getOnlineRankingApiUrl()) {
+      fetchOnlineLeaderboard(period, mode, list).then(onlineList => {
+        if (onlineList && onlineList.length > 0 && currentLeaderboardPeriod === period && currentLeaderboardMode === mode) {
+          renderLeaderboard(period, mode, onlineList);
+        }
+      }).catch(() => {});
+    }
   }
 
   // チェックした自分の記録を削除 (メインランキング)
@@ -1092,7 +1113,12 @@ window.addEventListener('DOMContentLoaded', () => {
     sound.playTap();
     const checked = Array.from(dom.leaderboardItems.querySelectorAll('.main-self-chk:checked')).map(c => c.dataset.id);
     if (checked.length === 0) return;
+    const identity = loadOrCreateUserIdentity();
     const deletedCount = game.deleteLeaderboardEntries(checked);
+    // オンライン側にも論理削除を送信
+    checked.forEach(id => {
+      deleteScoreFromOnline(id, identity.internal_user_id).catch(() => {});
+    });
     renderLeaderboard();
     renderResultRanking();
     if (dom.mainDeleteStatus) {
@@ -1771,9 +1797,9 @@ window.addEventListener('DOMContentLoaded', () => {
       : defaultText;
   }
 
-  function renderResultRanking(period = currentResultRankingPeriod, mode = currentResultRankingMode) {
+  function renderResultRanking(period = currentResultRankingPeriod, mode = currentResultRankingMode, overrideList = null) {
     if (!dom.resultRankingItems) return;
-    const list = game.getLeaderboard(period, mode);
+    const list = overrideList !== null ? overrideList : game.getLeaderboard(period, mode);
     const identity = loadOrCreateUserIdentity();
     if (list.length === 0) {
       dom.resultRankingItems.innerHTML = `
@@ -1782,37 +1808,45 @@ window.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
       updateResultDeleteButton();
-      return;
+    } else {
+      dom.resultRankingItems.innerHTML = list.slice(0, 10).map((item, idx) => {
+        const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `${idx + 1}`));
+        const isSelf = Boolean((item.internal_user_id && item.internal_user_id === identity.internal_user_id) || (item.name && item.name === identity.player_name));
+        const localizedName = isSelf ? (item.name || t('anonymousAngler')) : getLocalizedPlayerName(item.name);
+        const chkHtml = isSelf
+          ? `<label class="self-ranking-label" title="自分の記録を選択して削除"><input type="checkbox" class="self-ranking-chk result-self-chk" data-id="${item.id}"></label>`
+          : `<span class="self-ranking-spacer"></span>`;
+
+        const comboText = (item.maxCombo !== undefined && item.maxCombo !== null) ? item.maxCombo : 0;
+        return `
+          <div class="result-ranking-row ${isSelf ? 'current-user' : ''}">
+            <div style="display:flex; align-items:center; gap:6px;">
+              ${chkHtml}
+              <span class="rank-medal">${medal}</span>
+            </div>
+            <span class="rank-name" style="flex:1;">${escapeHtml(localizedName)}${isSelf ? ` 👤(${t('you')})` : ''}</span>
+            <span class="rank-score" style="white-space:nowrap;text-align:right;">
+              ${item.score} pt
+              <span style="font-size:10px;color:#facc15;font-weight:700;margin-left:3px;">(${comboText} combo)</span>
+            </span>
+          </div>
+        `;
+      }).join('');
+
+      dom.resultRankingItems.querySelectorAll('.result-self-chk').forEach(chk => {
+        chk.addEventListener('change', updateResultDeleteButton);
+      });
+      updateResultDeleteButton();
     }
 
-    dom.resultRankingItems.innerHTML = list.slice(0, 10).map((item, idx) => {
-      const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `${idx + 1}`));
-      const isSelf = Boolean((item.internal_user_id && item.internal_user_id === identity.internal_user_id) || (item.name && item.name === identity.player_name));
-      const localizedName = isSelf ? (item.name || t('anonymousAngler')) : getLocalizedPlayerName(item.name);
-      const chkHtml = isSelf
-        ? `<label class="self-ranking-label" title="自分の記録を選択して削除"><input type="checkbox" class="self-ranking-chk result-self-chk" data-id="${item.id}"></label>`
-        : `<span class="self-ranking-spacer"></span>`;
-
-      const comboText = (item.maxCombo !== undefined && item.maxCombo !== null) ? item.maxCombo : 0;
-      return `
-        <div class="result-ranking-row ${isSelf ? 'current-user' : ''}">
-          <div style="display:flex; align-items:center; gap:6px;">
-            ${chkHtml}
-            <span class="rank-medal">${medal}</span>
-          </div>
-          <span class="rank-name" style="flex:1;">${escapeHtml(localizedName)}${isSelf ? ` 👤(${t('you')})` : ''}</span>
-          <span class="rank-score" style="white-space:nowrap;text-align:right;">
-            ${item.score} pt
-            <span style="font-size:10px;color:#facc15;font-weight:700;margin-left:3px;">(${comboText} combo)</span>
-          </span>
-        </div>
-      `;
-    }).join('');
-
-    dom.resultRankingItems.querySelectorAll('.result-self-chk').forEach(chk => {
-      chk.addEventListener('change', updateResultDeleteButton);
-    });
-    updateResultDeleteButton();
+    // オンライン世界ランキングAPIが設定されている場合、非同期で最新データを取得・反映
+    if (overrideList === null && getOnlineRankingApiUrl()) {
+      fetchOnlineLeaderboard(period, mode, list).then(onlineList => {
+        if (onlineList && onlineList.length > 0 && currentResultRankingPeriod === period && currentResultRankingMode === mode) {
+          renderResultRanking(period, mode, onlineList);
+        }
+      }).catch(() => {});
+    }
   }
 
   // チェックした自分の記録を削除 (リザルトランキング)
@@ -1820,7 +1854,12 @@ window.addEventListener('DOMContentLoaded', () => {
     sound.playTap();
     const checked = Array.from(dom.resultRankingItems.querySelectorAll('.result-self-chk:checked')).map(c => c.dataset.id);
     if (checked.length === 0) return;
+    const identity = loadOrCreateUserIdentity();
     const deletedCount = game.deleteLeaderboardEntries(checked);
+    // オンライン側にも論理削除を送信
+    checked.forEach(id => {
+      deleteScoreFromOnline(id, identity.internal_user_id).catch(() => {});
+    });
     renderLeaderboard();
     renderResultRanking();
     if (dom.resultDeleteStatus) {
@@ -1861,6 +1900,8 @@ window.addEventListener('DOMContentLoaded', () => {
     dom.clearRankingModal?.classList.add('hidden');
     const identity = loadOrCreateUserIdentity();
     const count = game.clearAllMyLeaderboardEntries(identity);
+    // オンライン側にも自身の全記録削除を送信
+    deleteScoreFromOnline('*', identity.internal_user_id).catch(() => {});
     renderLeaderboard();
     renderResultRanking();
     if (dom.resultDeleteStatus) {
