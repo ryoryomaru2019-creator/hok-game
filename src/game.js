@@ -2502,7 +2502,17 @@ export class Game {
       text = text.slice(0, 127) + '...';
     }
 
-    const shareUrl = this.devConfig?.xShareUrl?.trim() || window.location.href;
+    let shareUrl = this.devConfig?.xShareUrl?.trim();
+    if (!shareUrl) {
+      const href = window.location.href;
+      // Xの古い失敗キャッシュ（t.co短縮URLに紐づく過去キャッシュ）を確実に回避し、最新の1200x630大画像カードを強制生成
+      if (href.includes('?')) {
+        shareUrl = href;
+      } else {
+        const cleanHref = href.replace(/#.*$/, '').replace(/\/$/, '/');
+        shareUrl = cleanHref.includes('?') ? cleanHref : `${cleanHref}?v=1`;
+      }
+    }
     return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
   }
 
