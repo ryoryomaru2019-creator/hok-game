@@ -190,6 +190,7 @@ window.addEventListener('DOMContentLoaded', () => {
     btnHomeGameSettings: document.getElementById('btnHomeGameSettings'),
     btnResetGameSettings: document.getElementById('btnResetGameSettings'),
     settingsSaveToast: document.getElementById('settingsSaveToast'),
+    globalGameToast: document.getElementById('globalGameToast'),
 
     // 設定要素
     fps30Btn: document.getElementById('fps30Btn'),
@@ -860,30 +861,82 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // グローバルトースト通知ユーティリティ (フルスクリーン案内やスマホ同期メッセージ等)
+  let globalToastTimer = null;
+  function showGlobalToast(msg, duration = 3000) {
+    if (!dom.globalGameToast) return;
+    dom.globalGameToast.textContent = msg;
+    dom.globalGameToast.classList.add('show');
+    if (globalToastTimer) clearTimeout(globalToastTimer);
+    globalToastTimer = setTimeout(() => {
+      dom.globalGameToast.classList.remove('show');
+    }, duration);
+  }
+
   // フルスクリーン (全画面モード) / ウィンドウモード切替
+  // iOS Safari / iPhone は Apple WebKit の制限により Element.requestFullscreen() を意図的に無効化しているため、
+  // 疑似フルスクリーン（Viewport最大化）とホーム画面追加案内をシームレスに提供する
+  let isPseudoFullscreen = false;
+
   function toggleFullscreen() {
     sound.playTap();
-    const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
-    if (!isFull) {
-      const root = document.documentElement;
-      if (root.requestFullscreen) {
-        root.requestFullscreen().catch(err => console.warn('Fullscreen request failed:', err));
-      } else if (root.webkitRequestFullscreen) {
-        root.webkitRequestFullscreen();
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const canNative = !isIos && typeof document.documentElement.requestFullscreen === 'function';
+    const isNativeFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+
+    if (canNative) {
+      // Android Chrome / PC などのネイティブ Fullscreen API
+      if (!isNativeFull) {
+        document.documentElement.requestFullscreen().then(() => {
+          updateFullscreenIcons();
+          showGlobalToast('⛶ フルスクリーンモードに切り替えました', 2000);
+        }).catch(err => {
+          console.warn('Native fullscreen request failed, fallback to pseudo:', err);
+          enablePseudoFullscreen();
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().then(() => {
+            updateFullscreenIcons();
+            showGlobalToast('🗗 ウィンドウモードに戻しました', 2000);
+          }).catch(err => console.warn(err));
+        }
       }
     } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(err => console.warn('Exit fullscreen failed:', err));
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
+      // iPhone (iOS Safari / Chrome) 等の WebKit 端末
+      if (!isPseudoFullscreen) {
+        enablePseudoFullscreen();
+      } else {
+        disablePseudoFullscreen();
       }
     }
   }
 
+  function enablePseudoFullscreen() {
+    isPseudoFullscreen = true;
+    document.body.classList.add('pseudo-fullscreen');
+    window.scrollTo(0, 0);
+    updateFullscreenIcons();
+
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIos && !window.navigator.standalone) {
+      showGlobalToast('💡 iPhoneは【共有 ➜ ホーム画面に追加】するとアドレスバーも消えて完全全画面で遊べます！', 4500);
+    } else {
+      showGlobalToast('⛶ 最大化モードに切り替えました', 2000);
+    }
+  }
+
+  function disablePseudoFullscreen() {
+    isPseudoFullscreen = false;
+    document.body.classList.remove('pseudo-fullscreen');
+    updateFullscreenIcons();
+    showGlobalToast('🗗 通常表示に戻しました', 2000);
+  }
+
   function updateFullscreenIcons() {
-    const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement || isPseudoFullscreen);
     const icon = isFull ? '🗗' : '⛶';
-    const textJa = isFull ? '🗗 ウィンドウ表示' : '⛶ 全画面切替 (フルスクリーン)';
+    const textJa = isFull ? '🗗 通常ウィンドウ表示に戻す' : '⛶ 全画面切替 (フルスクリーン)';
     if (dom.hudFullscreenBtn) {
       dom.hudFullscreenBtn.textContent = icon;
       dom.hudFullscreenBtn.title = isFull ? 'ウィンドウ表示に戻す' : '全画面表示にする';
@@ -891,13 +944,41 @@ window.addEventListener('DOMContentLoaded', () => {
     if (dom.titleFullscreenBtn) {
       dom.titleFullscreenBtn.textContent = textJa;
     }
-    setTimeout(resize, 120);
+    setTimeout(resize, 80);
+    setTimeout(resize, 250);
   }
 
   dom.hudFullscreenBtn?.addEventListener('click', toggleFullscreen);
   dom.titleFullscreenBtn?.addEventListener('click', toggleFullscreen);
   document.addEventListener('fullscreenchange', updateFullscreenIcons);
   document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
+
+  // URL同期パラメータのチェック (PCからスマホへ共有された設定の自動適用)
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const syncBgRaw = urlParams.get('syncBg');
+    if (syncBgRaw) {
+      const decodedJson = decodeURIComponent(atob(syncBgRaw));
+      const parsedBg = JSON.parse(decodedJson);
+      let curDev = {};
+      try { curDev = JSON.parse(localStorage.getItem('hirame_dev_config') || '{}'); } catch(e){}
+      curDev.ambientConfig = parsedBg;
+      localStorage.setItem('hirame_dev_config', JSON.stringify(curDev));
+      localStorage.setItem('hirame_custom_default_config', JSON.stringify(curDev));
+      game.devConfig = game.loadDevConfig();
+      if (renderer) {
+        renderer.bgImageLoadedSrc = null;
+        renderer.initBackgroundEffects?.();
+      }
+      setTimeout(() => {
+        showGlobalToast('📱 背景演出設定をこの端末に同期・保存しました！', 3500);
+      }, 500);
+      // URLを綺麗にリセット
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  } catch (err) {
+    console.warn('URL syncBg error:', err);
+  }
 
   // 設定保存トースト通知ユーティリティ
   let saveToastTimer = null;

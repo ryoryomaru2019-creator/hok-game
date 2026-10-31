@@ -1,0 +1,56 @@
+{
+  "ambientConfig": {
+    "enabled": true,
+    "backgroundImage": {
+      "enabled": false,
+      "dataUrl": "",
+      "fit": "cover",
+      "opacity": 1.0
+    },
+    "gradient": {
+      "enabled": true,
+      "topColor": "#0284c7",
+      "midColor": "#0369a1",
+      "deepColor": "#075985",
+      "bottomColor": "#0c2340"
+    },
+    "lightRays": {
+      "enabled": true,
+      "color": "#ffffff",
+      "alpha": 0.12,
+      "count": 5,
+      "intensity": 1.0
+    },
+    "ground": {
+      "enabled": true,
+      "topColor": "#786047",
+      "bottomColor": "#3b2b1d",
+      "plantColor": "#15803d",
+      "showPlants": true
+    },
+    "bubbles": {
+      "enabled": true,
+      "count": 30,
+      "color": "#ffffff"
+    },
+    "smallFish": {
+      "enabled": true,
+      "count": 15,
+      "color": "#e0f2fe"
+    },
+    "flowEffect": {
+      "enabled": false,
+      "count": 15,
+      "color": "#38bdf8",
+      "speed": 1.0,
+      "size": 20
+    },
+    "sparks": {
+      "enabled": false,
+      "count": 20,
+      "color": "#facc15",
+      "shape": "spark",
+      "speed": 1.0
+    }
+  }
+}

@@ -9831,12 +9831,63 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     // Save button
-    btnSaveAmbient?.addEventListener('click', () => {
+        btnSaveAmbient?.addEventListener('click', () => {
       saveCurrentConfigToStorage();
       try { sound.init(); sound.playSuccess(1); } catch (e) { }
       const orig = btnSaveAmbient.innerHTML;
       btnSaveAmbient.innerHTML = '✅ 保存完了！(ゲームに即時反映)';
       setTimeout(() => { btnSaveAmbient.innerHTML = orig; }, 1800);
+    });
+
+    // 📱 スマホへ設定を同期 (QR / URL) ボタン
+    const btnShareAmbientToMobile = document.getElementById('btnShareAmbientToMobile');
+    const shareAmbientModal = document.getElementById('shareAmbientModal');
+    const shareAmbientQrImg = document.getElementById('shareAmbientQrImg');
+    const shareAmbientUrlInput = document.getElementById('shareAmbientUrlInput');
+    const btnCopyShareAmbientUrl = document.getElementById('btnCopyShareAmbientUrl');
+    const btnCloseShareAmbientModal = document.getElementById('btnCloseShareAmbientModal');
+
+    btnShareAmbientToMobile?.addEventListener('click', () => {
+      const ambCfg = ensureAmbientConfig();
+      saveCurrentConfigToStorage();
+
+      // 画像の巨大Base64を除く演出パラメーターを安全に圧縮
+      const exportCfg = JSON.parse(JSON.stringify(ambCfg));
+      if (exportCfg.backgroundImage?.dataUrl?.length > 500) {
+        exportCfg.backgroundImage.dataUrl = ''; // URLサイズ制限対策
+      }
+
+      const encoded = btoa(encodeURIComponent(JSON.stringify(exportCfg)));
+      let baseUrl = window.location.href.split('admin.html')[0];
+      if (!baseUrl.endsWith('/')) baseUrl += '/';
+      const shareUrl = `${baseUrl}?syncBg=${encoded}`;
+
+      if (shareAmbientUrlInput) shareAmbientUrlInput.value = shareUrl;
+      if (shareAmbientQrImg) {
+        shareAmbientQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(shareUrl)}`;
+      }
+      if (shareAmbientModal) shareAmbientModal.classList.remove('hidden');
+      try { sound.init(); sound.playChime(); } catch (e) { }
+    });
+
+    btnCopyShareAmbientUrl?.addEventListener('click', async () => {
+      if (!shareAmbientUrlInput) return;
+      try {
+        await navigator.clipboard.writeText(shareAmbientUrlInput.value);
+        const orig = btnCopyShareAmbientUrl.innerHTML;
+        btnCopyShareAmbientUrl.innerHTML = '✅ コピー完了！';
+        setTimeout(() => { btnCopyShareAmbientUrl.innerHTML = orig; }, 1800);
+        try { sound.init(); sound.playSuccess(1); } catch (e) { }
+      } catch (err) {
+        shareAmbientUrlInput.select();
+        document.execCommand('copy');
+        alert('リンクをコピーしました！');
+      }
+    });
+
+    btnCloseShareAmbientModal?.addEventListener('click', () => {
+      if (shareAmbientModal) shareAmbientModal.classList.add('hidden');
+      try { sound.init(); sound.playTap(); } catch (e) { }
     });
 
     // Reset button

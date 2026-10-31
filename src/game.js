@@ -740,6 +740,27 @@ export class Game {
     this.isFeverTime = false;
 
     this.initAmbientFish();
+    this.fetchRemoteDefaultConfig();
+  }
+
+  async fetchRemoteDefaultConfig() {
+    try {
+      const res = await fetch('./custom_default_config.json?v=' + Date.now());
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.ambientConfig) {
+          const hasLocal = !!localStorage.getItem('hirame_dev_config');
+          if (!hasLocal) {
+            localStorage.setItem('hirame_custom_default_config', JSON.stringify(json));
+            this.devConfig = this.loadDevConfig();
+            if (this.renderer) {
+              this.renderer.bgImageLoadedSrc = null;
+              this.renderer.initBackgroundEffects?.();
+            }
+          }
+        }
+      }
+    } catch (e) {}
   }
 
   loadDevConfig() {

@@ -6,6 +6,11 @@
   <title>HoK！ ~華麗にヒラメいた！~ - カレイとヒラメを瞬時に仕分けろ！</title>
   <meta name="description" content="カレイとヒラメをタップして仕分けるWeb爽快アクション！カレイ派？ヒラメ派？ヒライ派？スキマ時間に最高記録を目指せ！">
   
+  <!-- キャッシュ無効化 (常に最新バージョンを配信) -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
   <!-- アイコン・PWA・ホーム画面追加設定 (PC / Android / iOS) -->
   <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
@@ -502,6 +507,9 @@
         </div>
       </div>
     </div>
+
+    <!-- 画面中央上部 グローバルトースト通知 (フルスクリーン切替・スマホ同期等) -->
+    <div id="globalGameToast" class="global-game-toast"></div>
   </div>
 
   <script type="module" src="./src/main.js"></script>

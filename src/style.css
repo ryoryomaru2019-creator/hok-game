@@ -1822,5 +1822,54 @@ canvas#gameCanvas {
   }
 }
 
+/* ========================================================
+   📱 iPhone / iOS Safari用 疑似フルスクリーン (Viewport最大化)
+   ======================================================== */
+body.pseudo-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  z-index: 999999 !important;
+}
+
+body.pseudo-fullscreen #app {
+  width: 100vw !important;
+  height: 100dvh !important;
+}
+
+/* 画面中央上部 グローバルトースト通知 */
+.global-game-toast {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(15, 23, 42, 0.92);
+  border: 1.5px solid #38bdf8;
+  color: #f8fafc;
+  padding: 8px 18px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.3);
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 9999999;
+  text-align: center;
+  max-width: 90vw;
+  line-height: 1.4;
+  backdrop-filter: blur(8px);
+}
+
+.global-game-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 
 
