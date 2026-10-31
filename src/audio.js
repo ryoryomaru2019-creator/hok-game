@@ -1,12 +1,12 @@
 // Audio controller handling custom local BGM tracks, LinkCore streaming links, 30s fading preview, and Web Audio API synthesized SFX
 
 export const DEFAULT_BGM_PLAYLIST = [
-  { id: 'halloween_pig', title: 'Halloween PIG!', src: './bgm/Halloween PIG!.mp3', enabled: true },
-  { id: 'nano_ninja', title: 'Nano Ninja', src: './bgm/Nano Ninja.mp3', enabled: true },
-  { id: 'onabe_the_mic', title: 'ONABE THE MIC – Hyper Boil Twins', src: './bgm/ONABE THE MIC – Hyper Boil Twins.mp3', enabled: true },
-  { id: 'eenyade', title: 'ええんやで', src: './bgm/ええんやで.mp3', enabled: true },
-  { id: 'haraheri', title: 'はらへりひれはれ', src: './bgm/はらへりひれはれ.mp3', enabled: true },
-  { id: 'tonton', title: 'トントン！！！', src: './bgm/トントン！！！.mp3', enabled: true }
+  { id: 'halloween_pig', title: 'Halloween PIG!', src: './bgm/Halloween PIG!.mp3', enabled: true, weight: 30 },
+  { id: 'nano_ninja', title: 'Nano Ninja', src: './bgm/Nano Ninja.mp3', enabled: true, weight: 20 },
+  { id: 'onabe_the_mic', title: 'ONABE THE MIC – Hyper Boil Twins', src: './bgm/ONABE THE MIC – Hyper Boil Twins.mp3', enabled: true, weight: 15 },
+  { id: 'eenyade', title: 'ええんやで', src: './bgm/ええんやで.mp3', enabled: true, weight: 15 },
+  { id: 'haraheri', title: 'はらへりひれはれ', src: './bgm/はらへりひれはれ.mp3', enabled: true, weight: 10 },
+  { id: 'tonton', title: 'トントン！！！', src: './bgm/トントン！！！.mp3', enabled: true, weight: 10 }
 ];
 
 export function resolveAssetPath(src) {
@@ -34,7 +34,8 @@ function loadStoredPlaylist() {
             ...item,
             title,
             src,
-            enabled: item.enabled !== false
+            enabled: item.enabled !== false,
+            weight: typeof item.weight === 'number' && item.weight > 0 ? item.weight : 20
           };
         });
 
@@ -95,9 +96,8 @@ class SoundSystem {
     this.bgmPlayMode = localStorage.getItem('hirame_bgm_mode') || 'random';
 
     const playable = this.getPlayablePlaylist();
-    this.currentTrackIndex = playable.length > 0
-      ? BGM_PLAYLIST.indexOf(playable[Math.floor(Math.random() * playable.length)])
-      : 0;
+    // ユーザーの要望: プレイリストの一番上(#1)の曲を初期選択・デフォルト曲として最優先する
+    this.currentTrackIndex = playable.length > 0 ? BGM_PLAYLIST.indexOf(playable[0]) : 0;
     if (this.currentTrackIndex < 0) this.currentTrackIndex = 0;
 
     this.linkcoreUrl = LINKCORE_URL;
@@ -212,6 +212,30 @@ class SoundSystem {
     return BGM_PLAYLIST.filter(t => t.enabled !== false);
   }
 
+  // 再生割合 (weight) に基づく加重ランダム選曲
+  getRandomTrackIndexWeighted(excludeCurrent = false) {
+    const playable = this.getPlayablePlaylist();
+    if (playable.length === 0) return 0;
+    let candidates = playable;
+    const curTrack = this.getCurrentTrack();
+    if (excludeCurrent && playable.length > 1) {
+      candidates = playable.filter(t => t !== curTrack);
+      if (candidates.length === 0) candidates = playable;
+    }
+
+    // 各曲のウェイト合計
+    const totalWeight = candidates.reduce((sum, t) => sum + Math.max(1, Number(t.weight || 20)), 0);
+    let rnd = Math.random() * totalWeight;
+    for (const track of candidates) {
+      const w = Math.max(1, Number(track.weight || 20));
+      if (rnd < w) {
+        return BGM_PLAYLIST.indexOf(track);
+      }
+      rnd -= w;
+    }
+    return BGM_PLAYLIST.indexOf(candidates[0]);
+  }
+
   // ===== BGM 制御 =====
   startBGM(trackIndex = null, forceNewRandom = false, { fromStart = false, fadeIn = false, fadeDuration = 1.5 } = {}) {
     this.init();
@@ -227,14 +251,7 @@ class SoundSystem {
     if (trackIndex !== null) {
       this.currentTrackIndex = trackIndex % BGM_PLAYLIST.length;
     } else if (this.bgmPlayMode === 'random' && forceNewRandom) {
-      if (playable.length > 1) {
-        let randTrack;
-        const curTrack = this.getCurrentTrack();
-        do {
-          randTrack = playable[Math.floor(Math.random() * playable.length)];
-        } while (randTrack === curTrack && playable.length > 1);
-        this.currentTrackIndex = BGM_PLAYLIST.indexOf(randTrack);
-      }
+      this.currentTrackIndex = this.getRandomTrackIndexWeighted(true);
     }
 
     // 現在の曲が無効化されている場合は、有効な最初の曲にフォールバック
@@ -604,13 +621,24 @@ class SoundSystem {
     return false;
   }
 
+  setTrackWeight(index, weight) {
+    if (index >= 0 && index < BGM_PLAYLIST.length) {
+      const parsed = parseInt(weight, 10);
+      BGM_PLAYLIST[index].weight = Math.max(1, Math.min(100, isNaN(parsed) ? 20 : parsed));
+      localStorage.setItem('hirame_bgm_playlist', JSON.stringify(BGM_PLAYLIST));
+      return BGM_PLAYLIST[index].weight;
+    }
+    return null;
+  }
+
   addTrack(track) {
     if (!track || !track.src) return null;
     const newTrack = {
       id: track.id || `custom_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       title: track.title || '新規楽曲',
       src: track.src,
-      enabled: track.enabled !== false
+      enabled: track.enabled !== false,
+      weight: typeof track.weight === 'number' && track.weight > 0 ? track.weight : 20
     };
     BGM_PLAYLIST.push(newTrack);
     localStorage.setItem('hirame_bgm_playlist', JSON.stringify(BGM_PLAYLIST));
@@ -666,10 +694,14 @@ class SoundSystem {
   nextTrack() {
     const playable = this.getPlayablePlaylist();
     if (playable.length === 0) return;
-    const curTrack = this.getCurrentTrack();
-    const curPlayableIdx = playable.indexOf(curTrack);
-    const nextPlayableIdx = (curPlayableIdx + 1) % playable.length;
-    this.currentTrackIndex = BGM_PLAYLIST.indexOf(playable[nextPlayableIdx]);
+    if (this.bgmPlayMode === 'random') {
+      this.currentTrackIndex = this.getRandomTrackIndexWeighted(true);
+    } else {
+      const curTrack = this.getCurrentTrack();
+      const curPlayableIdx = playable.indexOf(curTrack);
+      const nextPlayableIdx = (curPlayableIdx + 1) % playable.length;
+      this.currentTrackIndex = BGM_PLAYLIST.indexOf(playable[nextPlayableIdx]);
+    }
     this.startBGM(this.currentTrackIndex);
   }
 

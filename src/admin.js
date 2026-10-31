@@ -5503,7 +5503,7 @@ window.addEventListener('DOMContentLoaded', () => {
       renderPlaylistItems();
     };
 
-    // プレイリスト描画
+    // プレイリスト描画 (再生割合 ＆ デフォルト曲指定対応)
     function renderPlaylistItems() {
       const playlist = sound.getPlaylist();
       if (!adminBgmPlaylist) return;
@@ -5518,9 +5518,20 @@ window.addEventListener('DOMContentLoaded', () => {
         adminBgmTrackBadge.innerText = `BGM: ${currentTrack?.title || '未選択'}`;
       }
 
+      // 有効曲のウェイト合計を算出
+      const totalPlayableWeight = playlist
+        .filter(t => t.enabled !== false)
+        .reduce((sum, t) => sum + Math.max(1, Number(t.weight || 20)), 0);
+
       playlist.forEach((track, idx) => {
         const isCur = sound.currentTrackIndex === idx;
         const isEnabled = track.enabled !== false;
+        const isDefault = idx === 0;
+        const weight = Math.max(1, Number(track.weight || 20));
+        const effectivePct = isEnabled && totalPlayableWeight > 0
+          ? Math.round((weight / totalPlayableWeight) * 100)
+          : 0;
+
         const itemEl = document.createElement('div');
         itemEl.className = `admin-track-item ${isCur && isPlaying ? 'active-playing' : ''} ${isEnabled ? '' : 'track-item-disabled'}`;
         if (!isEnabled) {
@@ -5528,19 +5539,27 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         itemEl.innerHTML = `
-          <div class="track-info-cell" style="display:flex; align-items:center; gap:8px;">
+          <div class="track-info-cell">
             <label class="track-enable-toggle" style="display:inline-flex; align-items:center; gap:4px; cursor:pointer;" title="ゲーム本体で表示・再生可能にするか設定">
               <input type="checkbox" class="track-enable-checkbox" ${isEnabled ? 'checked' : ''} style="width:16px; height:16px; accent-color:#38bdf8; cursor:pointer;">
               <span class="track-enable-label" style="font-size:11px; font-weight:800; color:${isEnabled ? '#38bdf8' : '#94a3b8'};">${isEnabled ? 'ON' : 'OFF'}</span>
             </label>
-            <span class="track-index-num" style="color:#64748b; font-size:11px;">#${idx + 1}</span>
+            <span class="track-index-num" style="color:#64748b; font-size:11px; font-weight:900;">#${idx + 1}</span>
             <button type="button" class="btn-track-play ${isCur && isPlaying ? 'playing' : ''}" title="${isCur && isPlaying ? '停止' : 'この曲を再生'}">
               ${isCur && isPlaying ? '⏹' : '▶'}
             </button>
             <span class="track-name-text" style="${isEnabled ? '' : 'text-decoration: line-through; color: #94a3b8;'}" title="${track.title}">${track.title}</span>
+            ${isDefault ? '<span class="track-default-badge" title="ゲーム初期起動・初期選択される最優先デフォルト曲です">⭐ デフォルト曲</span>' : ''}
+          </div>
+          <div class="track-middle-cell">
+            <div class="track-weight-box" title="ランダム選曲時の抽選割合(重み)。全曲の比率から実質確率を自動算出します。">
+              <span class="track-weight-label">🎲 割合:</span>
+              <input type="number" class="track-weight-input" min="1" max="100" value="${weight}" data-index="${idx}">
+              <span class="track-weight-pct" title="ランダム再生時の実質確率">(${effectivePct}%)</span>
+            </div>
           </div>
           <div class="track-actions-cell">
-            <button type="button" class="btn-track-order btn-order-up" title="上へ移動" ${idx === 0 ? 'disabled' : ''}>▲</button>
+            <button type="button" class="btn-track-order btn-order-up" title="上へ移動 (一番上に来た曲が自動的にデフォルト曲になります)" ${idx === 0 ? 'disabled' : ''}>▲</button>
             <button type="button" class="btn-track-order btn-order-down" title="下へ移動" ${idx === playlist.length - 1 ? 'disabled' : ''}>▼</button>
             <button type="button" class="btn-track-delete" title="削除" ${playlist.length <= 1 ? 'disabled' : ''}>🗑️</button>
           </div>
@@ -5550,6 +5569,14 @@ window.addEventListener('DOMContentLoaded', () => {
         const enableCheckbox = itemEl.querySelector('.track-enable-checkbox');
         enableCheckbox.addEventListener('change', (e) => {
           sound.toggleTrackEnabled(idx, e.target.checked);
+          renderPlaylistItems();
+          if (adminChannel) adminChannel.postMessage({ type: 'UPDATE_BGM_PLAYLIST', playlist: sound.getPlaylist() });
+        });
+
+        // 割合 (weight) 入力
+        const weightInput = itemEl.querySelector('.track-weight-input');
+        weightInput.addEventListener('change', (e) => {
+          sound.setTrackWeight(idx, e.target.value);
           renderPlaylistItems();
           if (adminChannel) adminChannel.postMessage({ type: 'UPDATE_BGM_PLAYLIST', playlist: sound.getPlaylist() });
         });
@@ -5566,7 +5593,7 @@ window.addEventListener('DOMContentLoaded', () => {
           renderPlaylistItems();
         });
 
-        // 上へ移動
+        // 上へ移動 (一番上に移動した曲が自動的にデフォルト曲になる)
         const upBtn = itemEl.querySelector('.btn-order-up');
         upBtn.addEventListener('click', () => {
           sound.reorderTrack(idx, idx - 1);
@@ -5628,7 +5655,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // 初期3曲にリセット
     adminResetBgmBtn.addEventListener('click', () => {
-      if (confirm('BGMプレイリストを初期の3曲に戻しますか？')) {
+      if (confirm('BGMプレイリストを初期プレイリスト（全曲）に戻しますか？')) {
         sound.resetPlaylist();
         renderPlaylistItems();
         if (adminChannel) adminChannel.postMessage({ type: 'UPDATE_BGM_PLAYLIST', playlist: sound.getPlaylist() });
