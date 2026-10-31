@@ -48,37 +48,60 @@ window.addEventListener('DOMContentLoaded', () => {
     const hudEl = document.getElementById('gameHud');
     const nowPlayingPillEl = document.getElementById('nowPlayingPill');
     const bottomDockEl = document.getElementById('bottomDock');
-    
+
+    const isLandscape = w > h;
+    const isUltraLowHeight = h <= 550;
+
     let safeTop = 115;
-    if (nowPlayingPillEl && nowPlayingPillEl.offsetParent !== null) {
-      const rect = nowPlayingPillEl.getBoundingClientRect();
-      safeTop = Math.max(safeTop, rect.bottom + 8);
-    } else if (hudEl && hudEl.offsetParent !== null) {
-      safeTop = Math.max(safeTop, hudEl.offsetHeight + 35);
-    } else {
-      safeTop = Math.max(90, h * 0.16);
-    }
-    // 上限クランプ（画面高さの28%を超えない）
-    safeTop = Math.min(safeTop, h * 0.28);
-    
     let safeBottom = h * 0.70;
-    if (bottomDockEl && bottomDockEl.offsetParent !== null) {
-      const rect = bottomDockEl.getBoundingClientRect();
-      if (rect.top > 0) {
-        // ボトムドックの上端より12px上を魚の安全下限とし、かつ画面高さの72%を超えない
-        safeBottom = Math.min(h * 0.72, rect.top - 12);
+
+    if (isLandscape && isUltraLowHeight) {
+      // 横画面・低画面高モード（モバイル横向きなど）
+      // ヘッダー直下 (約36px〜42px) を魚の上限とする
+      const hudHeight = (hudEl && hudEl.offsetParent !== null) ? hudEl.offsetHeight : 38;
+      safeTop = Math.max(34, hudHeight + 6);
+
+      // ボトムドック直上 (約h - 50px) を魚の下限とする（水槽スペースを画面高の70%以上確保）
+      if (bottomDockEl && bottomDockEl.offsetParent !== null) {
+        const rect = bottomDockEl.getBoundingClientRect();
+        if (rect.top > 0) {
+          safeBottom = Math.max(safeTop + 140, rect.top - 6);
+        } else {
+          safeBottom = Math.max(safeTop + 140, h - 52);
+        }
       } else {
-        safeBottom = h * 0.70;
+        const dockHeight = (bottomDockEl && bottomDockEl.offsetHeight > 0) ? bottomDockEl.offsetHeight : 50;
+        safeBottom = Math.max(safeTop + 140, h - dockHeight - 6);
       }
-    } else if (bottomDockEl) {
-      const dockHeight = bottomDockEl.offsetHeight || 140;
-      safeBottom = Math.min(h * 0.72, h - dockHeight - 12);
+    } else {
+      // 縦画面 または PC大画面
+      if (nowPlayingPillEl && nowPlayingPillEl.offsetParent !== null) {
+        const rect = nowPlayingPillEl.getBoundingClientRect();
+        safeTop = Math.max(safeTop, rect.bottom + 8);
+      } else if (hudEl && hudEl.offsetParent !== null) {
+        safeTop = Math.max(safeTop, hudEl.offsetHeight + 35);
+      } else {
+        safeTop = Math.max(90, h * 0.16);
+      }
+      safeTop = Math.min(safeTop, h * 0.28);
+      
+      if (bottomDockEl && bottomDockEl.offsetParent !== null) {
+        const rect = bottomDockEl.getBoundingClientRect();
+        if (rect.top > 0) {
+          safeBottom = Math.min(h * 0.72, rect.top - 12);
+        } else {
+          safeBottom = h * 0.70;
+        }
+      } else if (bottomDockEl) {
+        const dockHeight = bottomDockEl.offsetHeight || 140;
+        safeBottom = Math.min(h * 0.72, h - dockHeight - 12);
+      }
     }
 
     // 逆転・近接時の絶対安全保証ガード
     if (safeBottom <= safeTop + 130) {
-      safeTop = h * 0.16;
-      safeBottom = h * 0.70;
+      safeTop = Math.max(36, h * 0.12);
+      safeBottom = Math.max(safeTop + 130, h * 0.85);
     }
 
     game.setSafeBounds(safeTop, safeBottom);
@@ -130,6 +153,7 @@ window.addEventListener('DOMContentLoaded', () => {
     quickRetryBtn: document.getElementById('quickRetryBtn'),
     hudHomeBtn: document.getElementById('hudHomeBtn'),
     hudMuteBtn: document.getElementById('hudMuteBtn'),
+    hudFullscreenBtn: document.getElementById('hudFullscreenBtn'),
     hudSettingsBtn: document.getElementById('hudSettingsBtn'),
     nowPlayingPill: document.getElementById('nowPlayingPill'),
     nowPlayingTitle: document.getElementById('nowPlayingTitle'),
@@ -155,6 +179,7 @@ window.addEventListener('DOMContentLoaded', () => {
     playerNameInput: document.getElementById('playerNameInput'),
     toModeSelectBtn: document.getElementById('toModeSelectBtn'),
     openLeaderboardBtn: document.getElementById('openLeaderboardBtn'),
+    titleFullscreenBtn: document.getElementById('titleFullscreenBtn'),
     refreshMainRankingBtn: document.getElementById('refreshMainRankingBtn'),
     openSettingsBtn: document.getElementById('openSettingsBtn'),
     openMusicModalBtn: document.getElementById('openMusicModalBtn'),
@@ -834,6 +859,45 @@ window.addEventListener('DOMContentLoaded', () => {
       dom.settingsModal.classList.add('hidden');
     });
   }
+
+  // フルスクリーン (全画面モード) / ウィンドウモード切替
+  function toggleFullscreen() {
+    sound.playTap();
+    const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    if (!isFull) {
+      const root = document.documentElement;
+      if (root.requestFullscreen) {
+        root.requestFullscreen().catch(err => console.warn('Fullscreen request failed:', err));
+      } else if (root.webkitRequestFullscreen) {
+        root.webkitRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(err => console.warn('Exit fullscreen failed:', err));
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    }
+  }
+
+  function updateFullscreenIcons() {
+    const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    const icon = isFull ? '🗗' : '⛶';
+    const textJa = isFull ? '🗗 ウィンドウ表示' : '⛶ 全画面切替 (フルスクリーン)';
+    if (dom.hudFullscreenBtn) {
+      dom.hudFullscreenBtn.textContent = icon;
+      dom.hudFullscreenBtn.title = isFull ? 'ウィンドウ表示に戻す' : '全画面表示にする';
+    }
+    if (dom.titleFullscreenBtn) {
+      dom.titleFullscreenBtn.textContent = textJa;
+    }
+    setTimeout(resize, 120);
+  }
+
+  dom.hudFullscreenBtn?.addEventListener('click', toggleFullscreen);
+  dom.titleFullscreenBtn?.addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', updateFullscreenIcons);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
 
   // 設定保存トースト通知ユーティリティ
   let saveToastTimer = null;

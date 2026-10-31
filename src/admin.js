@@ -656,18 +656,46 @@ window.addEventListener('DOMContentLoaded', () => {
           }
         }
 
+        const defAmb = DEFAULT_AMBIENT_CONFIG;
+        const pAmb = parsed.ambientConfig || {};
         const mergedAmbientConfig = {
-          ...JSON.parse(JSON.stringify(DEFAULT_AMBIENT_CONFIG)),
-          ...(parsed.ambientConfig || {}),
+          ...JSON.parse(JSON.stringify(defAmb)),
+          ...pAmb,
+          backgroundImage: {
+            ...defAmb.backgroundImage,
+            ...(pAmb.backgroundImage || {})
+          },
+          gradient: {
+            ...defAmb.gradient,
+            ...(pAmb.gradient || {})
+          },
+          lightRays: {
+            ...defAmb.lightRays,
+            ...(pAmb.lightRays || {})
+          },
+          ground: {
+            ...defAmb.ground,
+            ...(pAmb.ground || {})
+          },
           bubbles: {
-            ...DEFAULT_AMBIENT_CONFIG.bubbles,
-            ...(parsed.ambientConfig?.bubbles || {})
+            ...defAmb.bubbles,
+            ...(pAmb.bubbles || {})
           },
           smallFish: {
-            ...DEFAULT_AMBIENT_CONFIG.smallFish,
-            ...(parsed.ambientConfig?.smallFish || {})
+            ...defAmb.smallFish,
+            ...(pAmb.smallFish || {})
           },
-          presets: parsed.ambientConfig?.presets || JSON.parse(JSON.stringify(DEFAULT_AMBIENT_CONFIG.presets))
+          flowEffect: {
+            ...defAmb.flowEffect,
+            ...(pAmb.flowEffect || {})
+          },
+          sparks: {
+            ...defAmb.sparks,
+            ...(pAmb.sparks || {})
+          },
+          presets: Array.isArray(pAmb.presets)
+            ? pAmb.presets
+            : JSON.parse(JSON.stringify(defAmb.presets || []))
         };
 
         const mergeModeChars = (modeName) => {
@@ -2270,13 +2298,22 @@ window.addEventListener('DOMContentLoaded', () => {
   // ===== 「現在の設定をセット」ボタン (ヘッダー ＆ マトリクス一覧モーダル内) =====
   function commitAllSettingsToGame(sourceBtn) {
     currentConfig.updatedAt = Date.now();
-    localStorage.setItem('hirame_dev_config', JSON.stringify(currentConfig));
+    try {
+      const jsonStr = JSON.stringify(currentConfig);
+      localStorage.setItem('hirame_dev_config', jsonStr);
+      localStorage.setItem('hirame_custom_default_config', jsonStr);
+    } catch (storageErr) {
+      console.error('LocalStorage save error:', storageErr);
+      if (storageErr.name === 'QuotaExceededError') {
+        alert('⚠️ ブラウザのストレージ容量上限を超えました。背景画像などの容量が大きすぎる可能性があります。軽量な画像を再選択してください。');
+      }
+    }
     if (adminChannel) {
-      adminChannel.postMessage({
-        type: 'UPDATE_DEV_CONFIG',
-        config: currentConfig,
-        timestamp: Date.now()
-      });
+      try {
+        adminChannel.postMessage({ type: 'UPDATE_DEV_CONFIG', config: currentConfig, timestamp: Date.now() });
+      } catch (bcErr) {
+        console.warn('BroadcastChannel error:', bcErr);
+      }
     }
     try {
       sound.init();
@@ -9494,15 +9531,46 @@ window.addEventListener('DOMContentLoaded', () => {
     bgImageFileInput?.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
+
       const reader = new FileReader();
       reader.onload = (evt) => {
-        const ambCfg = ensureAmbientConfig();
-        if (!ambCfg.backgroundImage) ambCfg.backgroundImage = {};
-        ambCfg.backgroundImage.dataUrl = evt.target.result;
-        ambCfg.backgroundImage.enabled = true;
-        renderAmbientManager();
-        saveCurrentConfigToStorage();
-        try { sound.init(); sound.playSuccess(1); } catch (err) { }
+        const rawDataUrl = evt.target.result;
+        // 画像が巨大な場合は Canvas で最大1280pxにリサイズして圧縮保存（容量オーバー防止）
+        const img = new Image();
+        img.onload = () => {
+          let targetW = img.width;
+          let targetH = img.height;
+          const maxDim = 1280;
+          if (targetW > maxDim || targetH > maxDim) {
+            if (targetW > targetH) {
+              targetH = Math.round((targetH * maxDim) / targetW);
+              targetW = maxDim;
+            } else {
+              targetW = Math.round((targetW * maxDim) / targetH);
+              targetH = maxDim;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, targetW, targetH);
+          const compressedDataUrl = canvas.toDataURL('image/webp', 0.88);
+
+          const ambCfg = ensureAmbientConfig();
+          if (!ambCfg.backgroundImage) ambCfg.backgroundImage = {};
+          ambCfg.backgroundImage.dataUrl = compressedDataUrl;
+          ambCfg.backgroundImage.enabled = true;
+          renderAmbientManager();
+          const savedOk = saveCurrentConfigToStorage();
+          if (savedOk !== false) {
+            try { sound.init(); sound.playSuccess(1); } catch (err) { }
+          }
+        };
+        img.onerror = () => {
+          alert('画像の読み込みに失敗しました。対応形式(PNG/WebP/JPEG)をご確認ください。');
+        };
+        img.src = rawDataUrl;
       };
       reader.readAsDataURL(file);
     });

@@ -719,12 +719,20 @@ export class Game {
       this.adminChannel.onmessage = (event) => {
         if (event.data && event.data.type === 'UPDATE_DEV_CONFIG') {
           this.devConfig = this.loadDevConfig();
+          if (this.renderer) {
+            this.renderer.bgImageLoadedSrc = null;
+            this.renderer.initBackgroundEffects?.();
+          }
         }
       };
     } catch (e) {}
     window.addEventListener('storage', (e) => {
       if (e.key === 'hirame_dev_config') {
         this.devConfig = this.loadDevConfig();
+        if (this.renderer) {
+          this.renderer.bgImageLoadedSrc = null;
+          this.renderer.initBackgroundEffects?.();
+        }
       }
     });
 
@@ -814,18 +822,46 @@ export class Game {
           ...(parsed.bgmBannerConfig || {})
         };
 
+        const defAmb = DEFAULT_AMBIENT_CONFIG;
+        const pAmb = parsed.ambientConfig || {};
         const mergedAmbientConfig = {
-          ...DEFAULT_AMBIENT_CONFIG,
-          ...(parsed.ambientConfig || {}),
+          ...defAmb,
+          ...pAmb,
+          backgroundImage: {
+            ...defAmb.backgroundImage,
+            ...(pAmb.backgroundImage || {})
+          },
+          gradient: {
+            ...defAmb.gradient,
+            ...(pAmb.gradient || {})
+          },
+          lightRays: {
+            ...defAmb.lightRays,
+            ...(pAmb.lightRays || {})
+          },
+          ground: {
+            ...defAmb.ground,
+            ...(pAmb.ground || {})
+          },
           bubbles: {
-            ...DEFAULT_AMBIENT_CONFIG.bubbles,
-            ...(parsed.ambientConfig?.bubbles || {})
+            ...defAmb.bubbles,
+            ...(pAmb.bubbles || {})
           },
           smallFish: {
-            ...DEFAULT_AMBIENT_CONFIG.smallFish,
-            ...(parsed.ambientConfig?.smallFish || {})
+            ...defAmb.smallFish,
+            ...(pAmb.smallFish || {})
           },
-          presets: parsed.ambientConfig?.presets || JSON.parse(JSON.stringify(DEFAULT_AMBIENT_CONFIG.presets))
+          flowEffect: {
+            ...defAmb.flowEffect,
+            ...(pAmb.flowEffect || {})
+          },
+          sparks: {
+            ...defAmb.sparks,
+            ...(pAmb.sparks || {})
+          },
+          presets: Array.isArray(pAmb.presets)
+            ? pAmb.presets
+            : JSON.parse(JSON.stringify(defAmb.presets || []))
         };
 
         return {
@@ -1076,6 +1112,11 @@ export class Game {
           }
         }
       }
+    }
+
+    if (this.renderer) {
+      this.renderer.bgImageLoadedSrc = null;
+      this.renderer.initBackgroundEffects?.();
     }
   }
 
