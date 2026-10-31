@@ -9,15 +9,15 @@
     },
     "gradient": {
       "enabled": true,
-      "topColor": "#0284c7",
-      "midColor": "#0369a1",
-      "deepColor": "#075985",
-      "bottomColor": "#0c2340"
+      "topColor": "#365314",
+      "midColor": "#65a30d",
+      "deepColor": "#3f6212",
+      "bottomColor": "#1c1917"
     },
     "lightRays": {
       "enabled": true,
       "color": "#ffffff",
-      "alpha": 0.12,
+      "alpha": 0.14,
       "count": 5,
       "intensity": 1.0
     },
@@ -30,7 +30,7 @@
     },
     "bubbles": {
       "enabled": true,
-      "count": 30,
+      "count": 25,
       "color": "#ffffff"
     },
     "smallFish": {
@@ -51,6 +51,12 @@
       "color": "#facc15",
       "shape": "spark",
       "speed": 1.0
-    }
+    },
+    "presets": [
+      { "id": "bubbles", "name": "🫧 泡", "type": "bubbles", "enabled": true, "count": 25, "speed": 1.0 },
+      { "id": "small_fish", "name": "🐟 小魚 (イワシ群)", "type": "small_fish", "enabled": true, "count": 15, "speed": 1.0 },
+      { "id": "halloween_pumpkin", "name": "🎃 カボチャ (半透明)", "type": "custom", "enabled": true, "icon": "🎃", "count": 6, "speed": 0.5, "isWhiteTranslucent": true, "opacity": 0.45 },
+      { "id": "halloween_ghost", "name": "👻 オバケ (半透明)", "type": "custom", "enabled": true, "icon": "👻", "count": 6, "speed": 0.7, "isWhiteTranslucent": true, "opacity": 0.5 }
+    ]
   }
 }

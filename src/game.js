@@ -749,9 +749,9 @@ export class Game {
       if (res.ok) {
         const json = await res.json();
         if (json && json.ambientConfig) {
-          const hasLocal = !!localStorage.getItem('hirame_dev_config');
-          if (!hasLocal) {
-            localStorage.setItem('hirame_custom_default_config', JSON.stringify(json));
+          localStorage.setItem('hirame_custom_default_config', JSON.stringify(json));
+          const rawDev = localStorage.getItem('hirame_dev_config');
+          if (!rawDev) {
             this.devConfig = this.loadDevConfig();
             if (this.renderer) {
               this.renderer.bgImageLoadedSrc = null;
@@ -845,6 +845,12 @@ export class Game {
 
         const defAmb = DEFAULT_AMBIENT_CONFIG;
         const pAmb = parsed.ambientConfig || {};
+        
+        // 旧デフォルト（海青 #0284c7）が端末に残っている場合は最新公式テーマに自動アップグレード
+        const gradP = pAmb.gradient || {};
+        const isLegacyBlue = gradP.topColor === '#0284c7' && gradP.bottomColor === '#0c2340';
+        const effectiveGradient = isLegacyBlue ? defAmb.gradient : { ...defAmb.gradient, ...gradP };
+
         const mergedAmbientConfig = {
           ...defAmb,
           ...pAmb,
@@ -852,10 +858,7 @@ export class Game {
             ...defAmb.backgroundImage,
             ...(pAmb.backgroundImage || {})
           },
-          gradient: {
-            ...defAmb.gradient,
-            ...(pAmb.gradient || {})
-          },
+          gradient: effectiveGradient,
           lightRays: {
             ...defAmb.lightRays,
             ...(pAmb.lightRays || {})

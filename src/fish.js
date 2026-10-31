@@ -123,10 +123,10 @@ export const DEFAULT_AMBIENT_TRIGGER = {
 };
 
 export const DEFAULT_AMBIENT_PRESETS = [
-  { id: 'bubbles', name: '🫧 泡', type: 'bubbles', enabled: true, count: 30, speed: 1.0 },
+  { id: 'bubbles', name: '🫧 泡', type: 'bubbles', enabled: true, count: 25, speed: 1.0 },
   { id: 'small_fish', name: '🐟 小魚 (イワシ群)', type: 'small_fish', enabled: true, count: 15, speed: 1.0 },
-  { id: 'halloween_pumpkin', name: '🎃 カボチャ (半透明)', type: 'custom', enabled: false, icon: '🎃', count: 5, speed: 0.5, isWhiteTranslucent: true, opacity: 0.4 },
-  { id: 'halloween_ghost', name: '👻 オバケ (半透明)', type: 'custom', enabled: false, icon: '👻', count: 5, speed: 0.7, isWhiteTranslucent: true, opacity: 0.45 }
+  { id: 'halloween_pumpkin', name: '🎃 カボチャ (半透明)', type: 'custom', enabled: true, icon: '🎃', count: 6, speed: 0.5, isWhiteTranslucent: true, opacity: 0.45 },
+  { id: 'halloween_ghost', name: '👻 オバケ (半透明)', type: 'custom', enabled: true, icon: '👻', count: 6, speed: 0.7, isWhiteTranslucent: true, opacity: 0.5 }
 ];
 
 export const DEFAULT_AMBIENT_CONFIG = {
@@ -139,16 +139,17 @@ export const DEFAULT_AMBIENT_CONFIG = {
   },
   gradient: {
     enabled: true,
-    topColor: '#0284c7',
-    midColor: '#0369a1',
-    deepColor: '#075985',
-    bottomColor: '#0c2340'
+    topColor: '#365314',
+    midColor: '#65a30d',
+    deepColor: '#3f6212',
+    bottomColor: '#1c1917'
   },
   lightRays: {
     enabled: true,
     color: '#ffffff',
-    alpha: 0.12,
-    count: 5
+    alpha: 0.14,
+    count: 5,
+    intensity: 1.0
   },
   ground: {
     enabled: true,
@@ -159,12 +160,12 @@ export const DEFAULT_AMBIENT_CONFIG = {
   },
   bubbles: {
     enabled: true,
-    count: 30, // 0: ランダム (15〜50)
+    count: 25,
     color: '#ffffff'
   },
   smallFish: {
     enabled: true,
-    count: 15, // 0: ランダム (8〜25)
+    count: 15,
     color: '#e0f2fe'
   },
   flowEffect: {
@@ -178,7 +179,7 @@ export const DEFAULT_AMBIENT_CONFIG = {
     enabled: false,
     count: 20,
     color: '#facc15',
-    shape: 'spark' // 'spark' | 'star' | 'dot'
+    shape: 'spark'
   },
   presets: JSON.parse(JSON.stringify(DEFAULT_AMBIENT_PRESETS))
 };

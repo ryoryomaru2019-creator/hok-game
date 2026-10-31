@@ -167,21 +167,29 @@ class SoundSystem {
 
   applyBgmVolume(fadeMultiplier = 1.0) {
     if (!this.bgmAudio) return;
-    if (this.masterMuted || this.bgmMuted || this.isAuditioning) {
-      this.bgmAudio.volume = 0;
+    const isMuted = this.masterMuted || this.bgmMuted || this.isAuditioning;
+    
+    // iOS Safari / iPhone WebKit は volume = 0 を無視するため、muted プロパティの設定が必須
+    this.bgmAudio.muted = isMuted;
+    if (isMuted) {
+      try { this.bgmAudio.volume = 0; } catch (e) {}
     } else {
       const target = Math.max(0, Math.min(1, this.masterVolume * this.bgmVolume * fadeMultiplier));
-      this.bgmAudio.volume = target;
+      try { this.bgmAudio.volume = target; } catch (e) {}
     }
   }
 
   applyAuditionVolume(fadeMultiplier = 1.0) {
     if (!this.auditionAudio) return;
-    if (this.masterMuted || this.bgmMuted) {
-      this.auditionAudio.volume = 0;
+    const isMuted = this.masterMuted || this.bgmMuted;
+    
+    // iOS Safari / iPhone WebKit 対応
+    this.auditionAudio.muted = isMuted;
+    if (isMuted) {
+      try { this.auditionAudio.volume = 0; } catch (e) {}
     } else {
       const target = Math.max(0, Math.min(1, this.masterVolume * this.bgmVolume * (this.auditionAudio._fadeLevel != null ? this.auditionAudio._fadeLevel : fadeMultiplier)));
-      this.auditionAudio.volume = target;
+      try { this.auditionAudio.volume = target; } catch (e) {}
     }
   }
 
@@ -264,8 +272,9 @@ class SoundSystem {
     }
 
     if (fadeIn) {
-      // 0からフェードイン
-      this.bgmAudio.volume = 0;
+      // 0からフェードイン (iOS Safari対策でmutedも設定)
+      this.bgmAudio.muted = (this.masterMuted || this.bgmMuted);
+      try { this.bgmAudio.volume = 0; } catch (e) {}
       this.bgmAudio.play().catch(e => console.log("BGM play prevented:", e));
       const stepMs = 50;
       const totalSteps = Math.max(1, Math.floor((fadeDuration * 1000) / stepMs));

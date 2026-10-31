@@ -173,22 +173,65 @@ canvas#gameCanvas {
 .hud-controls {
   display: flex;
   gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* フルスクリーンボタン: 縦画面では右端の見切れ防止のため非表示、横画面（Landscape）でのみ表示 */
+#hudFullscreenBtn {
+  display: none;
+}
+@media (orientation: landscape) {
+  #hudFullscreenBtn {
+    display: flex;
+  }
 }
 
 .icon-btn {
   background: rgba(15, 23, 42, 0.75);
   border: 2px solid rgba(255, 255, 255, 0.25);
   color: white;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 12px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 18px;
+  font-size: 17px;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+/* 縦画面スマホ（幅440px以下）でのHUD全ボタン収容レイアウト */
+@media (max-width: 440px) and (orientation: portrait) {
+  .hud-header {
+    padding: max(8px, calc(8px + env(safe-area-inset-top, 0px))) 8px 8px;
+    gap: 4px;
+  }
+  .hud-stat-box {
+    padding: 4px 7px;
+    min-width: 42px;
+    border-radius: 9px;
+  }
+  .hud-label {
+    font-size: 8px;
+    margin-bottom: 0px;
+  }
+  .hud-value {
+    font-size: 18px;
+  }
+  .hud-controls {
+    gap: 4px;
+  }
+  .icon-btn {
+    width: 33px;
+    height: 33px;
+    font-size: 14px;
+    border-radius: 8px;
+    border-width: 1.5px;
+  }
 }
 
 .icon-btn:hover {
